@@ -20,8 +20,7 @@ All install scripts must be run as root.
 
 1.  ``ramroot-install`` builds the required hook and install files
 
-2.  ``ramroot-enable`` adds the necessary MODULES and HOOKS to
-    ``/etc/mkinitcpio.conf``
+2.  ``ramroot-enable`` adds the necessary mkinitcpio MODULES and HOOKS
 
 
 
