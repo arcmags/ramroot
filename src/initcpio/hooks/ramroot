@@ -1,4 +1,7 @@
 #!/bin/bash
+##======================  ramroot - initcpio hook  =======================##
+# Script for ramroot initcpio hook.
+# Place in: /usr/lib/initcpio/hooks
 
 run_hook() {
     # root (and boot) UUID

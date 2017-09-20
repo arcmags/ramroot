@@ -1,4 +1,7 @@
 #!/bin/bash
+##=====================  ramroot - initcpio install  =====================##
+# Install script for ramroot initcpio hook.
+# Place in: /usb/lib/initcpio/install
 
 build() {
   add_dir /local_root
@@ -14,6 +17,6 @@ build() {
 help() {
   cat <<HELPEOF
 This hook provides the option to load the root filesystem completely
-to RAM during boot.
+into RAM during boot.
 HELPEOF
 }

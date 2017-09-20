@@ -1,0 +1,20 @@
+#!/bin/bash
+##===========================  ramroot-remove  ===========================##
+# This script ensures that ramroot is disabled via 'ramroot-disable' and
+# then removes the initcpio hook and install scripts.
+
+# get ramroot/bin:
+binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# ramroot-disable
+"$binDir/ramroot-disable"
+
+# prepare removal:
+hooksDir="/usr/lib/initcpio/hooks"
+installDir="/usr/lib/initcpio/install"
+sudo -k
+
+# remove ramroot hook and install scripts from /usr/lib/initcpio:
+echo ":# sudo rm $hooksDir/ramroot $installDir/ramroot"
+sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot"
+echo ":: ramroot removed"

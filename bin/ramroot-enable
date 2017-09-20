@@ -4,6 +4,12 @@
 # required to load the root filesystem into RAM at boot.  A new linux
 # cpio boot image is built with these changes.
 
+# get ramroot/bin and ramroot/build directory paths:
+binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$binDir"
+cd ..
+buildDir="$PWD/build"
+
 # Check for ramroot hook and install:
 if [ ! -f /usr/lib/initcpio/hooks/ramroot ] ||
 [ ! -f /usr/lib/initcpio/install/ramroot ]; then
@@ -15,6 +21,7 @@ fi
 initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
 initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
 
+fNew=0
 # add zram and ext4 to MODULES:
 if [[ ! "$initMODULES" =~ zram ]]; then
     if [ "$initMODULES" = 'MODULES=""' ]; then
@@ -23,24 +30,37 @@ if [[ ! "$initMODULES" =~ zram ]]; then
         initMODULES="${initMODULES%*\"} zram\""
     fi
     echo ":: Added MODULE: zram"
+    fNew=1
 fi
 if [[ ! "$initMODULES" =~ ext4 ]]; then
     initMODULES="${initMODULES%*\"} ext4\""
     echo ":: Added MODULE: ext4"
+    fNew=1
 fi
 
 # add ramroot HOOK:
 if [[ ! "$initHOOKS" =~ ramroot ]]; then
     initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"
     echo ":: Added HOOK: ramroot"
+    fNew=1
 fi
 
-# write new /ect/mkinitcpio.conf:
-sed "s@^MODULES=.*@$initMODULES@g; \
-    s@^HOOKS=.*@$initHOOKS@g;" \
-    /etc/mkinitcpio.conf > /tmp/mkinitcpio_tmp
-cp /tmp/mkinitcpio_tmp /etc/mkinitcpio.conf
-rm /tmp/mkinitcpio_tmp
+if [ $fnew -eq 1 ]; then
+    # prepare build:
+    mkdir -p "$buildDir"
+    sudo -k
 
-# generate new linux image:
-mkinitcpio -p linux
+    # build new mkinitcpio.conf:
+    sed "s@^MODULES=.*@$initMODULES@g; \
+        s@^HOOKS=.*@$initHOOKS@g;" \
+        /etc/mkinitcpio.conf > "$buildDir/mkinitcpio_ramroot.conf"
+
+    # copy new mkinitcpio.conf to /etc and rebuild linux image:
+    echo ":# sudo cp $buildDir/mkinitcpio_ramroot.conf /etc/mkinitcpio.conf"
+    echo ":# sudo mkinitcpio -p linux"
+    sudo cp "$buildDir/mkinitcpio_ramroot.conf" /etc/mkinitcpio.conf
+    sudo mkinitcpio -p linux
+    echo ":: ramroot enabled"
+else
+    echo ":: ramroot already enabled"
+fi

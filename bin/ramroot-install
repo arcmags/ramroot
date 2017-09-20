@@ -4,16 +4,17 @@
 # the root filesystem to RAM.  This script must be run in a normal login
 # session (no chroot) to access the UUID of the root partition correctly.
 
-# get ram-root/bin and ram-root/src directory paths:
+# get ramroot/bin, ramroot/build, and ramroot/src directory paths:
 binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$binDir"
-cd ../src
-srcDir="$PWD"
+cd ..
+srcDir="$PWD/src"
+buildDir="$PWD/build"
 
 # get root UUID:
 rootUUID=
 if [ ! -d '/' ]; then
-    echo ":: No root mounted at: /"
+    echo ":: Nothing mounted: /"
     exit 1
 fi
 rootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' / *$'` )
@@ -32,17 +33,21 @@ if [ -d '/boot' ]; then
     echo ":: /boot UUID: $bootUUID"
 fi
 
-# copy hook and install files to /usr/lib/initcpio
+# prepare build:
 hooksDir="/usr/lib/initcpio/hooks"
 installDir="/usr/lib/initcpio/install"
-cd "$srcDir"
-rootUUIDline="rootUUID=\'$rootUUID\'"
-bootUUIDline="bootUUID=\'$bootUUID\'"
+mkdir -p "$buildDir"
+sudo -k
+
+# build hook and install scripts:
 sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
     s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
-    initcpio/hooks/ramroot > /tmp/ramroot_hook_tmp
-cp /tmp/ramroot_hook_tmp "$hooksDir/ramroot"
-echo ":: ramroot hook written to $hooksDir/ramroot"
-rm /tmp/ramroot_hook_tmp
-cp "initcpio/install/ramroot" "$installDir/ramroot"
-echo ":: ramroot install copied to $installDir/ramroot"
+    "$srcDir/initcpio/hooks/ramroot" > "$buildDir/ramroot_hook"
+cp "$srcDir/initcpio/hooks/ramroot" "$buildDir/ramroot_install"
+
+# copy hook and install scripts to /usr/lib/initcpio/:
+echo ":# sudo cp $buildDir/ramroot_hook $hooksDir/ramroot"
+echo ":# sudo cp $buildDir/ramroot_install $installDir/ramroot"
+sudo cp "$buildDir/ramroot_hook" "$hooksDir/ramroot"
+sudo cp "$buildDir/ramroot_install" "$installDir/ramroot"
+echo ":: ramroot installed"
