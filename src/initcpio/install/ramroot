@@ -1,0 +1,19 @@
+#!/bin/bash
+
+build() {
+  add_dir /local_root
+  add_dir /local_boot
+  add_dir /zram_root
+  add_binary zramctl
+  add_binary free
+  add_binary mkfs.ext4
+  add_binary nproc
+  add_runscript
+}
+
+help() {
+  cat <<HELPEOF
+This hook provides the option to load the root filesystem completely
+to RAM during boot.
+HELPEOF
+}

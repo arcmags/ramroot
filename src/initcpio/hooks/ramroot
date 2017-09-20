@@ -1,0 +1,89 @@
+#!/bin/bash
+
+run_hook() {
+    # root (and boot) UUID
+    bootUUID=''
+    rootUUID=''
+
+    # wait for output from other init processes:
+    sleep 4
+
+    # detect how much RAM there is:
+    ramG=`free --si -g | awk '/Mem/ {print int($2)}'`
+    echo ":: Total RAM detected: ${ramG}G"
+
+    # prompt [y/n] to load filesystem to RAM:
+    echo -n ":> Load root filesystem to RAM? "
+    if [ ${ramG} -ge 4 ]; then
+        # if machine has 4G or more of RAM, copy root to RAM by default:
+        echo -n "[Y/n] "
+        input="y"
+        read -s -r -t 10 -n 1 input
+        if [ "${input}" = "n" ] || [ "${input}" = "N" ]; then
+            input="n"
+        else
+            input="y"
+        fi
+    else
+        # if machine has less than 4G of RAM, leave root on USB by default:
+        echo -n "[y/N] "
+        input="n"
+        read -s -r -t 10 -n 1 input
+        if [ "${input}" = "y" ] || [ "${input}" = "Y" ]; then
+            input="y"
+        else
+            input="n"
+        fi
+    fi
+
+    # copy root filesystem to RAM:
+    if [ "${input}" = "y" ]; then
+        echo "yes"
+        echo ":: Copying root filesystem to RAM..."
+        # enable zRAM devices:
+        if [ ! -b "/dev/zram0" ]; then
+            modprobe zram num_devices=$(nproc)
+        fi
+        # mount root partition to /local_root:
+        poll_device "/dev/disk/by-uuid/${rootUUID}" 20
+        mount -U "${rootUUID}" /local_root
+        # make zRAM partition with half of total RAM:
+        zramG=$(( (${ramG}+1)/2 ))
+        zdevice=$(zramctl -f -s "${zramG}G" -a lzo -t $(nproc))
+        mkfs.ext4 -q "$zdevice"
+        # mount zRAM partition to /zram_root:
+        mount "$zdevice" /zram_root
+        export zdevice
+        # copy files from local root to zRAM root:
+        cp -a /local_root/* /zram_root/
+        # move /etc/fstab from to /etc/fstab~ in zRAM root:
+        mv /zram_root/etc/fstab /zram_root/etc/fstab~
+        # mount boot partition (if exists)
+        if [ -n "$bootUUID" ]; then
+            # mount boot partition to /local_boot:
+            poll_device "/dev/disk/by-uuid/${bootUUID}" 20
+            mount -U "${bootUUID}" /local_boot
+            # copy files from local boot partition to zRAM boot:
+            mkdir -p /zram_root/boot
+            cp -a /local_boot/* /zram_root/boot/
+            umount /local_boot
+        fi
+        # unmount local root, and zRAM root:
+        umount /local_root
+        umount /zram_root
+        # set new mount_handler:
+        oroot_mount() {
+            mount "$zdevice" "$1"
+        }
+        # don't perform filesystem check on zRAM:
+        fsck_root() {
+            :
+        }
+        mount_handler=oroot_mount
+
+    # keep root filesystem on local device:
+    else
+        echo " no"
+        echo ":: Keeping root filesystem on local device..."
+    fi
+}

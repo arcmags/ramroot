@@ -1,0 +1,48 @@
+#!/bin/bash
+##==========================  ramroot-install  ===========================##
+# This script builds the ramroot hook and install files required to copy
+# the root filesystem to RAM.  This script must be run in a normal login
+# session (no chroot) to access the UUID of the root partition correctly.
+
+# get ram-root/bin and ram-root/src directory paths:
+binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$binDir"
+cd ../src
+srcDir="$PWD"
+
+# get root UUID:
+rootUUID=
+if [ ! -d '/' ]; then
+    echo ":: No root mounted at: /"
+    exit 1
+fi
+rootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' / *$'` )
+rootUUID="${rootInfo[0]}"
+if [ -z "${rootInfo[1]}" ]; then
+    echo ":: Unable to get UUID of root: /"
+    exit 1
+fi
+echo ":: / UUID: $rootUUID"
+
+# get boot UUID:
+bootUUID=
+if [ -d '/boot' ]; then
+    bootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' /boot *$'` )
+    bootUUID="${bootInfo[0]}"
+    echo ":: /boot UUID: $bootUUID"
+fi
+
+# copy hook and install files to /usr/lib/initcpio
+hooksDir="/usr/lib/initcpio/hooks"
+installDir="/usr/lib/initcpio/install"
+cd "$srcDir"
+rootUUIDline="rootUUID=\'$rootUUID\'"
+bootUUIDline="bootUUID=\'$bootUUID\'"
+sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
+    s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
+    initcpio/hooks/ramroot > /tmp/ramroot_hook_tmp
+cp /tmp/ramroot_hook_tmp "$hooksDir/ramroot"
+echo ":: ramroot hook written to $hooksDir/ramroot"
+rm /tmp/ramroot_hook_tmp
+cp "initcpio/install/ramroot" "$installDir/ramroot"
+echo ":: ramroot install copied to $installDir/ramroot"
