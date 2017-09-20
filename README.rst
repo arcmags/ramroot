@@ -16,7 +16,8 @@ Installation
 
 All installation scripts are located in the ``bin/`` directory.  In order to
 obtain correct UUIDs, you must install from a normal login session (no chroot).
-All install scripts must be run as root.
+All install scripts must be run as root.  To use ramroot, first install the
+hook, then enable the changes:
 
 1.  ``ramroot-install`` builds the required hook and install files
 

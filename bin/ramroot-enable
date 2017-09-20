@@ -10,9 +10,11 @@ if [ ! -f /usr/lib/initcpio/hooks/ramroot ] ||
     echo ":: Missing initcpio scripts, run install first."
     exit 1
 fi
+
 # get current init MODULES and HOOKS:
 initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
 initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
+
 # add zram and ext4 to MODULES:
 if [[ ! "$initMODULES" =~ zram ]]; then
     if [ "$initMODULES" = 'MODULES=""' ]; then
@@ -26,16 +28,19 @@ if [[ ! "$initMODULES" =~ ext4 ]]; then
     initMODULES="${initMODULES%*\"} ext4\""
     echo ":: Added MODULE: ext4"
 fi
+
 # add ramroot HOOK:
 if [[ ! "$initHOOKS" =~ ramroot ]]; then
     initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"
     echo ":: Added HOOK: ramroot"
 fi
+
 # write new /ect/mkinitcpio.conf:
 sed "s@^MODULES=.*@$initMODULES@g; \
     s@^HOOKS=.*@$initHOOKS@g;" \
     /etc/mkinitcpio.conf > /tmp/mkinitcpio_tmp
 cp /tmp/mkinitcpio_tmp /etc/mkinitcpio.conf
 rm /tmp/mkinitcpio_tmp
+
 # generate new linux image:
 mkinitcpio -p linux
