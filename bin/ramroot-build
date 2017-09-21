@@ -23,14 +23,14 @@ if [ -z "${rootInfo[1]}" ]; then
     echo ":: Unable to get UUID of root: /"
     exit 1
 fi
-echo ":: / UUID: $rootUUID"
+echo ":: Detected root UUID: $rootUUID"
 
 # get boot UUID:
 bootUUID=
 if [ -d '/boot' ]; then
     bootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' /boot *$'` )
     bootUUID="${bootInfo[0]}"
-    echo ":: /boot UUID: $bootUUID"
+    echo ":: Detected /boot UUID: $bootUUID"
 fi
 
 # prepare build:

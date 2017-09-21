@@ -19,22 +19,22 @@ fNew=0
 if [[ "$initMODULES" =~ zram ]]; then
     initMODULES=`echo "$initMODULES" | sed -r 's/( zram|zram |zram)//g'`
     echo ":: Removed MODULE: zram"
-    fnew=1
+    fNew=1
 fi
 # remove ext4 MODULE:
 if [[ "$initMODULES" =~ ext4 ]]; then
     initMODULES=`echo "$initMODULES" | sed -r 's/( ext4|ext4 |ext4)//g'`
     echo ":: Removed MODULE: ext4"
-    fnew=1
+    fNew=1
 fi
 # remove ramroot HOOK:
 if [[ "$initHOOKS" =~ ramroot ]]; then
     initHOOKS=`echo "$initHOOKS" | sed -r 's/( ramroot|ramroot |ramroot)//g'`
     echo ":: Removed HOOK: ramroot"
-    fnew=1
+    fNew=1
 fi
 
-if [ $fnew -eq 1 ]; then
+if [ $fNew -eq 1 ]; then
     # prepare build:
     mkdir -p "$buildDir"
     sudo -k

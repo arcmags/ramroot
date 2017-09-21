@@ -44,7 +44,7 @@ if [[ ! "$initHOOKS" =~ ramroot ]]; then
     fNew=1
 fi
 
-if [ $fnew -eq 1 ]; then
+if [ $fNew -eq 1 ]; then
     # prepare build:
     mkdir -p "$buildDir"
     sudo -k
