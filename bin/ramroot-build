@@ -1,8 +1,8 @@
 #!/bin/bash
-##==========================  ramroot-install  ===========================##
-# This script builds the ramroot hook and install files required to copy
+##===========================  ramroot-build  ============================##
+# This script builds the ramroot build and runtime hook required to copy
 # the root filesystem to RAM.  This script must be run in a normal login
-# session (no chroot) to access the UUID of the root partition correctly.
+# session (no chroot) to correctly access the UUID of the root partition.
 
 # get ramroot/bin, ramroot/build, and ramroot/src directory paths:
 binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -39,13 +39,13 @@ installDir="/usr/lib/initcpio/install"
 mkdir -p "$buildDir"
 sudo -k
 
-# build hook and install scripts:
+# make build and runtime hooks:
 sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
     s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
     "$srcDir/initcpio/hooks/ramroot" > "$buildDir/ramroot_hook"
 cp "$srcDir/initcpio/hooks/ramroot" "$buildDir/ramroot_install"
 
-# copy hook and install scripts to /usr/lib/initcpio/:
+# copy build and runtime hooks to /usr/lib/initcpio/:
 echo ":# sudo cp $buildDir/ramroot_hook $hooksDir/ramroot"
 echo ":# sudo cp $buildDir/ramroot_install $installDir/ramroot"
 sudo cp "$buildDir/ramroot_hook" "$hooksDir/ramroot"

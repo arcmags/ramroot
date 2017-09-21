@@ -10,11 +10,10 @@ cd "$binDir"
 cd ..
 buildDir="$PWD/build"
 
-# Check for ramroot hook and install:
+# Check for ramroot hooks:
 if [ ! -f /usr/lib/initcpio/hooks/ramroot ] ||
 [ ! -f /usr/lib/initcpio/install/ramroot ]; then
-    echo ":: Missing initcpio scripts, run install first."
-    exit 1
+    "$binDir/ramroot-build"
 fi
 
 # get current init MODULES and HOOKS:
@@ -22,7 +21,7 @@ initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
 initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
 
 fNew=0
-# add zram and ext4 to MODULES:
+# add zram to MODULES:
 if [[ ! "$initMODULES" =~ zram ]]; then
     if [ "$initMODULES" = 'MODULES=""' ]; then
         initMODULES='MODULES="zram"'
@@ -32,12 +31,12 @@ if [[ ! "$initMODULES" =~ zram ]]; then
     echo ":: Added MODULE: zram"
     fNew=1
 fi
+# add ext4 to MODULES:
 if [[ ! "$initMODULES" =~ ext4 ]]; then
     initMODULES="${initMODULES%*\"} ext4\""
     echo ":: Added MODULE: ext4"
     fNew=1
 fi
-
 # add ramroot HOOK:
 if [[ ! "$initHOOKS" =~ ramroot ]]; then
     initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"

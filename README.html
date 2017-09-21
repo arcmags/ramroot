@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
+<title>ramroot</title>
+<style type="text/css">
+
+/*======================  dark.css  ======================*/
+body {
+    background: #252525;
+}
+
+.document {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left:8px;
+    padding-right: 8px;
+    background: #181818;
+    border: solid 2px #444444;
+    box-shadow: 10px 10px 5px #00000066;
+}
+
+* {
+    color: #c0c0c0;
+    font-family: arial, sans-serif;
+    font-size: 16px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 4px 0;
+    padding: 0;
+    font-family: helvetica, arial, sans-serif;
+}
+h1 {
+    margin: 24px 0 12px 0;
+    border-bottom: 1px solid #444444;
+    font-size: 20px;
+    color: #eaeaea;
+}
+
+h2 {
+    margin: 12px 0 6px 0;
+    font-size: 17px;
+    color: #d6d6d6;
+}
+h1.title {
+    margin: 8px 0 16px 0;
+    border-bottom: 2px solid #444444;
+    text-align: center;
+    font-family: helvetica;
+    font-size: 24px;
+}
+h2.subtitle {
+    text-align: center;
+    font-size: 18px;
+}
+
+p {
+    margin: 0 0 12px 0;
+}
+
+li {
+    margin: 0 0 4px 0;
+}
+
+blockquote {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+a:link,a:visited,a:active {
+    color: #005FFF;
+    text-decoration: none;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #00AA00;
+    text-decoration: none;
+}
+
+pre,
+.pre,
+.literal {
+    color: #d6d6d6;
+    font-family: courier, Hack, monospace;
+}
+pre.literal-block {
+    padding: 2px 2px 0 2px;
+    margin: 0 4px 8px 4px;
+    background: #000000;
+    border: 1px solid #303030;
+}
+pre.code .ln { /* line numbers */
+    color: #181818;
+}
+pre.code .comment,
+code .comment {
+    color: #ff0000
+}
+pre.code .keyword,
+code .keyword {
+    color: #00acac;
+}
+pre.code .literal.string,
+code .literal.string {
+    color: #0C5404
+}
+pre.code .name.builtin,
+code .name.builtin {
+    color: #00acac
+}
+pre.code .deleted,
+code .deleted {
+    background-color: #380000
+}
+pre.code .inserted,
+code .inserted {
+    background-color: #002800
+}
+
+dl {
+    margin-top: 0px;
+}
+
+dd {
+    margin-bottom: 8px;
+}
+
+.borderless, table.borderless td, table.borderless th {
+    border: 0
+}
+table.borderless td, table.borderless th {
+    padding: 0 0.5em 0 0 !important;
+}
+.first {
+    margin-top: 0 !important;
+}
+.last, .with-subtitle {
+    margin-bottom: 0 !important
+}
+
+.hidden {
+    display: none;
+}
+
+.subscript {
+    vertical-align: sub;
+    font-size: smaller;
+}
+
+.superscript {
+    vertical-align: super;
+    font-size: smaller;
+}
+
+a.toc-backref {
+    text-decoration: none;
+}
+
+blockquote.epigraph {
+    margin: 2em 5em;
+}
+
+
+object[type="image/svg+xml"],
+object[type="application/x-shockwave-flash"] {
+    overflow: hidden;
+}
+
+div.abstract {
+    margin: 2em 5em;
+}
+
+div.abstract p.topic-title {
+    font-weight: bold ;
+    text-align: center;
+}
+
+div.admonition,
+div.attention,
+div.caution,
+div.danger,
+div.error,
+div.hint,
+div.important,
+div.note,
+div.tip,
+div.warning {
+    margin: 2em ;
+    border: medium outset ;
+    padding: 1em;
+}
+
+div.admonition p.admonition-title,
+div.hint p.admonition-title,
+div.important p.admonition-title,
+div.note p.admonition-title,
+div.tip p.admonition-title {
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+div.attention p.admonition-title,
+div.caution p.admonition-title,
+div.danger p.admonition-title,
+div.error p.admonition-title,
+div.warning p.admonition-title,
+.code .error {
+      color: red;
+      font-weight: bold;
+      font-family: sans-serif;
+}
+
+div.compound .compound-first,
+div.compound .compound-middle {
+    margin-bottom: 0.5em;
+}
+
+div.compound .compound-last,
+div.compound .compound-middle {
+    margin-top: 0.5em;
+}
+
+div.dedication {
+    margin: 2em 5em;
+    text-align: center;
+    font-style: italic;
+}
+
+div.dedication p.topic-title {
+    font-weight: bold ;
+    font-style: normal
+}
+
+div.figure {
+    margin-left: 2em ;
+    margin-right: 2em
+}
+
+div.footer,
+div.header {
+    clear: both;
+    font-size: smaller
+}
+
+div.line-block {
+    display: block ;
+    margin-top: 1em ;
+    margin-bottom: 1em
+}
+
+div.line-block div.line-block {
+    margin-top: 0 ;
+    margin-bottom: 0 ;
+    margin-left: 1.5em
+}
+
+div.sidebar {
+    margin: 0 0 0.5em 1em ;
+    border: medium outset ;
+    padding: 1em ;
+    background-color: #ffffee ;
+    width: 40% ;
+    float: right ;
+    clear: right ;
+}
+
+div.sidebar p.rubric {
+    font-family: sans-serif ;
+    font-size: medium ;
+}
+
+div.system-messages {
+    margin: 5em;
+}
+
+div.system-messages h1 {
+    color: red;
+}
+
+div.system-message {
+    border: medium outset ;
+    padding: 1em;
+}
+
+div.system-message p.system-message-title {
+    color: red ;
+    font-weight: bold;
+}
+
+div.topic {
+    margin: 2em;
+}
+
+h1.section-subtitle,
+h2.section-subtitle,
+h3.section-subtitle,
+h4.section-subtitle,
+h5.section-subtitle,
+h6.section-subtitle {
+    margin-top: 0.4em;
+}
+
+hr.docutils {
+  width: 75%
+}
+
+img.align-left,
+.figure.align-left,
+object.align-left,
+table.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em
+}
+
+img.align-right,
+.figure.align-right,
+object.align-right,
+table.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em
+}
+
+img.align-center,
+.figure.align-center,
+object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left
+}
+
+.align-center {
+  clear: both ;
+  text-align: center
+}
+
+.align-right {
+  text-align: right
+}
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit
+}
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+.align-top    {
+  vertical-align: top
+}
+
+.align-middle {
+  vertical-align: middle
+}
+
+.align-bottom {
+  vertical-align: bottom
+}
+
+ol.simple, ul.simple {
+  margin-bottom: 1em
+}
+
+ol.arabic {
+  list-style: decimal
+}
+
+ol.loweralpha {
+  list-style: lower-alpha
+}
+
+ol.upperalpha {
+  list-style: upper-alpha
+}
+
+ol.lowerroman {
+  list-style: lower-roman
+}
+
+ol.upperroman {
+  list-style: upper-roman
+}
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50%
+}
+
+p.caption {
+  font-style: italic
+}
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller
+}
+
+p.label {
+  white-space: nowrap
+}
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center
+}
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger
+}
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold
+}
+
+p.topic-title {
+  font-weight: bold
+}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique
+}
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold
+}
+
+span.interpreted {
+  font-family: sans-serif
+}
+
+span.option {
+  white-space: nowrap
+}
+
+span.pre {
+  white-space: pre
+}
+
+span.problematic {
+  color: red
+}
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80%
+}
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px
+}
+
+table.docinfo {
+  margin: 2em 4em
+}
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em
+}
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px
+}
+
+table.docutils td,
+table.docutils th,
+table.docinfo td,
+table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top
+}
+
+table.docutils th.field-name,
+table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0
+}
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+
+table.docutils.booktabs * {
+  border: 0px;
+}
+
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils,
+h2 tt.docutils,
+h3 tt.docutils,
+h4 tt.docutils,
+h5 tt.docutils,
+h6 tt.docutils {
+  font-size: 100%
+}
+
+ul.auto-toc {
+  list-style-type: none
+}
+
+</style>
+</head>
+<body>
+<div class="document" id="ramroot">
+<h1 class="title">ramroot</h1>
+
+<p>Run Linux entirely from RAM!  This project creates and enables a custom
+<a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio">mkinitcpio</a> hook that completely loads the root (and /boot) filesystem into
+RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki/Initial_ramdisk">initramfs</a> boot stage.</p>
+<div class="section" id="requirements">
+<h1>Requirements</h1>
+<dl class="docutils">
+<dt>Arch Linux</dt>
+<dd>This is was built specifically to work with the Arch Linux <a class="reference external" href="https://wiki.archlinux.org/index.php/Arch_boot_process">boot process</a>.
+I suspect these scripts may work with slight modifications on other
+distributions as well, however this is currently untested.</dd>
+<dt>sudo</dt>
+<dd>These scripts can all be run as root, however, running them as a non
+elevated user is recommended.  The scripts call sudo when necessary
+to modify or create initcpio files.</dd>
+</dl>
+</div>
+<div class="section" id="installation">
+<h1>Installation</h1>
+<p>All installation scripts are located in the <cite>bin/</cite> directory.  In order to
+obtain correct UUIDs, you must install from a normal login session (no chroot).
+To build and enable ramroot in one step, simply run the <tt class="docutils literal"><span class="pre">ramroot-enable</span></tt>
+script.  The newly built scripts are placed in a new <cite>build/</cite> directory
+within the respository as well as copied to their required source locations in
+the filesystem.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">ramroot-build</span></tt></dt>
+<dd>This creates and copies the ramroot <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#Build_hooks">build hook</a> and <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#Runtime_hooks">runtime hook</a> to
+<cite>/usr/lib/initcpio/install/ramroot</cite> and <cite>/usr/lib/initcpio/hooks/ramroot</cite>
+respectively.</dd>
+<dt><tt class="docutils literal"><span class="pre">ramroot-enable</span></tt></dt>
+<dd>This script adds ramroot to the <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#HOOKS">HOOKS</a> array directly after the udev hook
+in <cite>/etc/mkinitcpio.conf</cite>.  Additionally, module requirements
+ext4 and zram are added to the <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#MODULES">MODULES</a> array.  A new new linux kernel
+image is generated with these changes via <cite>mkinitcpio -p linux</cite>.</dd>
+<dt><tt class="docutils literal"><span class="pre">ramroot-disable</span></tt></dt>
+<dd>This script removes the ramroot hook and ext4, zram module requirements
+in <cite>/etc/mkinitcpio.conf</cite>.  A new kernel image is generated.</dd>
+<dt><tt class="docutils literal"><span class="pre">ramroot-remove</span></tt></dt>
+<dd>This ensures ramroot is disabled in <cite>/etc/mkinitcpio.conf</cite> and removes the
+initcpio hooks at <cite>/usr/lib/initcpio/install/ramroot</cite> and
+<cite>/usr/lib/initcpio/hooks/ramroot</cite>.</dd>
+</dl>
+</div>
+<div class="section" id="usage">
+<h1>Usage</h1>
+<p>Once fully enabled, all that is required is a reboot.  During the initial
+phase of the boot process, the amount of detected RAM is displayed along with
+a [y/n] prompt asking if the user wishes to load the root filesystem to RAM.
+(Note that this prompt defaults to <cite>yes</cite> with a 10 second timeout if 4G or more
+of RAM is detected.)</p>
+<p>The filesystem transfer to RAM can take several minutes.  As soon as the boot
+process is complete, the USB device (or whatever boot device) can be removed.</p>
+<p>Remember that all changes to files in RAM are completely lost once the
+computer is shutdown.  To update the system and edit files, boot the device
+without transferring the filesystem to RAM.</p>
+</div>
+<div class="section" id="tips">
+<h1>Tips</h1>
+<p>Keep a clean and trimmed down system to maintain faster RAM sync times.
+Arch Linux stores downloaded packages in <cite>/var/cache/pacman/pkg/</cite>.  After
+every update, if no problems occur, consider removing <a class="reference external" href="https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache">old packages</a>.
+Execute <tt class="docutils literal">pacman <span class="pre">-Sc</span></tt> to remove all packages that aren't currently installed.
+Execute <tt class="docutils literal">paccache <span class="pre">-rk0</span></tt> to remove all packages.</p>
+<p>Additionally, one should consider that higher quality (more expensive) USB
+jump drives exhibit a noticeable difference in sync times.</p>
+<p>Use a git repo to update files/projects worked on.</p>
+</div>
+<div class="section" id="issues-to-do-maybe">
+<h1>Issues / to do (maybe)</h1>
+<ul class="simple">
+<li>add a ramroot-flush function to sync the RAM filesystem back to the
+initial boot device (simple)</li>
+<li>find a way to get UUIDs while in arch-chroot to allow installing via chroot</li>
+<li>perhaps combine all the <cite>bin/ramroot-*</cite> scripts into one, or at least<ul>
+<li>source common functions from a single file?</li>
+</ul>
+</li>
+<li>test on other distros</li>
+<li>package up for the <a class="reference external" href="https://aur.archlinux.org/">AUR</a></li>
+<li>add support for other partitions users may have</li>
+<li>could source fstab for information?</li>
+<li>warnings/no installing if user's root filesystem is to large?</li>
+<li>check filesystem size during boot<ul>
+<li>default [y/n] answer at boot dependent on RAM and filesystem sizes</li>
+</ul>
+</li>
+<li>add command line options to <cite>ramroot-build</cite><ul>
+<li>control [y/n] prompt behavior/existence</li>
+<li>specify UUIDs</li>
+</ul>
+</li>
+<li>make a webpage to go along with <a class="reference external" href="http://valleycat.org/arch-usb/arch-usb.html">arch-usb</a>.</li>
+</ul>
+</div>
+</div>
+</body>
+</html>

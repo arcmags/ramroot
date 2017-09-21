@@ -1,7 +1,8 @@
 #!/bin/bash
 ##==========================  ramroot-disable  ===========================##
-# This script removes the changes made to /etc/mkinitcpio.conf by
-# ramroot-enable.
+# This script removes the HOOK and MODULES from /etc/mkinitcpio.conf
+# required to load the root filesystem into RAM at boot.  A new linux
+# cpio boot image is built with these changes.
 
 # get ramroot/bin and ramroot/build directory paths:
 binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
