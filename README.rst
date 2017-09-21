@@ -39,18 +39,18 @@ the filesystem.
 
 ``ramroot-enable``
     This script adds ramroot to the HOOKS_ array directly after the udev hook
-    in `/etc/mkinitcpio.conf`.  Additionally, module requirements
+    in */etc/mkinitcpio.conf*.  Additionally, module requirements
     ext4 and zram are added to the MODULES_ array.  A new new linux kernel
     image is generated with these changes via `mkinitcpio -p linux`.
 
 ``ramroot-disable``
     This script removes the ramroot hook and ext4, zram module requirements
-    in `/etc/mkinitcpio.conf`.  A new kernel image is generated.
+    in */etc/mkinitcpio.conf*.  A new kernel image is generated.
 
 ``ramroot-remove``
-    This ensures ramroot is disabled in `/etc/mkinitcpio.conf` and removes the
-    initcpio hooks at `/usr/lib/initcpio/install/ramroot` and
-    `/usr/lib/initcpio/hooks/ramroot`.
+    This ensures ramroot is disabled in */etc/mkinitcpio.conf* and removes the
+    initcpio hooks at */usr/lib/initcpio/install/ramroot* and
+    */usr/lib/initcpio/hooks/ramroot*.
 
 
 Usage
@@ -59,7 +59,7 @@ Usage
 Once fully enabled, all that is required is a reboot.  During the initial
 phase of the boot process, the amount of detected RAM is displayed along with
 a [y/n] prompt asking if the user wishes to load the root filesystem to RAM.
-(Note that this prompt defaults to `yes` with a 10 second timeout if 4G or more
+(Note that this prompt defaults to *yes* with a 10 second timeout if 4G or more
 of RAM is detected.)
 
 The filesystem transfer to RAM can take several minutes.  As soon as the boot
@@ -74,7 +74,7 @@ Tips
 ====
 
 Keep a clean and trimmed down system to maintain faster RAM sync times.
-Arch Linux stores downloaded packages in `/var/cache/pacman/pkg/`.  After
+Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.  After
 every update, if no problems occur, consider removing `old packages`_.
 Execute ``pacman -Sc`` to remove all packages that aren't currently installed.
 Execute ``paccache -rk0`` to remove all packages.
@@ -91,7 +91,7 @@ Issues / to do (maybe)
 
 *   find a way to get UUIDs while in arch-chroot to allow installing via chroot
 
-*   perhaps combine all the `bin/ramroot-*` scripts into one, or at least
+*   perhaps combine all the *bin/ramroot-** scripts into one, or at least
 
     *   source common functions from a single file?
 
@@ -109,7 +109,7 @@ Issues / to do (maybe)
 
     *   default [y/n] answer at boot dependent on RAM and filesystem sizes
 
-*   add command line options to `ramroot-build`
+*   add command line options to ``ramroot-build``
 
     *   control [y/n] prompt behavior/existence
 
