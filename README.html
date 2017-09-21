@@ -5,6 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
 <title>ramroot</title>
+<base target="_blank">
 <style type="text/css">
 
 /*======================  dark.css  ======================*/
@@ -27,6 +28,7 @@ body {
     color: #c0c0c0;
     font-family: arial, sans-serif;
     font-size: 16px;
+    line-height: 133%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -80,6 +82,10 @@ a:link,a:visited,a:active {
 a:hover {
     color: #00AA00;
     text-decoration: none;
+}
+
+reference external {
+    target: '_blank';
 }
 
 pre,
@@ -557,8 +563,8 @@ elevated user is recommended.  The scripts call sudo when necessary
 to modify or create initcpio files.</dd>
 </dl>
 </div>
-<div class="section" id="installation">
-<h1>Installation</h1>
+<div class="section" id="installation-easy-way">
+<h1>Installation (easy way)</h1>
 <p>All installation scripts are located in the <em>bin/</em> directory.  In order to
 obtain correct UUIDs, you must install from a normal login session (no chroot).
 To build and enable ramroot in one step, simply run the <tt class="docutils literal"><span class="pre">ramroot-enable</span></tt>
@@ -612,7 +618,10 @@ exhibit a noticeable difference in sync times.</p>
 <ul class="simple">
 <li>add a ramroot-flush function to sync the RAM filesystem back to the
 initial boot device (simple)</li>
-<li>find a way to get UUIDs while in arch-chroot to allow installing via chroot</li>
+<li>find a way to get UUIDs while in arch-chroot to allow installing via chroot<ul>
+<li>prompt for UUIDs if none found?</li>
+</ul>
+</li>
 <li>perhaps combine all the <em>bin/ramroot-*</em> scripts into one, or at least<ul>
 <li>source common functions from a single file?</li>
 </ul>
@@ -620,22 +629,28 @@ initial boot device (simple)</li>
 <li>test on other distros</li>
 <li>package up for the <a class="reference external" href="https://aur.archlinux.org/">AUR</a></li>
 <li>add support for other partitions users may have</li>
-<li>could source fstab for information?</li>
 <li>warnings/no installing if user's root filesystem is to large?</li>
 <li>check filesystem size during boot<ul>
 <li>default [y/n] answer at boot dependent on RAM and filesystem sizes</li>
 </ul>
 </li>
 <li>add command line options to <tt class="docutils literal"><span class="pre">ramroot-build</span></tt><ul>
-<li>control [y/n] prompt behavior/existence</li>
+<li>control [y/n] prompt behavior/existence/timeout</li>
 <li>specify UUIDs</li>
 </ul>
 </li>
 <li>make a webpage to go along with <a class="reference external" href="http://valleycat.org/arch-usb/arch-usb.html">arch-usb</a>.</li>
+<li>right now, the fstab is completely disregarded upon a RAM boot...<ul>
+<li>add option to keep fstab and mount other partitions in/out of RAM</li>
+<li>source fstab for information (UUIDs)?</li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="section" id="credits">
 <h1>Credits</h1>
+<p>This project was motivated greatly in part by the <a class="reference external" href="https://github.com/bluerider/liveroot">liveroot</a> package and
+by several inquisitive <a class="reference external" href="https://bbs.archlinux.org/viewtopic.php?id=178963">forum posts</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -646,8 +661,6 @@ initial boot device (simple)</li>
 </tr>
 </tbody>
 </table>
-<p>This project was motivated greatly in part by the <a class="reference external" href="https://github.com/bluerider/liveroot">liveroot</a> package and
-by several inquisitive <a class="reference external" href="https://bbs.archlinux.org/viewtopic.php?id=178963">forum posts</a>.</p>
 </div>
 </div>
 </body>

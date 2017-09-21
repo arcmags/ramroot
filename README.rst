@@ -22,8 +22,8 @@ sudo
     to modify or create initcpio files.
 
 
-Installation
-============
+Installation (easy way)
+=======================
 
 All installation scripts are located in the *bin/* directory.  In order to
 obtain correct UUIDs, you must install from a normal login session (no chroot).
@@ -91,6 +91,8 @@ Issues / to do (maybe)
 
 *   find a way to get UUIDs while in arch-chroot to allow installing via chroot
 
+    *   prompt for UUIDs if none found?
+
 *   perhaps combine all the *bin/ramroot-** scripts into one, or at least
 
     *   source common functions from a single file?
@@ -101,8 +103,6 @@ Issues / to do (maybe)
 
 *   add support for other partitions users may have
 
-*   could source fstab for information?
-
 *   warnings/no installing if user's root filesystem is to large?
 
 *   check filesystem size during boot
@@ -111,24 +111,30 @@ Issues / to do (maybe)
 
 *   add command line options to ``ramroot-build``
 
-    *   control [y/n] prompt behavior/existence
+    *   control [y/n] prompt behavior/existence/timeout
 
     *   specify UUIDs
 
 *   make a webpage to go along with arch-usb_.
 
+*   right now, the fstab is completely disregarded upon a RAM boot...
+
+    *   add option to keep fstab and mount other partitions in/out of RAM
+
+    *   source fstab for information (UUIDs)?
+
 
 Credits
 =======
+
+This project was motivated greatly in part by the liveroot_ package and
+by several inquisitive `forum posts`_.
 
 :Author:
     Chris Magyar
 
 :License:
     BSD 3-Clause
-
-This project was motivated greatly in part by the liveroot_ package and
-by several inquisitive `forum posts`_.
 
 
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
