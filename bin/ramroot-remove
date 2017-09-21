@@ -7,14 +7,20 @@
 binDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # ramroot-disable
-"$binDir/ramroot-disable"
+if ("$binDir/ramroot-disable"); then
+    # prepare removal:
+    hooksDir="/usr/lib/initcpio/hooks"
+    installDir="/usr/lib/initcpio/install"
+    sudo -k
 
-# prepare removal:
-hooksDir="/usr/lib/initcpio/hooks"
-installDir="/usr/lib/initcpio/install"
-sudo -k
-
-# remove build and runtime hooks from /usr/lib/initcpio:
-echo ":# sudo rm $hooksDir/ramroot $installDir/ramroot"
-sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot" &&
-echo ":: ramroot hook and install scripts removed"
+    # remove build and runtime hooks from /usr/lib/initcpio:
+    echo "#: sudo rm $hooksDir/ramroot $installDir/ramroot"
+    sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot" &&
+    echo ":: ramroot hook and install scripts removed" &&
+    exit 0 ||
+    echo "!: ramroot hook and install scripts NOT removed" &&
+    exit 1
+else
+    echo "!: ramroot hook and install scripts NOT removed" &&
+    exit 1
+fi

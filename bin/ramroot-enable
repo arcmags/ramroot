@@ -13,7 +13,10 @@ buildDir="$PWD/build"
 # Check for ramroot hooks:
 if [ ! -f /usr/lib/initcpio/hooks/ramroot ] ||
 [ ! -f /usr/lib/initcpio/install/ramroot ]; then
-    "$binDir/ramroot-build"
+    if ! ("$binDir/ramroot-build"); then
+        echo "!: ramroot NOT enabled"
+        exit 1
+    fi
 fi
 
 # get current init MODULES and HOOKS:
@@ -53,14 +56,18 @@ if [ $fNew -eq 1 ]; then
     sed "s@^MODULES=.*@$initMODULES@g; \
         s@^HOOKS=.*@$initHOOKS@g;" \
         /etc/mkinitcpio.conf > "$buildDir/mkinitcpio_ramroot.conf" &&
-    echo ":: new mkinitcpio.conf created in $buildDir"
+    echo ":: new mkinitcpio.conf created in $buildDir" &&
 
     # copy new mkinitcpio.conf to /etc and rebuild linux image:
-    echo ":# sudo cp $buildDir/mkinitcpio_ramroot.conf /etc/mkinitcpio.conf"
-    echo ":# sudo mkinitcpio -p linux"
+    echo "#: sudo cp $buildDir/mkinitcpio_ramroot.conf /etc/mkinitcpio.conf" &&
+    echo "#: sudo mkinitcpio -p linux" &&
     sudo cp "$buildDir/mkinitcpio_ramroot.conf" /etc/mkinitcpio.conf &&
     sudo mkinitcpio -p linux &&
-    echo ":: ramroot enabled"
+    echo ":: ramroot enabled" &&
+    exit 0 ||
+    echo "!: ramroot NOT enabled" &&
+    exit 1
 else
     echo ":: ramroot already enabled"
+    exit 0
 fi

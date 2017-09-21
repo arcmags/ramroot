@@ -14,13 +14,13 @@ buildDir="$PWD/build"
 # get root UUID:
 rootUUID=
 if [ ! -d '/' ]; then
-    echo ":: Nothing mounted: /"
+    echo "!: Nothing mounted: /"
     exit 1
 fi
 rootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' / *$'` )
 rootUUID="${rootInfo[0]}"
 if [ -z "${rootInfo[1]}" ]; then
-    echo ":: Unable to get UUID of root: /"
+    echo "!: Unable to get UUID of root: /"
     exit 1
 fi
 echo ":: Detected root UUID: $rootUUID"
@@ -44,11 +44,14 @@ cp "$srcDir/initcpio/install/ramroot" "$buildDir/ramroot_install" &&
 sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
     s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
     "$srcDir/initcpio/hooks/ramroot" > "$buildDir/ramroot_hook" &&
-echo ":: ramroot_hooks built in $buildDir"
+echo ":: ramroot_hooks built in $buildDir" &&
 
 # copy build and runtime hooks to /usr/lib/initcpio/:
-echo ":# sudo cp $buildDir/ramroot_hook $hooksDir/ramroot"
-echo ":# sudo cp $buildDir/ramroot_install $installDir/ramroot"
+echo "#: sudo cp $buildDir/ramroot_hook $hooksDir/ramroot" &&
+echo "#: sudo cp $buildDir/ramroot_install $installDir/ramroot" &&
 sudo cp "$buildDir/ramroot_hook" "$hooksDir/ramroot" &&
 sudo cp "$buildDir/ramroot_install" "$installDir/ramroot" &&
-echo ":: ramroot hooks installed"
+echo ":: ramroot hooks installed" &&
+exit 0 ||
+echo "!: ramroot hooks NOT installed" &&
+exit 1

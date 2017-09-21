@@ -16,7 +16,7 @@ run_hook() {
     echo ":: Total RAM detected: ${ramG}G"
 
     # prompt [y/n] to load filesystem to RAM:
-    echo -n ":> Load root filesystem to RAM? "
+    echo -n ">: Load root filesystem to RAM? "
     if [ ${ramG} -ge 4 ]; then
         # if machine has 4G or more of RAM, copy root to RAM by default:
         echo -n "[Y/n] "
