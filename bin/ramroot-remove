@@ -15,7 +15,7 @@ if ("$binDir/ramroot-disable"); then
 
     # remove build and runtime hooks from /usr/lib/initcpio:
     echo "#: sudo rm $hooksDir/ramroot $installDir/ramroot"
-    sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot" &&
+    sudo rm "$hooksDir/ramroot" "$installDir/ramroot" &&
     echo ":: ramroot hook and install scripts removed" &&
     exit 0 ||
     echo "!: ramroot hook and install scripts NOT removed" &&
