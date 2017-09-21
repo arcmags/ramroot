@@ -78,10 +78,8 @@ every update, if no problems occur, consider removing `old packages`_.
 Execute ``pacman -Sc`` to remove all packages that aren't currently installed.
 Execute ``paccache -rk0`` to remove all packages.
 
-Additionally, one should consider that higher quality (more expensive) USB
-jump drives exhibit a noticeable difference in sync times.
-
-Use a git repo to update files/projects worked on.
+Consider that higher quality (more expensive) USB jump drives will
+exhibit a noticeable difference in sync times.
 
 
 Issues / to do (maybe)
