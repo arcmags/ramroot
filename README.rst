@@ -11,9 +11,10 @@ Requirements
 ============
 
 Arch Linux
-    This is was built specifically to work with the Arch Linux `boot process`_.
-    I suspect these scripts may work with slight modifications on other
-    distributions as well, however this is currently untested.
+    This is was designed specifically to work with the Arch Linux
+    `boot process`_.  I suspect these scripts may work with slight
+    modifications on other distributions as well, however this is
+    currently untested.
 
 sudo
     These scripts can all be run as root, however, running them as a non
@@ -24,16 +25,16 @@ sudo
 Installation
 ============
 
-All installation scripts are located in the `bin/` directory.  In order to
+All installation scripts are located in the *bin/* directory.  In order to
 obtain correct UUIDs, you must install from a normal login session (no chroot).
 To build and enable ramroot in one step, simply run the ``ramroot-enable``
-script.  The newly built scripts are placed in a new `build/` directory
+script.  The newly built scripts are placed in a new *build/* directory
 within the respository as well as copied to their required source locations in
 the filesystem.
 
 ``ramroot-build``
     This creates and copies the ramroot `build hook`_ and `runtime hook`_ to
-    `/usr/lib/initcpio/install/ramroot` and `/usr/lib/initcpio/hooks/ramroot`
+    */usr/lib/initcpio/install/ramroot* and */usr/lib/initcpio/hooks/ramroot*
     respectively.
 
 ``ramroot-enable``
@@ -123,8 +124,11 @@ Credits
 :Author:
     Chris Magyar
 
+:License:
+    BSD 3-Clause
+
 This project was motivated greatly in part by the liveroot_ package and
-by several `forum posts`_.
+by several inquisitive `forum posts`_.
 
 
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
