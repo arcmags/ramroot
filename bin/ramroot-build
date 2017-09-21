@@ -40,14 +40,15 @@ mkdir -p "$buildDir"
 sudo -k
 
 # make build and runtime hooks:
+cp "$srcDir/initcpio/install/ramroot" "$buildDir/ramroot_install" &&
 sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
     s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
-    "$srcDir/initcpio/hooks/ramroot" > "$buildDir/ramroot_hook"
-cp "$srcDir/initcpio/hooks/ramroot" "$buildDir/ramroot_install"
+    "$srcDir/initcpio/hooks/ramroot" > "$buildDir/ramroot_hook" &&
+echo ":: ramroot_hooks built in $buildDir"
 
 # copy build and runtime hooks to /usr/lib/initcpio/:
 echo ":# sudo cp $buildDir/ramroot_hook $hooksDir/ramroot"
 echo ":# sudo cp $buildDir/ramroot_install $installDir/ramroot"
-sudo cp "$buildDir/ramroot_hook" "$hooksDir/ramroot"
-sudo cp "$buildDir/ramroot_install" "$installDir/ramroot"
-echo ":: ramroot installed"
+sudo cp "$buildDir/ramroot_hook" "$hooksDir/ramroot" &&
+sudo cp "$buildDir/ramroot_install" "$installDir/ramroot" &&
+echo ":: ramroot hooks installed"

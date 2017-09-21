@@ -16,5 +16,5 @@ sudo -k
 
 # remove build and runtime hooks from /usr/lib/initcpio:
 echo ":# sudo rm $hooksDir/ramroot $installDir/ramroot"
-sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot"
+sudo rm "$hooksDir/ramroot" "$hooksDir/ramroot" &&
 echo ":: ramroot hook and install scripts removed"
