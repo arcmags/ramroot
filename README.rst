@@ -119,6 +119,16 @@ Issues / to do (maybe)
 *   make a webpage to go along with arch-usb_.
 
 
+Credits
+=======
+
+:Author:
+    Chris Magyar
+
+This project was motivated greatly in part by the liveroot_ package and
+by several `forum posts`_.
+
+
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
 .. _zram: https://en.wikipedia.org/wiki/Zram
 .. _initramfs: https://en.wikipedia.org/wiki/Initial_ramdisk
@@ -130,3 +140,5 @@ Issues / to do (maybe)
 .. _AUR: https://aur.archlinux.org/
 .. _arch-usb: http://valleycat.org/arch-usb/arch-usb.html
 .. _old packages: https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache
+.. _liveroot: https://github.com/bluerider/liveroot
+.. _forum posts: https://bbs.archlinux.org/viewtopic.php?id=178963
