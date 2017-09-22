@@ -1,7 +1,6 @@
 #!/bin/bash
-##=====================  ramroot - initcpio install  =====================##
-# Install script for ramroot initcpio hook.
-# Place in: /usb/lib/initcpio/install
+##==========================  ramroot (build hook)  ==========================##
+# Place in: /usb/lib/initcpio/install/
 
 build() {
   add_dir /local_root
@@ -11,6 +10,7 @@ build() {
   add_binary free
   add_binary mkfs.ext4
   add_binary nproc
+  add_binary cp
   add_runscript
 }
 
