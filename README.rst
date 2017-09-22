@@ -123,6 +123,9 @@ Issues / to do (maybe)
 
     *   source fstab for information (UUIDs)?
 
+*   when ramroot is already enabled and changes are made to hook files, the
+    linux kernel image needs to be rebuilt
+
 
 Credits
 =======
