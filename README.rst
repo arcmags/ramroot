@@ -57,10 +57,14 @@ Usage
 =====
 
 Once fully enabled, all that is required is a reboot.  During the initial
-phase of the boot process, the amount of detected RAM is displayed along with
-a [y/n] prompt asking if the user wishes to load the root filesystem to RAM.
-(Note that this prompt defaults to *yes* with a 10 second timeout if 4G or more
-of RAM is detected.)
+phase of the boot process, the amount of available RAM on the computer along
+with the size of the root filesystem to be copied is detected and shown on
+the screen.  If the available RAM is at least 500MB larger that the root
+filesystem, a [y/n] confirmation appears to load the root filesystem to RAM.
+(Confirmation prompt defaults to *yes* with a 15 second timeout.)
+
+The size of the zram partition created is determined by taking the size of
+the root filesystem plus half of the extra available RAM to a maximum of 6GB.
 
 The filesystem transfer to RAM can take several minutes.  As soon as the boot
 process is complete, the USB device (or whatever boot device) can be removed.
@@ -89,25 +93,14 @@ Issues / to do (maybe)
 *   add a ramroot-flush function to sync the RAM filesystem back to the
     initial boot device (simple)
 
-*   find a way to get UUIDs while in arch-chroot to allow installing via chroot
-
-    *   prompt for UUIDs if none found?
-
 *   perhaps combine all the *bin/ramroot-** scripts into one, or at least
-
-    *   source common functions from a single file?
+    source common functions from a single file?
 
 *   test on other distros
 
 *   package up for the AUR_
 
 *   add support for other partitions users may have
-
-*   warnings/no installing if user's root filesystem is to large?
-
-*   check filesystem size during boot
-
-    *   default [y/n] answer at boot dependent on RAM and filesystem sizes
 
 *   add command line options to ``ramroot-build``
 
@@ -121,7 +114,7 @@ Issues / to do (maybe)
 
     *   add option to keep fstab and mount other partitions in/out of RAM
 
-    *   source fstab for information (UUIDs)?
+    *   source fstab for UUID information
 
 *   when ramroot is already enabled and changes are made to hook files, the
     linux kernel image needs to be rebuilt

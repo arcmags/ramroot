@@ -10,49 +10,67 @@ run_hook() {
     # wait for output from other init processes:
     sleep 4
 
-    # detect how much RAM there is:
-    ramG=`free --si -g | awk '/Mem/ {print int($2)}'`
-    echo ":: Total RAM detected: ${ramG}G"
+    # detect available RAM:
+    ramM=`free --mega | awk '/Mem/ {print int($2)}'`
+    ramG=$(( $ramM / 1000 ))
+
+    # mount root partition to /local_root:
+    poll_device "/dev/disk/by-uuid/${rootUUID}" 20
+    mount -U "${rootUUID}" /local_root
+    # get size of /local_root:
+    rootM=`df -BM /local_root/ | awk 'FNR==2 {print int($3)}'`
+
+    # mount boot partition (if exists) to /local_boot:
+    if [ -n "$bootUUID" ]; then
+        poll_device "/dev/disk/by-uuid/${bootUUID}" 20
+        mount -U "${bootUUID}" /local_boot
+        # add size of /local_boot:
+        rootM=$(( $rootM + `df -BM /local_boot/ | \
+            awk 'FNR==2 {print int($3)}'` ))
+    fi
+
+    # check and print available memory:
+    echo ":: Total RAM available  : ${ramM}M"
+    echo ":: Root filesystem size : ${rootM}M"
+    diffM=$(( $ramM - $rootM ))
+    if [ $diffM -lt 500 ]; then
+        echo ":! Not enough RAM available."
+        inputYN="n"
 
     # prompt [y/n] to load filesystem to RAM:
-    echo -n ">: Load root filesystem to RAM? "
-    if [ ${ramG} -ge 4 ]; then
-        # if machine has 4G or more of RAM, copy root to RAM by default:
-        echo -n "[Y/n] "
-        input="y"
-        read -s -r -t 10 -n 1 input
-        if [ "${input}" = "n" ] || [ "${input}" = "N" ]; then
-            input="n"
-        else
-            input="y"
-        fi
     else
-        # if machine has less than 4G of RAM, leave root on USB by default:
-        echo -n "[y/N] "
-        input="n"
-        read -s -r -t 10 -n 1 input
-        if [ "${input}" = "y" ] || [ "${input}" = "Y" ]; then
-            input="y"
+        echo -n ">: Load root filesystem to RAM? "
+        echo -n "[Y/n] "
+        inputYN="y"
+        read -s -r -t 15 -n 1 inputYN
+        if [ "${inputYN}" = "n" ] || [ "${inputYN}" = "N" ] || \
+        [ "${inputYN}" = "q" ] || [ "${inputYN}" = "Q" ]; then
+            inputYN="n"
         else
-            input="n"
+            inputYN="y"
         fi
     fi
 
     # copy root filesystem to RAM:
-    if [ "${input}" = "y" ]; then
+    if [ "${inputYN}" = "y" ]; then
         echo "yes"
         echo ":: Copying root filesystem to RAM..."
         # enable zRAM devices:
         if [ ! -b "/dev/zram0" ]; then
             modprobe zram num_devices=$(nproc)
         fi
-        # mount root partition to /local_root:
-        poll_device "/dev/disk/by-uuid/${rootUUID}" 20
-        mount -U "${rootUUID}" /local_root
-        # make zRAM partition with half of total RAM:
-        zramG=$(( (${ramG}+1)/2 ))
-        zdevice=$(zramctl -f -s "${zramG}G" -a lzo -t $(nproc))
+
+        # make zRAM partition using half of available free RAM (max +6G)
+        addM=$(( $diffM / 2 ))
+        if [ $addM -gt 6000 ]; then
+            addM=6000
+        else
+            addM=$(( $diffM / 2 ))
+        fi
+        zramM=$(( $rootM + $addM ))
+        zdevice=$(zramctl -f -s "${zramM}M" -a lzo -t $(nproc))
         mkfs.ext4 -q "$zdevice"
+
         # mount zRAM partition to /zram_root:
         mount "$zdevice" /zram_root
         export zdevice
@@ -60,20 +78,14 @@ run_hook() {
         cp -a /local_root/* /zram_root/
         # move /etc/fstab from to /etc/fstab~ in zRAM root:
         mv /zram_root/etc/fstab /zram_root/etc/fstab~
-        # mount boot partition (if exists)
+        # copy files from local boot partition (if exists) to zRAM boot:
         if [ -n "$bootUUID" ]; then
-            # mount boot partition to /local_boot:
-            poll_device "/dev/disk/by-uuid/${bootUUID}" 20
-            mount -U "${bootUUID}" /local_boot
-            # copy files from local boot partition to zRAM boot:
             mkdir -p /zram_root/boot
             cp -a /local_boot/* /zram_root/boot/
-            umount /local_boot
         fi
-        # unmount local root, and zRAM root:
-        umount /local_root
+        # unmount zRAM root:
         umount /zram_root
-        # set new mount_handler:
+        # set new mount_handler to use zRAM device:
         oroot_mount() {
             mount "$zdevice" "$1"
         }
@@ -85,7 +97,14 @@ run_hook() {
 
     # keep root filesystem on local device:
     else
-        echo " no"
+        echo "no"
         echo ":: Keeping root filesystem on local device..."
     fi
+
+    # unmount /local_root and /local_boot:
+    umount /local_root
+    if [ -n "$bootUUID" ]; then
+        umount /local_boot
+    fi
+
 }

@@ -592,10 +592,13 @@ initcpio hooks at <em>/usr/lib/initcpio/install/ramroot</em> and
 <div class="section" id="usage">
 <h1>Usage</h1>
 <p>Once fully enabled, all that is required is a reboot.  During the initial
-phase of the boot process, the amount of detected RAM is displayed along with
-a [y/n] prompt asking if the user wishes to load the root filesystem to RAM.
-(Note that this prompt defaults to <em>yes</em> with a 10 second timeout if 4G or more
-of RAM is detected.)</p>
+phase of the boot process, the amount of available RAM on the computer along
+with the size of the root filesystem to be copied is detected and shown on
+the screen.  If the available RAM is at least 500MB larger that the root
+filesystem, a [y/n] confirmation appears to load the root filesystem to RAM.
+(Confirmation prompt defaults to <em>yes</em> with a 15 second timeout.)</p>
+<p>The size of the zram partition created is determined by taking the size of
+the root filesystem plus half of the extra available RAM to a maximum of 6GB.</p>
 <p>The filesystem transfer to RAM can take several minutes.  As soon as the boot
 process is complete, the USB device (or whatever boot device) can be removed.</p>
 <p>Remember that all changes to files in RAM are completely lost once the
@@ -617,22 +620,11 @@ exhibit a noticeable difference in sync times.</p>
 <ul class="simple">
 <li>add a ramroot-flush function to sync the RAM filesystem back to the
 initial boot device (simple)</li>
-<li>find a way to get UUIDs while in arch-chroot to allow installing via chroot<ul>
-<li>prompt for UUIDs if none found?</li>
-</ul>
-</li>
-<li>perhaps combine all the <em>bin/ramroot-*</em> scripts into one, or at least<ul>
-<li>source common functions from a single file?</li>
-</ul>
-</li>
+<li>perhaps combine all the <em>bin/ramroot-*</em> scripts into one, or at least
+source common functions from a single file?</li>
 <li>test on other distros</li>
 <li>package up for the <a class="reference external" href="https://aur.archlinux.org/">AUR</a></li>
 <li>add support for other partitions users may have</li>
-<li>warnings/no installing if user's root filesystem is to large?</li>
-<li>check filesystem size during boot<ul>
-<li>default [y/n] answer at boot dependent on RAM and filesystem sizes</li>
-</ul>
-</li>
 <li>add command line options to <tt class="docutils literal"><span class="pre">ramroot-build</span></tt><ul>
 <li>control [y/n] prompt behavior/existence/timeout</li>
 <li>specify UUIDs</li>
@@ -641,7 +633,7 @@ initial boot device (simple)</li>
 <li>make a webpage to go along with <a class="reference external" href="http://valleycat.org/arch-usb/arch-usb.html">arch-usb</a>.</li>
 <li>right now, the fstab is completely disregarded upon a RAM boot...<ul>
 <li>add option to keep fstab and mount other partitions in/out of RAM</li>
-<li>source fstab for information (UUIDs)?</li>
+<li>source fstab for UUID information</li>
 </ul>
 </li>
 <li>when ramroot is already enabled and changes are made to hook files, the
