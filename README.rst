@@ -126,11 +126,14 @@ Credits
 This project was motivated greatly in part by the liveroot_ package and
 by several inquisitive `forum posts`_.
 
+:License:
+    BSD 3-Clause
+
 :Author:
     Chris Magyar
 
-:License:
-    BSD 3-Clause
+:Donations:
+    XMR: 41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61    xoPuxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
 
 
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
