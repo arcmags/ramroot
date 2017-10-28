@@ -11,26 +11,40 @@ cd ..
 srcDir="$PWD/src"
 buildDir="$PWD/build"
 
-# get root UUID:
-rootUUID=
-if [ ! -d '/' ]; then
+# check if root even mounted:
+if (! mountpoint / >/dev/null 2>&1); then
+    # FAIL: root not mounted:
     echo "!: Nothing mounted: /"
     exit 1
 fi
-rootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' / *$'` )
-rootUUID="${rootInfo[0]}"
-if [ -z "${rootInfo[1]}" ]; then
-    echo "!: Unable to get UUID of root: /"
-    exit 1
+# try to get root UUID from lsblk:
+rootUUID=
+rootUUID=`lsblk -n -o mountpoint,UUID | grep -Po '(^| +)/ +\K[^ ]+'`
+if [ -z "$rootUUID" ]; then
+    # try to get root UUID from /etc/fstab:
+    if [ -f /etc/fstab ]; then
+        rootUUID=`grep -Po 'UUID=\K[^ ]+(?= +/ )' /etc/fstab`
+        if [ -z "$rootUUID" ]; then
+            # FAIL: unable to obtain root UUID:
+            echo "!: Unable to get UUID of root."
+            exit 1
+        fi
+    fi
 fi
-echo ":: Detected root UUID: $rootUUID"
+echo ":: Detected / UUID: $rootUUID"
 
-# get boot UUID:
-bootUUID=
-if [ -d '/boot' ]; then
-    bootInfo=( `lsblk -n -o UUID,mountpoint | grep -P ' /boot *$'` )
-    bootUUID="${bootInfo[0]}"
-    echo ":: Detected /boot UUID: $bootUUID"
+# check if /boot even mounted:
+if (mountpoint /boot >/dev/null 2>&1); then
+    # try to get /boot UUID from lsblk:
+    bootUUID=
+    bootUUID=`lsblk -n -o mountpoint,UUID | grep -Po '(^| +)/boot +\K[^ ]+'`
+    # try to get /boot UUID from /etc/fstab:
+    if [ -z "$bootUUID" ] && [ -f /etc/fstab ]; then
+        bootUUID=`grep -Po 'UUID=\K[^ ]+(?= +/boot )' /etc/fstab`
+    fi
+    if [ -n "$bootUUID" ]; then
+        echo ":: Detected /boot UUID: $bootUUID"
+    fi
 fi
 
 # prepare build:
