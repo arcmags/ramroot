@@ -17,16 +17,15 @@ Arch Linux
     currently untested.
 
 sudo
-    These scripts can all be run as root, however, running them as a non
-    elevated user is recommended.  The scripts call sudo when necessary
-    to modify or create initcpio files.
+    These scripts can all be run as root, or as a normal user with sudo
+    privileges.  The scripts will call sudo when necessary to modify or
+    create initcpio files.
 
 
 Installation (easy way)
 =======================
 
-All installation scripts are located in the *bin/* directory.  In order to
-obtain correct UUIDs, you must install from a normal login session (no chroot).
+All installation scripts are located in the *bin/* directory.
 To build and enable ramroot in one step, simply run the ``ramroot-enable``
 script.  The newly built scripts are placed in a new *build/* directory
 within the respository as well as copied to their required source locations in
@@ -83,8 +82,8 @@ every update, if no problems occur, consider removing `old packages`_.
 Execute ``pacman -Sc`` to remove all packages that aren't currently installed.
 Execute ``paccache -rk0`` to remove all packages.
 
-Consider that higher quality (more expensive) USB jump drives will
-exhibit a noticeable difference in sync times.
+From experience: higher quality (more expensive) USB flash drives
+often exhibit a huge improvement in sync times.
 
 
 Issues / to do (maybe)
@@ -109,12 +108,6 @@ Issues / to do (maybe)
     *   specify UUIDs
 
 *   make a webpage to go along with arch-usb_.
-
-*   right now, the fstab is completely disregarded upon a RAM boot...
-
-    *   add option to keep fstab and mount other partitions in/out of RAM
-
-    *   source fstab for UUID information
 
 *   when ramroot is already enabled and changes are made to hook files, the
     linux kernel image needs to be rebuilt
