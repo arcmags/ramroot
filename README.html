@@ -562,40 +562,47 @@ privileges.  The scripts will call sudo when necessary to modify or
 create initcpio files.</dd>
 </dl>
 </div>
-<div class="section" id="installation-easy-way">
-<h1>Installation (easy way)</h1>
-<p>All installation scripts are located in the <em>bin/</em> directory.
-To build and enable ramroot in one step, simply run the <tt class="docutils literal"><span class="pre">ramroot-enable</span></tt>
-script.  The newly built scripts are placed in a new <em>build/</em> directory
-within the respository as well as copied to their required source locations in
-the filesystem.</p>
-<dl class="docutils">
-<dt><tt class="docutils literal"><span class="pre">ramroot-build</span></tt></dt>
-<dd>This creates and copies the ramroot <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#Build_hooks">build hook</a> and <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#Runtime_hooks">runtime hook</a> to
-<em>/usr/lib/initcpio/install/ramroot</em> and <em>/usr/lib/initcpio/hooks/ramroot</em>
-respectively.</dd>
-<dt><tt class="docutils literal"><span class="pre">ramroot-enable</span></tt></dt>
-<dd>This script adds ramroot to the <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#HOOKS">HOOKS</a> array directly after the udev hook
-in <em>/etc/mkinitcpio.conf</em>.  Additionally, module requirements
-ext4 and zram are added to the <a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio#MODULES">MODULES</a> array.  A new new linux kernel
-image is generated with these changes via <cite>mkinitcpio -p linux</cite>.</dd>
-<dt><tt class="docutils literal"><span class="pre">ramroot-disable</span></tt></dt>
-<dd>This script removes the ramroot hook and ext4, zram module requirements
-in <em>/etc/mkinitcpio.conf</em>.  A new kernel image is generated.</dd>
-<dt><tt class="docutils literal"><span class="pre">ramroot-remove</span></tt></dt>
-<dd>This ensures ramroot is disabled in <em>/etc/mkinitcpio.conf</em> and removes the
-initcpio hooks at <em>/usr/lib/initcpio/install/ramroot</em> and
-<em>/usr/lib/initcpio/hooks/ramroot</em>.</dd>
-</dl>
-</div>
 <div class="section" id="usage">
 <h1>Usage</h1>
-<p>Once fully enabled, all that is required is a reboot.  During the initial
-phase of the boot process, the amount of available RAM on the computer along
-with the size of the root filesystem to be copied is detected and shown on
-the screen.  If the available RAM is at least 500MB larger that the root
-filesystem, a [y/n] confirmation appears to load the root filesystem to RAM.
-(Confirmation prompt defaults to <em>yes</em> with a 15 second timeout.)</p>
+<dl class="docutils">
+<dt><tt class="docutils literal">ramroot [options]</tt></dt>
+<dd>All actions are invoked with the <em>ramroot</em> script.  At least one option
+of either <em>--enable</em>, <em>--disable</em>, or <em>--remove</em> must be specified.</dd>
+</dl>
+</div>
+<div class="section" id="options">
+<h1>Options</h1>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">-b,</span> <span class="pre">--boot</span> [UUID]</tt></dt>
+<dd>Specify the <em>/boot</em> UUID to use when building hooks; necessary if
+unable to detect UUID via <em>lsblk</em> or <em>/etc/fstab</em>.</dd>
+<dt><tt class="docutils literal"><span class="pre">-D,</span> <span class="pre">--disable</span></tt></dt>
+<dd>Disable ramroot.  Remove ramroot HOOK and required MODULES from
+<em>/etc/mkinitcpio.conf</em> and rebuild linux cpio boot image.</dd>
+<dt><tt class="docutils literal"><span class="pre">-E,</span> <span class="pre">--enable</span></tt></dt>
+<dd>Enable ramroot.  Rebuild build and runtime hooks and place in
+<em>/usr/lib/initcpio</em>.  Add ramroot HOOK and required MODULES to
+<em>/etc/mkinitcpio.conf</em> and rebuild linux cpio boot image.</dd>
+<dt><tt class="docutils literal"><span class="pre">-H,</span> <span class="pre">--help</span></tt></dt>
+<dd>Display help text and exit.</dd>
+<dt><tt class="docutils literal"><span class="pre">-K,</span> <span class="pre">--keep</span></tt></dt>
+<dd>Keep copies of new build and runtime hooks in <em>~/.cache/ramroot</em>.</dd>
+<dt><tt class="docutils literal"><span class="pre">-r,</span> <span class="pre">--root</span> [UUID]</tt></dt>
+<dd>Specify the root UUID to use when building hooks; necessary if
+unable to detect UUID via lsblk or <em>/etc/fstab</em>.</dd>
+<dt><tt class="docutils literal"><span class="pre">-R,</span> <span class="pre">--remove</span></tt></dt>
+<dd>Disable ramroot and remove build and runtime hooks from
+<em>/usr/lib/initcpio</em>.</dd>
+</dl>
+</div>
+<div class="section" id="operation">
+<h1>Operation</h1>
+<p>If rameroot is enabled, during the initial phase of the boot process,
+the amount of available RAM on the computer along with the size of the
+root filesystem to be copied is detected and shown on the screen.  If the
+available RAM is at least 500MB larger that the root filesystem, a [y/n]
+confirmation appears to load the root filesystem to RAM. (Confirmation
+prompt defaults to <em>yes</em> with a 15 second timeout.)</p>
 <p>The size of the zram partition created is determined by taking the size of
 the root filesystem plus half of the extra available RAM to a maximum of 6GB.</p>
 <p>The filesystem transfer to RAM can take several minutes.  As soon as the boot
@@ -619,19 +626,10 @@ often exhibit a huge improvement in sync times.</p>
 <ul class="simple">
 <li>add a ramroot-flush function to sync the RAM filesystem back to the
 initial boot device (simple)</li>
-<li>perhaps combine all the <em>bin/ramroot-*</em> scripts into one, or at least
-source common functions from a single file?</li>
 <li>test on other distros</li>
 <li>package up for the <a class="reference external" href="https://aur.archlinux.org/">AUR</a></li>
 <li>add support for other partitions users may have</li>
-<li>add command line options to <tt class="docutils literal"><span class="pre">ramroot-build</span></tt><ul>
-<li>control [y/n] prompt behavior/existence/timeout</li>
-<li>specify UUIDs</li>
-</ul>
-</li>
 <li>make a webpage to go along with <a class="reference external" href="http://valleycat.org/arch-usb/arch-usb.html">arch-usb</a>.</li>
-<li>when ramroot is already enabled and changes are made to hook files, the
-linux kernel image needs to be rebuilt</li>
 </ul>
 </div>
 <div class="section" id="credits">

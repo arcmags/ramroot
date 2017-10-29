@@ -1,5 +1,5 @@
 #!/bin/bash
-##=====================  ramroot (runtime hook)  =====================##
+##=======================  ramroot (runtime hook)  =======================##
 # Place in: /usr/lib/initcpio/hooks/
 
 run_hook() {
@@ -106,5 +106,4 @@ run_hook() {
     if [ -n "$bootUUID" ]; then
         umount /local_boot
     fi
-
 }

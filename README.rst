@@ -22,45 +22,54 @@ sudo
     create initcpio files.
 
 
-Installation (easy way)
-=======================
-
-All installation scripts are located in the *bin/* directory.
-To build and enable ramroot in one step, simply run the ``ramroot-enable``
-script.  The newly built scripts are placed in a new *build/* directory
-within the respository as well as copied to their required source locations in
-the filesystem.
-
-``ramroot-build``
-    This creates and copies the ramroot `build hook`_ and `runtime hook`_ to
-    */usr/lib/initcpio/install/ramroot* and */usr/lib/initcpio/hooks/ramroot*
-    respectively.
-
-``ramroot-enable``
-    This script adds ramroot to the HOOKS_ array directly after the udev hook
-    in */etc/mkinitcpio.conf*.  Additionally, module requirements
-    ext4 and zram are added to the MODULES_ array.  A new new linux kernel
-    image is generated with these changes via `mkinitcpio -p linux`.
-
-``ramroot-disable``
-    This script removes the ramroot hook and ext4, zram module requirements
-    in */etc/mkinitcpio.conf*.  A new kernel image is generated.
-
-``ramroot-remove``
-    This ensures ramroot is disabled in */etc/mkinitcpio.conf* and removes the
-    initcpio hooks at */usr/lib/initcpio/install/ramroot* and
-    */usr/lib/initcpio/hooks/ramroot*.
-
-
 Usage
 =====
 
-Once fully enabled, all that is required is a reboot.  During the initial
-phase of the boot process, the amount of available RAM on the computer along
-with the size of the root filesystem to be copied is detected and shown on
-the screen.  If the available RAM is at least 500MB larger that the root
-filesystem, a [y/n] confirmation appears to load the root filesystem to RAM.
-(Confirmation prompt defaults to *yes* with a 15 second timeout.)
+``ramroot [options]``
+    All actions are invoked with the *ramroot* script.  At least one option
+    of either *--enable*, *--disable*, or *--remove* must be specified.
+
+
+Options
+=======
+
+``-b, --boot [UUID]``
+    Specify the */boot* UUID to use when building hooks; necessary if
+    unable to detect UUID via *lsblk* or */etc/fstab*.
+
+``-D, --disable``
+    Disable ramroot.  Remove ramroot HOOK and required MODULES from
+    */etc/mkinitcpio.conf* and rebuild linux cpio boot image.
+
+``-E, --enable``
+    Enable ramroot.  Rebuild build and runtime hooks and place in
+    */usr/lib/initcpio*.  Add ramroot HOOK and required MODULES to
+    */etc/mkinitcpio.conf* and rebuild linux cpio boot image.
+
+``-H, --help``
+    Display help text and exit.
+
+``-K, --keep``
+    Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
+
+``-r, --root [UUID]``
+    Specify the root UUID to use when building hooks; necessary if
+    unable to detect UUID via lsblk or */etc/fstab*.
+
+``-R, --remove``
+    Disable ramroot and remove build and runtime hooks from
+    */usr/lib/initcpio*.
+
+
+Operation
+=========
+
+If rameroot is enabled, during the initial phase of the boot process,
+the amount of available RAM on the computer along with the size of the
+root filesystem to be copied is detected and shown on the screen.  If the
+available RAM is at least 500MB larger that the root filesystem, a [y/n]
+confirmation appears to load the root filesystem to RAM. (Confirmation
+prompt defaults to *yes* with a 15 second timeout.)
 
 The size of the zram partition created is determined by taking the size of
 the root filesystem plus half of the extra available RAM to a maximum of 6GB.
@@ -92,25 +101,13 @@ Issues / to do (maybe)
 *   add a ramroot-flush function to sync the RAM filesystem back to the
     initial boot device (simple)
 
-*   perhaps combine all the *bin/ramroot-** scripts into one, or at least
-    source common functions from a single file?
-
 *   test on other distros
 
 *   package up for the AUR_
 
 *   add support for other partitions users may have
 
-*   add command line options to ``ramroot-build``
-
-    *   control [y/n] prompt behavior/existence/timeout
-
-    *   specify UUIDs
-
 *   make a webpage to go along with arch-usb_.
-
-*   when ramroot is already enabled and changes are made to hook files, the
-    linux kernel image needs to be rebuilt
 
 
 Credits

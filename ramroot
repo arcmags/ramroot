@@ -1,0 +1,364 @@
+#!/bin/bash
+##==============================  ramroot  ===============================##
+# Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
+##========================================================================##
+print_help() {
+cat <<'HELPDOC'
+NAME
+    ramroot - load root and /boot partitions to RAM during boot
+
+SYNOPSIS
+    ramroot [options]
+
+DESCRIPTION
+    Run Linux entirely from RAM!  This script creates and enables a custom
+    mkinitcpio hook that completely loads the root (and /boot) filesystem
+    into RAM during the initramfs boot stage.
+
+OPTIONS
+    -b, --boot [UUID]
+        Specify the /boot UUID to use when building hooks; necessary if
+        unable to detect UUID via `lsblk` or /etc/fstab.
+
+    -D, --disable
+        Disable ramroot.  Remove ramroot HOOK and required MODULES from
+        /etc/mkinitcpio.conf and rebuild linux cpio boot image.
+
+    -E, --enable
+        Enable ramroot.  Rebuild build and runtime hooks and place in
+        /usr/lib/initcpio.  Add ramroot HOOK and required MODULES to
+        mkinitcpio.conf and rebuild linux cpio boot image.
+
+    -H, --help
+        Display help text and exit.
+
+    -K, --keep
+        Keep copies of new build and runtime hooks in ~/.cache/ramroot.
+
+    -r, --root [UUID]
+        Specify the root UUID to use when building hooks; necessary if
+        unable to detect UUID via `lsblk` or /etc/fstab.
+
+    -R, --remove
+        Disable ramroot and remove build and runtime hooks from
+        /usr/lib/initcpio.
+HELPDOC
+return 0
+}
+
+
+##=============================  VARIABLES  ==============================##
+# default variables:
+dirCache="$HOME/.cache/ramroot"
+dirBuild='/tmp/ramroot'
+keepBuildFiles='false'
+# script variables (do not change):
+rootUUID=
+bootUUID=
+ramrootAction=
+dirHooks='/usr/lib/initcpio/hooks'
+dirInstall='/usr/lib/initcpio/install'
+dirLib='/usr/lib/ramroot'
+dirScript=
+hookBuild="$dirLib/install/ramroot"
+hookRuntime="$dirLib/hooks/ramroot"
+
+
+##=============================  FUNCTIONS  ==============================##
+# Script functions.
+##========================  ramroot_enable()  ========================##
+# Generate new build and runtime hooks using local UUID of root partition.
+# Copy new hooks to /usr/lib/initcpio.
+# Add ext4 and zram to /etc/mkinitcpio.conf MODULES.
+# Add ramroot to /etc/mkinitcpio.conf HOOKS.
+# Rebuild linux cpio boot image.
+ramroot_enable() {
+    mkinitChange='false'
+    # check for user specified root UUID:
+    if [ -n "$rootUUID" ]; then
+        printf ":: Using root UUID: $rootUUID\n"
+    else
+        # FAIL: root not mounted:
+        if (! mountpoint / >/dev/null 2>&1); then
+            printf ":! Nothing mounted at /.\n"
+            exit 1
+        fi
+        # try to get root UUID from lsblk:
+        rootUUID=`lsblk -n -o mountpoint,UUID | \
+            grep -Po '(^| +)/ +\K[^ ]+'`
+        # try to get root UUID from /etc/fstab:
+        if [ -z "$rootUUID" ] && [ -f /etc/fstab ]; then
+            rootUUID=`grep -Po 'UUID=\K[^ ]+(?= +/ )' /etc/fstab`
+        fi
+        # FAIL: unable to determine root UUID:
+        if [ -z "$rootUUID" ]; then
+            printf ":! Unable to determine root UUID.\n"
+            exit 1
+        else
+            printf ":: Detected root UUID: $rootUUID\n"
+        fi
+    fi
+    # check for user specified /boot UUID:
+    if [ -n "$bootUUID" ]; then
+        printf ":: Using /boot UUID: $bootUUID\n"
+    else
+        # check if /boot mounted:
+        if (mountpoint /boot >/dev/null 2>&1); then
+            # try to get /boot UUID from lsblk:
+            bootUUID=`lsblk -n -o mountpoint,UUID | \
+                grep -Po '(^| +)/boot +\K[^ ]+'`
+            # try to get /boot UUID from /etc/fstab:
+            if [ -z "$bootUUID" ] && [ -f /etc/fstab ]; then
+                bootUUID=`grep -Po 'UUID=\K[^ ]+(?= +/boot )' /etc/fstab`
+            fi
+        fi
+        if [ -z "$bootUUID" ]; then
+            printf ":: No /boot UUID detected.\n"
+        else
+            printf ":: Detected /boot UUID: $bootUUID\n"
+        fi
+    fi
+    # check for hook files in /usr/lib:
+    if [ ! -f "$hookBuild" ] || [ ! -f "$hookRuntime" ]; then
+        # check for hook files in project directory:
+        if [ -f "$dirScript/lib/install/ramroot" ] &&
+        [ -f "$dirScript/lib/hooks/ramroot" ]; then
+            hookBuild="$dirScript/lib/install/ramroot"
+            hookRuntime="$dirScript/lib/hooks/ramroot"
+        # FAIL: unable to find hook files:
+        else
+            printf ":! Unable to locate hook files.\n"
+            exit 1
+        fi
+    fi
+
+    # copy build hook:
+    mkdir -p install
+    cp "$hookBuild" install/ramroot
+    # make runtime hook:
+    mkdir -p hooks
+    sed "s@rootUUID=.*@rootUUID=\'$rootUUID\'@g; \
+        s@bootUUID=.*@bootUUID=\'$bootUUID\'@g;" \
+        "$hookRuntime" > hooks/ramroot
+    # FAIL: ramroot hooks not built:
+    if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
+        printf ":! ramroot hooks not built.\n"
+        exit 1
+    fi
+    # check for hook changes:
+    if (! diff -q install/ramroot "$dirInstall/ramroot" >/dev/null 2>&1) ||
+    (! diff -q hooks/ramroot "$dirHooks/ramroot" >/dev/null 2>&1); then
+        mkinitChange='true'
+    fi
+
+    # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
+    initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
+    initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
+    # add zram to initMODULES:
+    if [[ ! "$initMODULES" =~ zram ]]; then
+        if [ "$initMODULES" = 'MODULES=""' ]; then
+            initMODULES='MODULES="zram"'
+        else
+            initMODULES="${initMODULES%*\"} zram\""
+        fi
+        printf ":: zram added to mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
+    # add ext4 to initMODULES:
+    if [[ ! "$initMODULES" =~ ext4 ]]; then
+        initMODULES="${initMODULES%*\"} ext4\""
+        printf ":: ext4 added to mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
+    # add ramroot to initHOOKS:
+    if [[ ! "$initHOOKS" =~ ramroot ]]; then
+        initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"
+        printf ":: ramroot added to mkinitcpio.conf HOOKS\n"
+        mkinitChange='true'
+    fi
+
+    # if changes need to be made:
+    if [ "$mkinitChange" = 'true' ]; then
+        # build new mkinitcpio.conf:
+        sed "s@^MODULES=.*@$initMODULES@g; \
+            s@^HOOKS=.*@$initHOOKS@g;" \
+            /etc/mkinitcpio.conf > mkinitcpio.conf
+        # FAIL: mkinitcpio.conf not built:
+        if [ ! -f mkinitcpio.conf ]; then
+            printf ":! mkinitcpio.conf not built.\n"
+            exit 1
+        fi
+        # keep build files in cache:
+        ramroot_cache
+        # copy mkinitcpio.conf to /etc and hooks to /usr/lib/initcpio:
+        printf ":: Enabling ramroot...\n"
+        sudo cp hooks/ramroot "$dirHooks/ramroot" &&
+        sudo cp install/ramroot "$dirInstall/ramroot" &&
+        sudo cp mkinitcpio.conf /etc/mkinitcpio.conf &&
+        sudo mkinitcpio -p linux &&
+        printf ":: ramroot enabled.\n"
+    else
+        printf ":: ramroot already enabled.\n"
+    fi
+
+    return 0
+}
+
+##=======================  ramroot_disable()  ========================##
+# Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
+# Remove ramroot from /etc/mkinitcpio.conf HOOKS.
+# Rebuild linux cpio boot image.
+ramroot_disable() {
+    mkinitChange='false'
+    # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
+    initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
+    initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
+    # remove zram from initMODULES:
+    if [[ "$initMODULES" =~ zram ]]; then
+        initMODULES=`echo "$initMODULES" | \
+            sed -r 's/( zram|zram |zram)//g'`
+        printf ":: zram removed from mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
+    # remove ext4 from initMODULES:
+    if [[ "$initMODULES" =~ ext4 ]]; then
+        initMODULES=`echo "$initMODULES" | \
+            sed -r 's/( ext4|ext4 |ext4)//g'`
+        printf ":: ext4 removed from mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
+    # remove ramroot from initHOOKS:
+    if [[ "$initHOOKS" =~ ramroot ]]; then
+        initHOOKS=`echo "$initHOOKS" | \
+            sed -r 's/( ramroot|ramroot |ramroot)//g'`
+        printf ":: ramroot removed from mkinitcpio.conf HOOKS\n"
+        mkinitChange='true'
+    fi
+
+    # if changes need to be made:
+    if [ "$mkinitChange" = 'true' ]; then
+        # keep copy of old mkinitcpio.conf:
+        if [ "$keepBuildFiles" = 'true' ]; then
+            mkdir -p "$dirCache"
+            cp /etc/mkinitcpio.conf "$dirCache/mkinitcpio~.conf"
+        fi
+        # build new mkinitcpio.conf:
+        sed "s@^MODULES=.*@$initMODULES@g; \
+            s@^HOOKS=.*@$initHOOKS@g;" \
+            /etc/mkinitcpio.conf > mkinitcpio.conf
+        # FAIL: mkinitcpio.conf not built:
+        if [ ! -f mkinitcpio.conf ]; then
+            printf ":! mkinitcpio.conf not built.\n"
+            exit 1
+        fi
+        # keep build files in cache:
+        ramroot_cache
+        # copy mkinitcpio.conf to /etc and rebuild linux cpio image:
+        printf ":: Disabling ramroot...\n"
+        sudo cp mkinitcpio.conf /etc/mkinitcpio.conf &&
+        sudo mkinitcpio -p linux &&
+        printf ":: ramroot disabled.\n"
+    fi
+
+    return 0
+}
+
+##========================  ramroot_remove()  ========================##
+# Remove ramroot hooks from /usr/lib/initcpio.
+ramroot_remove() {
+    # check for installed hooks:
+    if [ -f /usr/lib/initcpio/hooks/ramroot ] ||
+    [ -f /usr/lib/initcpio/install/ramroot ]; then
+        # keep copy of old hooks:
+        if [ "$keepBuildFiles" = 'true' ]; then
+            if [ -f /usr/lib/initcpio/hooks/ramroot ]; then
+                mkdir -p "$dirCache/hooks"
+                cp /usr/lib/initcpio/hooks/ramroot \
+                    "$dirCache/hooks/ramroot"
+            fi
+            if [ -f /usr/lib/initcpio/install/ramroot ]; then
+                mkdir -p "$dirCache/install"
+                cp /usr/lib/initcpio/install/ramroot \
+                    "$dirCache/install/ramroot"
+            fi
+        fi
+        # remove ramroot hooks:
+        printf ":: Removing ramroot hooks...\n"
+        if [ -f /usr/lib/initcpio/hooks/ramroot ]; then
+            sudo rm /usr/lib/initcpio/hooks/ramroot
+        fi
+        if [ -f /usr/lib/initcpio/install/ramroot ]; then
+            sudo rm /usr/lib/initcpio/install/ramroot
+        fi
+    fi
+
+    return 0
+}
+
+##========================  helper functions  ========================##
+ramroot_cache() {
+    if [ "$keepBuildFiles" = 'true' ]; then
+        mkdir -p "$dirCache"
+        cd "$dirCache"
+        cp -r "$dirBuild"/* .
+        cd "$dirBuild"
+    fi
+    return 0
+}
+
+
+##===============================  SCRIPT  ===============================##
+# get path of script:
+dirScript="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# parse command line arguments:
+for arg in "$@"; do case $arg in
+    -b|--boot)     shift; bootUUID="$1";     shift;;
+    -D|--disable)  ramrootAction='disable';  shift;;
+    -E|--enable)   ramrootAction='enable';   shift;;
+    -H|-h|--help)  ramrootAction='help';     shift;;
+    -K|--keep)     keepBuildFiles='true';    shift;;
+    -r|--root)     shift; rootUUID="$1";     shift;;
+    -R|--remove)   ramrootAction='remove';   shift;;
+esac; done
+
+# print help:
+if [ "$ramrootAction" = 'help' ]; then
+    print_help
+    exit 0
+fi
+
+# FAIL: unrecognized option:
+if [ -n "$1" ]; then
+    printf ":! Unrecognized option: $1\n"
+    exit 1
+fi
+
+# FAIL: no action specified:
+if [ "$ramrootAction" != 'enable' ] &&
+[ "$ramrootAction" != 'disable' ] &&
+[ "$ramrootAction" != 'remove' ]; then
+    printf ":! No action specified.  See --help\n"
+    exit 1
+fi
+
+# prepare build:
+mkdir -p "$dirBuild"
+cd "$dirBuild"
+sudo -k
+
+# take action:
+if [ "$ramrootAction" = 'enable' ]; then
+    ramroot_enable
+elif [ "$ramrootAction" = 'disable' ]; then
+    ramroot_disable
+elif [ "$ramrootAction" = 'remove' ]; then
+    ramroot_disable
+    ramroot_remove
+fi
+
+# remove build files:
+cd ..
+rm -Rd "$dirBuild"
+
+exit 0
