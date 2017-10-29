@@ -64,7 +64,7 @@ Options
 Operation
 =========
 
-If rameroot is enabled, during the initial phase of the boot process,
+If ramroot is enabled, during the initial phase of the boot process,
 the amount of available RAM on the computer along with the size of the
 root filesystem to be copied is detected and shown on the screen.  If the
 available RAM is at least 500MB larger that the root filesystem, a [y/n]
