@@ -117,7 +117,7 @@ This project was motivated greatly in part by the liveroot_ package and
 by several inquisitive `forum posts`_.
 
 :License:
-    BSD 3-Clause
+    GPL 3.0
 
 :Author:
     Chris Magyar
