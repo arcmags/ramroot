@@ -17,7 +17,7 @@ Arch Linux
     currently untested.
 
 sudo
-    These scripts can all be run as root, or as a normal user with sudo
+    These scripts can all be run as root or as a normal user with sudo
     privileges.  The scripts will call sudo when necessary to modify or
     create initcpio files.
 
@@ -103,11 +103,7 @@ Issues / to do (maybe)
 
 *   test on other distros
 
-*   package up for the AUR_
-
 *   add support for other partitions users may have
-
-*   make a webpage to go along with arch-usb_.
 
 
 Credits
@@ -134,7 +130,6 @@ by several inquisitive `forum posts`_.
 .. _runtime hook: https://wiki.archlinux.org/index.php/mkinitcpio#Runtime_hooks
 .. _HOOKS: https://wiki.archlinux.org/index.php/mkinitcpio#HOOKS
 .. _MODULES: https://wiki.archlinux.org/index.php/mkinitcpio#MODULES
-.. _AUR: https://aur.archlinux.org/
 .. _arch-usb: http://valleycat.org/arch-usb/arch-usb.html
 .. _old packages: https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache
 .. _liveroot: https://github.com/bluerider/liveroot

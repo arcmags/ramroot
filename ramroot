@@ -2,7 +2,7 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.0"
+version="1.1.1"
 # load root and /boot partitions to RAM during boot
 
 print_help() {
@@ -45,6 +45,7 @@ OPTIONS
     -R, --remove
         Disable ramroot and remove build and runtime hooks from
         /usr/lib/initcpio.
+
 HELPDOC
 return 0
 }
