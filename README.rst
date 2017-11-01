@@ -67,9 +67,9 @@ Operation
 If ramroot is enabled, during the initial phase of the boot process,
 the amount of available RAM on the computer along with the size of the
 root filesystem to be copied is detected and shown on the screen.  If the
-available RAM is at least 500MB larger that the root filesystem, a [y/n]
-confirmation appears to load the root filesystem to RAM. (Confirmation
-prompt defaults to *yes* with a 15 second timeout.)
+available RAM is at least 500MB more than the data contained on the root
+filesystem, the user will be prompted to load the root filesystem to RAM.
+(Confirmation prompt defaults to *yes* with a 15 second timeout.)
 
 The size of the zram partition created is determined by taking the size of
 the root filesystem plus half of the extra available RAM to a maximum of 6GB.
@@ -105,6 +105,10 @@ Issues / to do (maybe)
 
 *   add support for other partitions users may have
 
+*   add *--status* option
+
+*   enable on first install?
+
 
 Credits
 =======
@@ -112,14 +116,17 @@ Credits
 This project was motivated greatly in part by the liveroot_ package and
 by several inquisitive `forum posts`_.
 
-:License:
-    GPL 3.0
-
 :Author:
     Chris Magyar
 
 :Donations:
     XMR: 41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61    xoPuxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
+
+:License:
+    GPL 3.0
+
+:Version:
+    1.1.1
 
 
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
