@@ -552,15 +552,22 @@ RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki
 <h1>Requirements</h1>
 <dl class="docutils">
 <dt>Arch Linux</dt>
-<dd>This is was designed specifically to work with the Arch Linux
+<dd>This package is designed specifically to work with the Arch Linux
 <a class="reference external" href="https://wiki.archlinux.org/index.php/Arch_boot_process">boot process</a>.  I suspect these scripts may work with slight
 modifications on other distributions as well, however this is
 currently untested.</dd>
 <dt>sudo</dt>
-<dd>These scripts can all be run as root or as a normal user with sudo
-privileges.  The scripts will call sudo when necessary to modify or
-create initcpio files.</dd>
+<dd>The ramroot script can be run as root or as a normal user.  If
+executed as a normal user, <em>sudo</em> will be called when necessary
+to modify or create initcpio files, and the user will be prompted
+for their sudo password.</dd>
 </dl>
+</div>
+<div class="section" id="installation">
+<h1>Installation</h1>
+<p>This package is available in the <a class="reference external" href="https://aur.archlinux.org/packages/ramroot/">AUR</a> for easy installation, however the
+ramroot script can also be run directly from a local git clone of this
+repository.</p>
 </div>
 <div class="section" id="usage">
 <h1>Usage</h1>
@@ -642,11 +649,12 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Donations:</th><td class="field-body">XMR: 41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61    xoPuxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.1</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.1</td>
+<tr class="field"><th class="field-name">Donate(xmr):</th><td class="field-body">41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61xoP
+uxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP</td>
 </tr>
 </tbody>
 </table>

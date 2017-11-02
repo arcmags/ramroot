@@ -11,15 +11,24 @@ Requirements
 ============
 
 Arch Linux
-    This is was designed specifically to work with the Arch Linux
+    This package is designed specifically to work with the Arch Linux
     `boot process`_.  I suspect these scripts may work with slight
     modifications on other distributions as well, however this is
     currently untested.
 
 sudo
-    These scripts can all be run as root or as a normal user with sudo
-    privileges.  The scripts will call sudo when necessary to modify or
-    create initcpio files.
+    The ramroot script can be run as root or as a normal user.  If
+    executed as a normal user, *sudo* will be called when necessary
+    to modify or create initcpio files, and the user will be prompted
+    for their sudo password.
+
+
+Installation
+============
+
+This package is available in the AUR_ for easy installation, however the
+ramroot script can also be run directly from a local git clone of this
+repository.
 
 
 Usage
@@ -119,16 +128,19 @@ by several inquisitive `forum posts`_.
 :Author:
     Chris Magyar
 
-:Donations:
-    XMR: 41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61    xoPuxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
+:Version:
+    1.1.1
 
 :License:
     GPL 3.0
 
-:Version:
-    1.1.1
+:Donate(xmr):
+    41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61xoP
+    uxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
 
 
+
+.. _AUR: https://aur.archlinux.org/packages/ramroot/
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
 .. _zram: https://en.wikipedia.org/wiki/Zram
 .. _initramfs: https://en.wikipedia.org/wiki/Initial_ramdisk
