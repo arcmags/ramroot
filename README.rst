@@ -104,8 +104,8 @@ From experience: higher quality (more expensive) USB flash drives
 often exhibit a huge improvement in sync times.
 
 
-Issues / to do (maybe)
-======================
+Issues / Ideas to implement (maybe)
+===================================
 
 *   add a ramroot-flush function to sync the RAM filesystem back to the
     initial boot device (simple)
@@ -114,7 +114,11 @@ Issues / to do (maybe)
 
 *   add support for other partitions users may have
 
-*   add *--status* option
+*   *--status* option
+
+*   *--rsync* option (or maybe use rsync automatically if installed)
+
+*   *--incognito* mode?
 
 *   enable on first install?
 
