@@ -1,0 +1,24 @@
+.TH RAMROOT 8 "November 2017" "ramroot 1.1.1" "Ramroot Manual"
+.SH NAME
+ramroot \- load root (and /boot) filesystem entirely to RAM during boot
+.SH SYNOPSIS
+.B ramroot
+<\fIOPERATION\fR> [\fIOPTIONS\fR]
+.SH DESCRIPTION
+\fIRamroot\fP is a script that can enable and disable the pre-userspace loading
+of the root filesystem to RAM during the initramfs boot stage.  To enable a
+live root environment, it creates custom initcpio hooks specific to the UUID
+of the target root filesystem, adds \fIramroot\fR to mkinitcpio.conf HOOKS,
+adds \fIext4\fR and \fIzram\fR to mkinitcpio.conf MODULES, and rebuilds the
+Linux cpio boot image.
+.PP
+When \fIramroot\fP is enabled, during the initial phase of the boot process,
+the amount of available RAM on the computer along with the size of the
+root filesystem to be copied is detected and shown on the screen.  If the
+available RAM is at least 500MB more than the data contained on the root
+filesystem, the user will be prompted to load the root filesystem to RAM.
+(Confirmation prompt defaults to yes with a 15 second timeout.)
+.PP
+The size of the zram partition created is determined by taking the size of
+the root filesystem data plus half of the extra available RAM to a maximum
+of 6GB.
