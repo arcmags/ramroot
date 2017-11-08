@@ -20,7 +20,7 @@ sudo
     The ramroot script can be run as root or as a normal user.  If
     executed as a normal user, *sudo* will be called when necessary
     to modify or create initcpio files, and the user will be prompted
-    for their sudo password.
+    for his or her sudo password.
 
 
 Installation
@@ -96,7 +96,7 @@ All options are optional (although *--root* may be required as noted below).
     required if unable to detect UUID via lsblk or */etc/fstab*.
 
 
-NOTES
+Notes
 =====
 
 The filesystem transfer to RAM can take several minutes.  As soon as
@@ -111,8 +111,8 @@ Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.  After
 every update, if no problems occur, consider removing `old packages`_.
 Consider installer fewer packages if you indend on loading to RAM often.
 
-Also know that higher quality (more expensive) USB flash drives
-often exhibit a huge improvement in RAM sync times.
+Also, keep in mind that higher quality (more expensive) USB flash drives
+often exhibit a dramatic improvement in RAM sync times.
 
 
 Issues / Future Implementations
