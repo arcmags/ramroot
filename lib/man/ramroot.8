@@ -37,13 +37,9 @@ Rebuild linux cpio boot image.
 Disable ramroot.  Remove build and runtime hooks from
 /usr/lib/initcpio.
 .SH OPTIONS
-All options are optional (although \fB--root\fR may need to be used in rare
-cases).
-.PP
 .TP
 \fB\-b\fR, \fB\-\-boot\fR \fIUUID\fR
-Specify the /boot UUID to use when building hooks; necessary if
-unable to detect UUID via lsblk or /etc/fstab.
+Specify /boot partition UUID to use when building hooks.
 .TP
 \fB\-H\fR, \fB\-\-help\fR
 Display help text and exit.
@@ -52,7 +48,7 @@ Display help text and exit.
 Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 .TP
 \fB\-r\fR, \fB\-\-root\fR \fIUUID\fR
-Specify the root UUID to use when building hooks; necessary if
+Specify root partions UUID to use when building hooks; required if
 unable to detect UUID via lsblk or /etc/fstab.
 .SH NOTES
 The filesystem transfer to RAM can take several minutes.  As soon as

@@ -80,11 +80,10 @@ Action performed by ramroot; one must be specified.
 Options
 =======
 
-All options are optional (although *--root* may be required in rare cases).
+All options are optional (although *--root* may be required as noted below).
 
 ``-b, --boot [UUID]``
-    Specify the */boot* UUID to use when building hooks; necessary if
-    unable to detect UUID via *lsblk* or */etc/fstab*.
+    Specify */boot* partition UUID to use when building hooks.
 
 ``-H, --help``
     Display help text and exit.
@@ -93,8 +92,8 @@ All options are optional (although *--root* may be required in rare cases).
     Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
 
 ``-r, --root [UUID]``
-    Specify the root UUID to use when building hooks; necessary if
-    unable to detect UUID via lsblk or */etc/fstab*.
+    Specify root partition UUID to use when building hooks;
+    required if unable to detect UUID via lsblk or */etc/fstab*.
 
 
 NOTES

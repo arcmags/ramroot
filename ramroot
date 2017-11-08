@@ -21,7 +21,7 @@ ACTIONS
     enable, --enable, -E
         Rebuild  build and runtime hooks in /usr/lib/initcpio.
         Add ramroot to /etc/mkinitcpio.conf HOOKS.
-        Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
+        Add ext4 and zram to /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
     remove, --remove, -R
@@ -30,7 +30,7 @@ ACTIONS
 
 OPTIONS
     -b, --boot UUID
-        Specify the /boot UUID to use when building hooks.
+        Specify /boot partition UUID to use when building hooks.
 
     -H, --help
         Display help text and exit.
@@ -39,7 +39,7 @@ OPTIONS
         Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 
     -r, --root UUID
-        Specify the root UUID to use when building hooks.
+        Specify root partition UUID to use when building hooks.
 HELPDOC
 return 0
 }
