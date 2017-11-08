@@ -2,34 +2,35 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.1"
+version="1.1.2"
 
 print_help() {
 cat <<'HELPDOC'
 NAME
-    ramroot - load root and /boot partitions to RAM during boot
+    ramroot - load root (and /boot) filesystem entirely to RAM during boot
 
 SYNOPSIS
-    ramroot [options]
+    ramroot <ACTION> [OPTIONS]
 
-DESCRIPTION
-    Run Linux entirely from RAM!  This script creates and enables a custom
-    mkinitcpio hook that completely loads the root (and /boot) filesystem
-    into RAM during the initramfs boot stage.
+ACTIONS
+    disable, --disable, -D
+        Remove ramroot from /etc/mkinitcpio.conf HOOKS.
+        Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
+        Rebuild linux cpio boot image.
+
+    enable, --enable, -E
+        Rebuild  build and runtime hooks in /usr/lib/initcpio.
+        Add ramroot to /etc/mkinitcpio.conf HOOKS.
+        Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
+        Rebuild linux cpio boot image.
+
+    remove, --remove, -R
+        Disable ramroot.
+        Remove build and runtime hooks from /usr/lib/initcpio.
 
 OPTIONS
-    -b, --boot [UUID]
-        Specify the /boot UUID to use when building hooks; necessary if
-        unable to detect UUID via `lsblk` or /etc/fstab.
-
-    -D, --disable
-        Disable ramroot.  Remove ramroot HOOK and required MODULES from
-        /etc/mkinitcpio.conf and rebuild linux cpio boot image.
-
-    -E, --enable
-        Enable ramroot.  Rebuild build and runtime hooks and place in
-        /usr/lib/initcpio.  Add ramroot HOOK and required MODULES to
-        mkinitcpio.conf and rebuild linux cpio boot image.
+    -b, --boot UUID
+        Specify the /boot UUID to use when building hooks.
 
     -H, --help
         Display help text and exit.
@@ -37,14 +38,8 @@ OPTIONS
     -K, --keep
         Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 
-    -r, --root [UUID]
-        Specify the root UUID to use when building hooks; necessary if
-        unable to detect UUID via `lsblk` or /etc/fstab.
-
-    -R, --remove
-        Disable ramroot and remove build and runtime hooks from
-        /usr/lib/initcpio.
-
+    -r, --root UUID
+        Specify the root UUID to use when building hooks.
 HELPDOC
 return 0
 }
@@ -316,13 +311,13 @@ dirScript="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # parse command line arguments:
 for arg in "$@"; do case $arg in
-    -b|--boot)     shift; bootUUID="$1";     shift;;
-    -D|--disable)  ramrootAction='disable';  shift;;
-    -E|--enable)   ramrootAction='enable';   shift;;
-    -H|-h|--help)  ramrootAction='help';     shift;;
-    -K|--keep)     keepBuildFiles='true';    shift;;
-    -r|--root)     shift; rootUUID="$1";     shift;;
-    -R|--remove)   ramrootAction='remove';   shift;;
+    -b|--boot)             shift; bootUUID="$1";     shift;;
+    -D|--disable|disable)  ramrootAction='disable';  shift;;
+    -E|--enable|enable)    ramrootAction='enable';   shift;;
+    -H|-h|--help)          ramrootAction='help';     shift;;
+    -K|--keep)             keepBuildFiles='true';    shift;;
+    -r|--root)             shift; rootUUID="$1";     shift;;
+    -R|--remove|remove)    ramrootAction='remove';   shift;;
 esac; done
 
 # print help:
@@ -350,7 +345,7 @@ mkdir -p "$dirBuild"
 cd "$dirBuild"
 sudo -k
 
-# take action:
+# execute action:
 if [ "$ramrootAction" = 'enable' ]; then
     ramroot_enable
 elif [ "$ramrootAction" = 'disable' ]; then

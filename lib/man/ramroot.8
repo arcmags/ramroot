@@ -1,0 +1,78 @@
+.TH RAMROOT 8 "November 2017" "ramroot 1.1.2" "Ramroot Manual"
+.SH NAME
+ramroot \- load root filesystem entirely to RAM during boot
+.SH SYNOPSIS
+.B ramroot
+<\fIACTION\fR> [\fIOPTIONS\fR]
+.SH DESCRIPTION
+\fIRamroot\fR can enable and disable the pre\-userspace loading of the
+root (and /boot, if it exists) filesystem to RAM during system boot.
+.PP
+When \fIramroot\fR is enabled, during the initial phase of boot
+the amount of detected RAM on the computer along with the size the
+root filesystem to be copied is shown on the screen.  If there is at
+least 500MB more RAM than the size of the filesystem, the user will
+be prompted to load the root filesystem to RAM.
+(Confirmation prompt defaults to yes with a 15 second timeout.)
+.PP
+The size of the \fIzram\fR partition created is determined by taking
+the size of the root filesystem plus half of the extra available
+RAM (to a maximum of 6GB).
+.SH ACTIONS
+Action performed by ramroot; one must be specified.
+.PP
+.TP
+\fBdisable\fR, \fB\-\-disable\fR, \fB\-D\fR
+Remove \fIramroot\fR from /etc/mkinitcpio.conf HOOKS.
+Remove \fIext4\fR and \fIzram\fR from /etc/mkinitcpio.conf MODULES.
+Rebuild linux cpio boot image.
+.TP
+\fBenable\fR, \fB\-\-enable\fR, \fB\-E\fR
+Rebuild build and runtime hooks in /usr/lib/initcpio.
+Add \fIramroot\fR to /etc/mkinitcpio.conf HOOKS.
+Add \fIext4\fR and \fIzram\fR to /etc/mkinitcpio.conf MODULES.
+Rebuild linux cpio boot image.
+.TP
+\fBremove\fR, \fB\-\-remove\fR, \fB\-R\fR
+Disable ramroot.  Remove build and runtime hooks from
+/usr/lib/initcpio.
+.SH OPTIONS
+All options are optional (although \fB--root\fR may need to be used in rare
+cases).
+.PP
+.TP
+\fB\-b\fR, \fB\-\-boot\fR \fIUUID\fR
+Specify the /boot UUID to use when building hooks; necessary if
+unable to detect UUID via lsblk or /etc/fstab.
+.TP
+\fB\-H\fR, \fB\-\-help\fR
+Display help text and exit.
+.TP
+\fB\-K\fR, \fB\-\-keep\fR
+Keep copies of new build and runtime hooks in ~/.cache/ramroot.
+.TP
+\fB\-r\fR, \fB\-\-root\fR \fIUUID\fR
+Specify the root UUID to use when building hooks; necessary if
+unable to detect UUID via lsblk or /etc/fstab.
+.SH NOTES
+The filesystem transfer to RAM can take several minutes.  As soon as
+the boot process is complete, the boot media can be safely removed.
+.PP
+All changes to files in RAM are completely lost once the
+computer is reboot.  To update the system and edit files, boot
+the device without transferring the filesystem to RAM.
+.PP
+Keep a clean and trimmed down system to maintain faster RAM sync times.
+Remove old packages and cached files after system
+upgrades to keep the size of the root filesystem down.
+Consider installing fewer packages if you intend on loading
+to RAM often.
+.SH AUTHOR
+Written by Chris Magyar.
+.SH COPYRIGHT
+Copyright \(co 2017 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+Official ramroot source: <https://github.com/arcmags/ramroot/>

@@ -569,27 +569,49 @@ for their sudo password.</dd>
 ramroot script can also be run directly from a local git clone of this
 repository.</p>
 </div>
-<div class="section" id="usage">
-<h1>Usage</h1>
+<div class="section" id="synopsis">
+<h1>Synopsis</h1>
+<p><tt class="docutils literal">ramroot &lt;action&gt; [options]</tt></p>
+</div>
+<div class="section" id="description">
+<h1>Description</h1>
+<p>Ramroot can enable and disable the pre-userspace loading of the root
+(and <em>/boot</em>, if it exists) filesystem to RAM during system boot.</p>
+<p>When ramroot is enabled, during the initial phase of boot the amount
+of detected RAM on the computer along with the size the root filesystem
+to be copied is shown on the screen.  If there is at least 500MB
+more RAM than the size of the filesystem, the user will be prompted
+to load the root filesystem to RAM.
+(Confirmation prompt defaults to yes with a 15 second timeout.)</p>
+<p>The size of the zram partition created is determined by taking the
+size of the root filesystem plus half of the extra available RAM
+(to a maximum of 6GB).</p>
+</div>
+<div class="section" id="actions">
+<h1>Actions</h1>
+<p>Action performed by ramroot; one must be specified.</p>
 <dl class="docutils">
-<dt><tt class="docutils literal">ramroot [options]</tt></dt>
-<dd>All actions are invoked with the <em>ramroot</em> script.  At least one option
-of either <em>--enable</em>, <em>--disable</em>, or <em>--remove</em> must be specified.</dd>
+<dt><tt class="docutils literal">disable, <span class="pre">--disable,</span> <span class="pre">-D</span></tt></dt>
+<dd>Remove ramroot from <em>/etc/mkinitcpio.conf</em> HOOKS.
+Remove ext4 and zram from <em>/etc/mkinitcpio.conf</em> MODULES.
+Rebuild linux cpio boot image.</dd>
+<dt><tt class="docutils literal">enable, <span class="pre">--enable,</span> <span class="pre">-E</span></tt></dt>
+<dd>Rebuild  build and runtime hooks in /usr/lib/initcpio.
+Add ramroot to <em>/etc/mkinitcpio.conf</em> HOOKS.
+Add ext4 and zram to <em>/etc/mkinitcpio.conf</em> MODULES.
+Rebuild linux cpio boot image.</dd>
+<dt><tt class="docutils literal">remove, <span class="pre">--remove,</span> <span class="pre">-R</span></tt></dt>
+<dd>Disable ramroot.
+Remove build and runtime hooks from <em>/usr/lib/initcpio</em>.</dd>
 </dl>
 </div>
 <div class="section" id="options">
 <h1>Options</h1>
+<p>All options are optional (although <em>--root</em> may be required in rare cases).</p>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">-b,</span> <span class="pre">--boot</span> [UUID]</tt></dt>
 <dd>Specify the <em>/boot</em> UUID to use when building hooks; necessary if
 unable to detect UUID via <em>lsblk</em> or <em>/etc/fstab</em>.</dd>
-<dt><tt class="docutils literal"><span class="pre">-D,</span> <span class="pre">--disable</span></tt></dt>
-<dd>Disable ramroot.  Remove ramroot HOOK and required MODULES from
-<em>/etc/mkinitcpio.conf</em> and rebuild linux cpio boot image.</dd>
-<dt><tt class="docutils literal"><span class="pre">-E,</span> <span class="pre">--enable</span></tt></dt>
-<dd>Enable ramroot.  Rebuild build and runtime hooks and place in
-<em>/usr/lib/initcpio</em>.  Add ramroot HOOK and required MODULES to
-<em>/etc/mkinitcpio.conf</em> and rebuild linux cpio boot image.</dd>
 <dt><tt class="docutils literal"><span class="pre">-H,</span> <span class="pre">--help</span></tt></dt>
 <dd>Display help text and exit.</dd>
 <dt><tt class="docutils literal"><span class="pre">-K,</span> <span class="pre">--keep</span></tt></dt>
@@ -597,48 +619,32 @@ unable to detect UUID via <em>lsblk</em> or <em>/etc/fstab</em>.</dd>
 <dt><tt class="docutils literal"><span class="pre">-r,</span> <span class="pre">--root</span> [UUID]</tt></dt>
 <dd>Specify the root UUID to use when building hooks; necessary if
 unable to detect UUID via lsblk or <em>/etc/fstab</em>.</dd>
-<dt><tt class="docutils literal"><span class="pre">-R,</span> <span class="pre">--remove</span></tt></dt>
-<dd>Disable ramroot and remove build and runtime hooks from
-<em>/usr/lib/initcpio</em>.</dd>
 </dl>
 </div>
-<div class="section" id="operation">
-<h1>Operation</h1>
-<p>If ramroot is enabled, during the initial phase of the boot process,
-the amount of available RAM on the computer along with the size of the
-root filesystem to be copied is detected and shown on the screen.  If the
-available RAM is at least 500MB more than the data contained on the root
-filesystem, the user will be prompted to load the root filesystem to RAM.
-(Confirmation prompt defaults to <em>yes</em> with a 15 second timeout.)</p>
-<p>The size of the zram partition created is determined by taking the size of
-the root filesystem plus half of the extra available RAM to a maximum of 6GB.</p>
-<p>The filesystem transfer to RAM can take several minutes.  As soon as the boot
-process is complete, the USB device (or whatever boot device) can be removed.</p>
+<div class="section" id="notes">
+<h1>NOTES</h1>
+<p>The filesystem transfer to RAM can take several minutes.  As soon as
+the boot process is complete, the boot media can be safely removed.</p>
 <p>Remember that all changes to files in RAM are completely lost once the
-computer is shutdown.  To update the system and edit files, boot the device
-without transferring the filesystem to RAM.</p>
-</div>
-<div class="section" id="tips">
-<h1>Tips</h1>
+computer is reboot.  To update the system and edit files, boot the
+device without transferring the filesystem to RAM.</p>
 <p>Keep a clean and trimmed down system to maintain faster RAM sync times.
 Arch Linux stores downloaded packages in <em>/var/cache/pacman/pkg/</em>.  After
 every update, if no problems occur, consider removing <a class="reference external" href="https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache">old packages</a>.
-Execute <tt class="docutils literal">pacman <span class="pre">-Sc</span></tt> to remove all packages that aren't currently installed.
-Execute <tt class="docutils literal">paccache <span class="pre">-rk0</span></tt> to remove all packages.</p>
-<p>From experience: higher quality (more expensive) USB flash drives
-often exhibit a huge improvement in sync times.</p>
+Consider installer fewer packages if you indend on loading to RAM often.</p>
+<p>Also know that higher quality (more expensive) USB flash drives
+often exhibit a huge improvement in RAM sync times.</p>
 </div>
-<div class="section" id="issues-ideas-to-implement-maybe">
-<h1>Issues / Ideas to implement (maybe)</h1>
+<div class="section" id="issues-future-implementations">
+<h1>Issues / Future Implementations</h1>
 <ul class="simple">
-<li>add a ramroot-flush function to sync the RAM filesystem back to the
-initial boot device (simple)</li>
-<li>test on other distros</li>
+<li><em>status</em> action</li>
+<li><em>--rsync</em> option (maybe use rsync automatically if installed)</li>
+<li>test with full disk encryption</li>
+<li><em>flush</em> action to sync the RAM filesystem back to the
+initial boot device</li>
 <li>add support for other partitions users may have</li>
-<li><em>--status</em> option</li>
-<li><em>--rsync</em> option (or maybe use rsync automatically if installed)</li>
-<li><em>--incognito</em> mode?</li>
-<li>enable on first install?</li>
+<li>test on other distros</li>
 </ul>
 </div>
 <div class="section" id="credits">
@@ -651,7 +657,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.1</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.2</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>

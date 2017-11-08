@@ -31,29 +31,60 @@ ramroot script can also be run directly from a local git clone of this
 repository.
 
 
-Usage
-=====
+Synopsis
+========
 
-``ramroot [options]``
-    All actions are invoked with the *ramroot* script.  At least one option
-    of either *--enable*, *--disable*, or *--remove* must be specified.
+``ramroot <action> [options]``
+
+
+Description
+===========
+
+Ramroot can enable and disable the pre-userspace loading of the root
+(and */boot*, if it exists) filesystem to RAM during system boot.
+
+When ramroot is enabled, during the initial phase of boot the amount
+of detected RAM on the computer along with the size the root filesystem
+to be copied is shown on the screen.  If there is at least 500MB
+more RAM than the size of the filesystem, the user will be prompted
+to load the root filesystem to RAM.
+(Confirmation prompt defaults to yes with a 15 second timeout.)
+
+The size of the zram partition created is determined by taking the
+size of the root filesystem plus half of the extra available RAM
+(to a maximum of 6GB).
+
+
+Actions
+=======
+
+Action performed by ramroot; one must be specified.
+
+
+``disable, --disable, -D``
+    Remove ramroot from */etc/mkinitcpio.conf* HOOKS.
+    Remove ext4 and zram from */etc/mkinitcpio.conf* MODULES.
+    Rebuild linux cpio boot image.
+
+``enable, --enable, -E``
+    Rebuild  build and runtime hooks in /usr/lib/initcpio.
+    Add ramroot to */etc/mkinitcpio.conf* HOOKS.
+    Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
+    Rebuild linux cpio boot image.
+
+``remove, --remove, -R``
+    Disable ramroot.
+    Remove build and runtime hooks from */usr/lib/initcpio*.
 
 
 Options
 =======
 
+All options are optional (although *--root* may be required in rare cases).
+
 ``-b, --boot [UUID]``
     Specify the */boot* UUID to use when building hooks; necessary if
     unable to detect UUID via *lsblk* or */etc/fstab*.
-
-``-D, --disable``
-    Disable ramroot.  Remove ramroot HOOK and required MODULES from
-    */etc/mkinitcpio.conf* and rebuild linux cpio boot image.
-
-``-E, --enable``
-    Enable ramroot.  Rebuild build and runtime hooks and place in
-    */usr/lib/initcpio*.  Add ramroot HOOK and required MODULES to
-    */etc/mkinitcpio.conf* and rebuild linux cpio boot image.
 
 ``-H, --help``
     Display help text and exit.
@@ -65,62 +96,41 @@ Options
     Specify the root UUID to use when building hooks; necessary if
     unable to detect UUID via lsblk or */etc/fstab*.
 
-``-R, --remove``
-    Disable ramroot and remove build and runtime hooks from
-    */usr/lib/initcpio*.
 
+NOTES
+=====
 
-Operation
-=========
-
-If ramroot is enabled, during the initial phase of the boot process,
-the amount of available RAM on the computer along with the size of the
-root filesystem to be copied is detected and shown on the screen.  If the
-available RAM is at least 500MB more than the data contained on the root
-filesystem, the user will be prompted to load the root filesystem to RAM.
-(Confirmation prompt defaults to *yes* with a 15 second timeout.)
-
-The size of the zram partition created is determined by taking the size of
-the root filesystem plus half of the extra available RAM to a maximum of 6GB.
-
-The filesystem transfer to RAM can take several minutes.  As soon as the boot
-process is complete, the USB device (or whatever boot device) can be removed.
+The filesystem transfer to RAM can take several minutes.  As soon as
+the boot process is complete, the boot media can be safely removed.
 
 Remember that all changes to files in RAM are completely lost once the
-computer is shutdown.  To update the system and edit files, boot the device
-without transferring the filesystem to RAM.
-
-
-Tips
-====
+computer is reboot.  To update the system and edit files, boot the
+device without transferring the filesystem to RAM.
 
 Keep a clean and trimmed down system to maintain faster RAM sync times.
 Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.  After
 every update, if no problems occur, consider removing `old packages`_.
-Execute ``pacman -Sc`` to remove all packages that aren't currently installed.
-Execute ``paccache -rk0`` to remove all packages.
+Consider installer fewer packages if you indend on loading to RAM often.
 
-From experience: higher quality (more expensive) USB flash drives
-often exhibit a huge improvement in sync times.
+Also know that higher quality (more expensive) USB flash drives
+often exhibit a huge improvement in RAM sync times.
 
 
-Issues / Ideas to implement (maybe)
+Issues / Future Implementations
 ===================================
 
-*   add a ramroot-flush function to sync the RAM filesystem back to the
-    initial boot device (simple)
+*   *status* action
 
-*   test on other distros
+*   *--rsync* option (maybe use rsync automatically if installed)
+
+*   test with full disk encryption
+
+*   *flush* action to sync the RAM filesystem back to the
+    initial boot device
 
 *   add support for other partitions users may have
 
-*   *--status* option
-
-*   *--rsync* option (or maybe use rsync automatically if installed)
-
-*   *--incognito* mode?
-
-*   enable on first install?
+*   test on other distros
 
 
 Credits
@@ -133,7 +143,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.1
+    1.1.2
 
 :License:
     GPL 3.0
