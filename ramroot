@@ -28,6 +28,10 @@ ACTIONS
         Disable ramroot.
         Remove build and runtime hooks from /usr/lib/initcpio.
 
+    status, --status, -S
+        Print ramroot status to screen.
+        Returns exit status 2 if not enabled.
+
 OPTIONS
     -b, --boot UUID
         Specify /boot partition UUID to use when building hooks.
@@ -53,13 +57,16 @@ keepBuildFiles='false'
 # script variables (do not change):
 rootUUID=
 bootUUID=
-ramrootAction=
+ramrootAction='none'
 dirHooks='/usr/lib/initcpio/hooks'
 dirInstall='/usr/lib/initcpio/install'
 dirLib='/usr/lib/ramroot'
 dirScript=
 hookBuild="$dirLib/install/ramroot"
 hookRuntime="$dirLib/hooks/ramroot"
+initMODULES=
+initHOOKS=
+exitStatus=0
 
 
 ##=============================  FUNCTIONS  ==============================##
@@ -149,9 +156,6 @@ ramroot_enable() {
         mkinitChange='true'
     fi
 
-    # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-    initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
-    initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
     # add zram to initMODULES:
     if [[ ! "$initMODULES" =~ zram ]]; then
         if [ "$initMODULES" = 'MODULES=""' ]; then
@@ -208,9 +212,6 @@ ramroot_enable() {
 # Rebuild linux cpio boot image.
 ramroot_disable() {
     mkinitChange='false'
-    # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-    initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
-    initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
     # remove zram from initMODULES:
     if [[ "$initMODULES" =~ zram ]]; then
         initMODULES=`echo "$initMODULES" | \
@@ -293,6 +294,22 @@ ramroot_remove() {
     return 0
 }
 
+##========================  ramroot_status()  ========================##
+# Print ramroot installation status to screen.
+ramroot_status() {
+    if [[ "$initMODULES" =~ zram ]] &&
+    [[ "$initMODULES" =~ ext4 ]] &&
+    [[ "$initHOOKS" =~ ramroot ]] &&
+    [ -f /usr/lib/initcpio/hooks/ramroot ] &&
+    [ -f /usr/lib/initcpio/install/ramroot ]; then
+        printf ":: ramroot enabled\n"
+    else
+        printf ":: ramroot disabled\n"
+        exitStatus=2
+    fi
+}
+
+
 ##========================  helper functions  ========================##
 ramroot_cache() {
     if [ "$keepBuildFiles" = 'true' ]; then
@@ -318,6 +335,7 @@ for arg in "$@"; do case $arg in
     -K|--keep)             keepBuildFiles='true';    shift;;
     -r|--root)             shift; rootUUID="$1";     shift;;
     -R|--remove|remove)    ramrootAction='remove';   shift;;
+    -S|--status|status)    ramrootAction='status';   shift;;
 esac; done
 
 # print help:
@@ -333,9 +351,7 @@ if [ -n "$1" ]; then
 fi
 
 # FAIL: no action specified:
-if [ "$ramrootAction" != 'enable' ] &&
-[ "$ramrootAction" != 'disable' ] &&
-[ "$ramrootAction" != 'remove' ]; then
+if [ "$ramrootAction" = 'none' ]; then
     printf ":! No action specified.  See --help\n"
     exit 1
 fi
@@ -345,6 +361,10 @@ mkdir -p "$dirBuild"
 cd "$dirBuild"
 sudo -k
 
+# get current MODULES and HOOKS from /etc/mkinitcpio.conf:
+initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
+initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
+
 # execute action:
 if [ "$ramrootAction" = 'enable' ]; then
     ramroot_enable
@@ -353,10 +373,12 @@ elif [ "$ramrootAction" = 'disable' ]; then
 elif [ "$ramrootAction" = 'remove' ]; then
     ramroot_disable
     ramroot_remove
+elif [ "$ramrootAction" = 'status' ]; then
+    ramroot_status
 fi
 
 # remove build files:
 cd ..
 rm -Rd "$dirBuild"
 
-exit 0
+exit $exitStatus

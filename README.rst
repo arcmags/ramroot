@@ -76,6 +76,10 @@ Action performed by ramroot; one must be specified.
     Disable ramroot.
     Remove build and runtime hooks from */usr/lib/initcpio*.
 
+``status, --status, -S``
+    Print ramroot status to screen.
+    Returns exit status 2 if not enabled.
+
 
 Options
 =======
@@ -117,8 +121,6 @@ often exhibit a dramatic improvement in RAM sync times.
 
 Issues / Future Implementations
 ===================================
-
-*   *status* action
 
 *   *--rsync* option (maybe use rsync automatically if installed)
 

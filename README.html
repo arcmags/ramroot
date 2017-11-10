@@ -603,6 +603,9 @@ Rebuild linux cpio boot image.</dd>
 <dt><tt class="docutils literal">remove, <span class="pre">--remove,</span> <span class="pre">-R</span></tt></dt>
 <dd>Disable ramroot.
 Remove build and runtime hooks from <em>/usr/lib/initcpio</em>.</dd>
+<dt><tt class="docutils literal">status, <span class="pre">--status,</span> <span class="pre">-S</span></tt></dt>
+<dd>Print ramroot status to screen.
+Returns exit status 2 if not enabled.</dd>
 </dl>
 </div>
 <div class="section" id="options">
@@ -631,13 +634,12 @@ device without transferring the filesystem to RAM.</p>
 Arch Linux stores downloaded packages in <em>/var/cache/pacman/pkg/</em>.  After
 every update, if no problems occur, consider removing <a class="reference external" href="https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache">old packages</a>.
 Consider installer fewer packages if you indend on loading to RAM often.</p>
-<p>Also know that higher quality (more expensive) USB flash drives
-often exhibit a huge improvement in RAM sync times.</p>
+<p>Also, keep in mind that higher quality (more expensive) USB flash drives
+often exhibit a dramatic improvement in RAM sync times.</p>
 </div>
 <div class="section" id="issues-future-implementations">
 <h1>Issues / Future Implementations</h1>
 <ul class="simple">
-<li><em>status</em> action</li>
 <li><em>--rsync</em> option (maybe use rsync automatically if installed)</li>
 <li>test with full disk encryption</li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
