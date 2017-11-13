@@ -78,13 +78,13 @@ Action performed by ramroot; one must be specified.
 
 ``status, --status, -S``
     Print ramroot status to screen.
-    Returns exit status 2 if not enabled.
+    Return exit status 2 if not enabled.
 
 
 Options
 =======
 
-All options are optional (although *--root* may be required as noted below).
+All are optional (although *--root* may be required as noted below).
 
 ``-b, --boot [UUID]``
     Specify */boot* partition UUID to use when building hooks.
