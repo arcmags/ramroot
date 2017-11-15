@@ -1,4 +1,4 @@
-.TH RAMROOT 8 "November 2017" "ramroot 1.1.2" "Ramroot Manual"
+.TH RAMROOT 8 "November 2017" "ramroot 1.1.3" "Ramroot Manual"
 .SH NAME
 ramroot \- load root filesystem entirely to RAM during boot
 .SH SYNOPSIS
@@ -45,15 +45,25 @@ Return exit status 2 if not enabled.
 \fB\-b\fR, \fB\-\-boot\fR \fIUUID\fR
 Specify /boot partition UUID to use when building hooks.
 .TP
+\fB\-\-dryrun\fR
+Execute ACTION without making any changes.  Useful for debugging
+or viewing changes in ~/.cache/ramroot before enabling.
+.TP
 \fB\-H\fR, \fB\-\-help\fR
 Display help text and exit.
 .TP
 \fB\-K\fR, \fB\-\-keep\fR
 Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 .TP
+\fB\-N\fR, \fB\-\-no\fR
+Change startup prompt default to not load filesystem to RAM.
+.TP
 \fB\-r\fR, \fB\-\-root\fR \fIUUID\fR
 Specify root partions UUID to use when building hooks; required if
 unable to detect UUID via lsblk or /etc/fstab.
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fISECONDS\fR
+Set RAM boot prompt timeout (default=15).
 .SH NOTES
 The filesystem transfer to RAM can take several minutes.  As soon as
 the boot process is complete, the boot media can be safely removed.

@@ -86,8 +86,12 @@ Options
 
 All are optional (although *--root* may be required as noted below).
 
-``-b, --boot [UUID]``
+``-b, --boot <UUID>``
     Specify */boot* partition UUID to use when building hooks.
+
+``--dryrun``
+    Execute action without making any changes.  Useful for debugging
+    or viewing changes in *~/.cache/ramroot* before enabling.
 
 ``-H, --help``
     Display help text and exit.
@@ -95,9 +99,15 @@ All are optional (although *--root* may be required as noted below).
 ``-K, --keep``
     Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
 
-``-r, --root [UUID]``
+``-N, --no``
+    Change startup prompt default to not load filesystem to RAM.
+
+``-r, --root <UUID>``
     Specify root partition UUID to use when building hooks;
     required if unable to detect UUID via lsblk or */etc/fstab*.
+
+``-t, --timeout <SECONDS>``
+    Set RAM boot prompt timeout (default=15).
 
 
 Notes
@@ -144,7 +154,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.2
+    1.1.3
 
 :License:
     GPL 3.0

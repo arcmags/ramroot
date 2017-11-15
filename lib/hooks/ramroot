@@ -6,6 +6,9 @@ run_hook() {
     # root (and boot) UUID
     bootUUID=''
     rootUUID=''
+    # ramroot prompt:
+    promptDefault='yes'
+    promptTimeout=15
 
     # wait for output from other init processes:
     sleep 4
@@ -35,24 +38,34 @@ run_hook() {
     diffM=$(( $ramM - $rootM ))
     if [ $diffM -lt 500 ]; then
         echo ":! Not enough RAM available."
-        inputYN="n"
+        inputYN='n'
 
-    # prompt [y/n] to load filesystem to RAM:
-    else
-        echo -n ">: Load root filesystem to RAM? "
-        echo -n "[Y/n] "
-        inputYN="y"
-        read -s -r -t 15 -n 1 inputYN
-        if [ "${inputYN}" = "n" ] || [ "${inputYN}" = "N" ] || \
-        [ "${inputYN}" = "q" ] || [ "${inputYN}" = "Q" ]; then
-            inputYN="n"
+    # prompt [Y/n] to load filesystem to RAM:
+    elif [ "$promptDefault" = 'yes' ]; then
+        echo -n ">: Load root filesystem to RAM? [Y/n] "
+        inputYN='y'
+        read -s -r -t $promptTimeout -n 1 inputYN
+        if [ "${inputYN}" = 'n' ] || [ "${inputYN}" = 'N' ] || \
+        [ "${inputYN}" = 'q' ] || [ "${inputYN}" = 'Q' ]; then
+            inputYN='n'
         else
-            inputYN="y"
+            inputYN='y'
         fi
+    # prompt [y/N] to load filesystem to RAM:
+    else
+        echo -n ">: Load root filesystem to RAM? [y/N] "
+        inputYN='n'
+        read -s -r -t $promptTimeout -n 1 inputYN
+        if [ "${inputYN}" = 'y' ] || [ "${inputYN}" = 'Y' ]; then
+            inputYN='y'
+        else
+            inputYN='n'
+        fi
+
     fi
 
     # copy root filesystem to RAM:
-    if [ "${inputYN}" = "y" ]; then
+    if [ "${inputYN}" = 'y' ]; then
         echo "yes"
         echo ":: Copying root filesystem to RAM..."
         # enable zRAM devices:
