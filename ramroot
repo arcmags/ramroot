@@ -2,7 +2,7 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.3"
+version="1.1.4"
 
 print_help() {
 cat <<'HELPDOC'
@@ -13,22 +13,22 @@ SYNOPSIS
     ramroot <ACTION> [OPTIONS]
 
 ACTIONS
-    disable, --disable, -D
+    disable
         Remove ramroot from /etc/mkinitcpio.conf HOOKS.
         Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
-    enable, --enable, -E
+    enable
         Rebuild  build and runtime hooks in /usr/lib/initcpio.
         Add ramroot to /etc/mkinitcpio.conf HOOKS.
         Add ext4 and zram to /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
-    remove, --remove, -R
+    remove
         Disable ramroot.
         Remove build and runtime hooks from /usr/lib/initcpio.
 
-    status, --status, -S
+    status
         Print ramroot status to screen.
         Return exit status 2 if not enabled.
 
@@ -36,7 +36,7 @@ OPTIONS
     -b, --boot UUID
         Specify /boot partition UUID to use when building hooks.
 
-    --dryrun
+    -D, --dryrun
         Execute ACTION without making any changes.
 
     -H, --help
@@ -355,17 +355,17 @@ dirScript="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # parse command line arguments:
 for arg in "$@"; do case $arg in
-    -b|--boot)             shift; bootUUID="$1";       shift;;
-    -D|--disable|disable)  ramrootAction='disable';    shift;;
-    --dryrun)              dryRun='true';              shift;;
-    -E|--enable|enable)    ramrootAction='enable';     shift;;
-    -H|-h|--help)          ramrootAction='help';       shift;;
-    -K|--keep)             keepBuildFiles='true';      shift;;
-    -N|--no)               promptDefault='no';         shift;;
-    -R|--remove|remove)    ramrootAction='remove';     shift;;
-    -r|--root)             shift; rootUUID="$1";       shift;;
-    -S|--status|status)    ramrootAction='status';     shift;;
-    -t|--timeout)          shift; promptTimeout="$1";  shift;;
+    disable)       ramrootAction='disable';    shift;;
+    enable)        ramrootAction='enable';     shift;;
+    remove)        ramrootAction='remove';     shift;;
+    status)        ramrootAction='status';     shift;;
+    -b|--boot)     shift; bootUUID="$1";       shift;;
+    -D|--dryrun)   dryRun='true';              shift;;
+    -H|-h|--help)  ramrootAction='help';       shift;;
+    -K|--keep)     keepBuildFiles='true';      shift;;
+    -N|--no)       promptDefault='no';         shift;;
+    -r|--root)     shift; rootUUID="$1";       shift;;
+    -t|--timeout)  shift; promptTimeout="$1";  shift;;
 esac; done
 
 # print help:

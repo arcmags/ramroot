@@ -61,22 +61,22 @@ Actions
 Action performed by ramroot; one must be specified.
 
 
-``disable, --disable, -D``
+``disable``
     Remove ramroot from */etc/mkinitcpio.conf* HOOKS.
     Remove ext4 and zram from */etc/mkinitcpio.conf* MODULES.
     Rebuild linux cpio boot image.
 
-``enable, --enable, -E``
+``enable``
     Rebuild  build and runtime hooks in /usr/lib/initcpio.
     Add ramroot to */etc/mkinitcpio.conf* HOOKS.
     Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
     Rebuild linux cpio boot image.
 
-``remove, --remove, -R``
+``remove``
     Disable ramroot.
     Remove build and runtime hooks from */usr/lib/initcpio*.
 
-``status, --status, -S``
+``status``
     Print ramroot status to screen.
     Return exit status 2 if not enabled.
 
@@ -89,7 +89,7 @@ All are optional (although *--root* may be required as noted below).
 ``-b, --boot <UUID>``
     Specify */boot* partition UUID to use when building hooks.
 
-``--dryrun``
+``-D, --dryrun``
     Execute action without making any changes.  Useful for debugging
     or viewing changes in *~/.cache/ramroot* before enabling.
 
@@ -154,7 +154,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.3
+    1.1.4
 
 :License:
     GPL 3.0

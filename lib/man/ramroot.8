@@ -1,4 +1,4 @@
-.TH RAMROOT 8 "November 2017" "ramroot 1.1.3" "Ramroot Manual"
+.TH RAMROOT 8 "November 2017" "ramroot 1.1.4" "Ramroot Manual"
 .SH NAME
 ramroot \- load root filesystem entirely to RAM during boot
 .SH SYNOPSIS
@@ -22,30 +22,34 @@ RAM (to a maximum of 6GB).
 Action performed by ramroot; one must be specified.
 .PP
 .TP
-\fBdisable\fR, \fB\-\-disable\fR, \fB\-D\fR
+\fBdisable\fR
+.br
 Remove \fIramroot\fR from /etc/mkinitcpio.conf HOOKS.
 Remove \fIext4\fR and \fIzram\fR from /etc/mkinitcpio.conf MODULES.
 Rebuild linux cpio boot image.
 .TP
-\fBenable\fR, \fB\-\-enable\fR, \fB\-E\fR
+\fBenable\fR
+.br
 Rebuild build and runtime hooks in /usr/lib/initcpio.
 Add \fIramroot\fR to /etc/mkinitcpio.conf HOOKS.
 Add \fIext4\fR and \fIzram\fR to /etc/mkinitcpio.conf MODULES.
 Rebuild linux cpio boot image.
 .TP
-\fBremove\fR, \fB\-\-remove\fR, \fB\-R\fR
+\fBremove\fR
+.br
 Disable ramroot.  Remove build and runtime hooks from
 /usr/lib/initcpio.
 .TP
-\fBstatus\fR, \fB\-\-status\fR, \fB\-S\fR
+\fBstatus\fR
+.br
 Print ramroot status to screen.
 Return exit status 2 if not enabled.
 .SH OPTIONS
 .TP
-\fB\-b\fR, \fB\-\-boot\fR \fIUUID\fR
+\fB\-b\fR, \fB\-\-boot\fR <\fIUUID\fR>
 Specify /boot partition UUID to use when building hooks.
 .TP
-\fB\-\-dryrun\fR
+\fB\-D\fR, \fB\-\-dryrun\fR
 Execute ACTION without making any changes.  Useful for debugging
 or viewing changes in ~/.cache/ramroot before enabling.
 .TP
@@ -58,7 +62,7 @@ Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 \fB\-N\fR, \fB\-\-no\fR
 Change startup prompt default to not load filesystem to RAM.
 .TP
-\fB\-r\fR, \fB\-\-root\fR \fIUUID\fR
+\fB\-r\fR, \fB\-\-root\fR <\fIUUID\fR>
 Specify root partions UUID to use when building hooks; required if
 unable to detect UUID via lsblk or /etc/fstab.
 .TP

@@ -591,19 +591,19 @@ size of the root filesystem plus half of the extra available RAM
 <h1>Actions</h1>
 <p>Action performed by ramroot; one must be specified.</p>
 <dl class="docutils">
-<dt><tt class="docutils literal">disable, <span class="pre">--disable,</span> <span class="pre">-D</span></tt></dt>
+<dt><tt class="docutils literal">disable</tt></dt>
 <dd>Remove ramroot from <em>/etc/mkinitcpio.conf</em> HOOKS.
 Remove ext4 and zram from <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
-<dt><tt class="docutils literal">enable, <span class="pre">--enable,</span> <span class="pre">-E</span></tt></dt>
+<dt><tt class="docutils literal">enable</tt></dt>
 <dd>Rebuild  build and runtime hooks in /usr/lib/initcpio.
 Add ramroot to <em>/etc/mkinitcpio.conf</em> HOOKS.
 Add ext4 and zram to <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
-<dt><tt class="docutils literal">remove, <span class="pre">--remove,</span> <span class="pre">-R</span></tt></dt>
+<dt><tt class="docutils literal">remove</tt></dt>
 <dd>Disable ramroot.
 Remove build and runtime hooks from <em>/usr/lib/initcpio</em>.</dd>
-<dt><tt class="docutils literal">status, <span class="pre">--status,</span> <span class="pre">-S</span></tt></dt>
+<dt><tt class="docutils literal">status</tt></dt>
 <dd>Print ramroot status to screen.
 Return exit status 2 if not enabled.</dd>
 </dl>
@@ -614,7 +614,7 @@ Return exit status 2 if not enabled.</dd>
 <dl class="docutils">
 <dt><tt class="docutils literal"><span class="pre">-b,</span> <span class="pre">--boot</span> &lt;UUID&gt;</tt></dt>
 <dd>Specify <em>/boot</em> partition UUID to use when building hooks.</dd>
-<dt><tt class="docutils literal"><span class="pre">--dryrun</span></tt></dt>
+<dt><tt class="docutils literal"><span class="pre">-D,</span> <span class="pre">--dryrun</span></tt></dt>
 <dd>Execute action without making any changes.  Useful for debugging
 or viewing changes in <em>~/.cache/ramroot</em> before enabling.</dd>
 <dt><tt class="docutils literal"><span class="pre">-H,</span> <span class="pre">--help</span></tt></dt>
@@ -665,7 +665,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.3</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.4</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>
