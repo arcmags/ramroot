@@ -132,6 +132,8 @@ often exhibit a dramatic improvement in RAM sync times.
 Issues / Future Implementations
 ===================================
 
+*   use *getopts* to allow grouping command line options together
+
 *   *--rsync* option (maybe use rsync automatically if installed)
 
 *   test with full disk encryption

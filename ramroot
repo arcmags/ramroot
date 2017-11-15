@@ -74,6 +74,7 @@ dirLib='/usr/lib/ramroot'
 dirScript=
 hookBuild="$dirLib/install/ramroot"
 hookRuntime="$dirLib/hooks/ramroot"
+incognitoMode='false'
 initMODULES=
 initHOOKS=
 exitStatus=0
@@ -160,6 +161,9 @@ ramroot_enable() {
         s@promptDefault=.*@promptDefault=\'$promptDefault\'@g; \
         s@promptTimeout=.*@promptTimeout=\'$promptTimeout\'@g;" \
         "$hookRuntime" > hooks/ramroot
+    if [ "$incognitoMode" = 'true' ]; then
+        sed -i '71i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
+    fi
     # FAIL: ramroot hooks not built:
     if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
         printf ":! ramroot hooks not built.\n"
@@ -355,17 +359,18 @@ dirScript="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # parse command line arguments:
 for arg in "$@"; do case $arg in
-    disable)       ramrootAction='disable';    shift;;
-    enable)        ramrootAction='enable';     shift;;
-    remove)        ramrootAction='remove';     shift;;
-    status)        ramrootAction='status';     shift;;
-    -b|--boot)     shift; bootUUID="$1";       shift;;
-    -D|--dryrun)   dryRun='true';              shift;;
-    -H|-h|--help)  ramrootAction='help';       shift;;
-    -K|--keep)     keepBuildFiles='true';      shift;;
-    -N|--no)       promptDefault='no';         shift;;
-    -r|--root)     shift; rootUUID="$1";       shift;;
-    -t|--timeout)  shift; promptTimeout="$1";  shift;;
+    disable)         ramrootAction='disable';    shift;;
+    enable)          ramrootAction='enable';     shift;;
+    remove)          ramrootAction='remove';     shift;;
+    status)          ramrootAction='status';     shift;;
+    -b|--boot)       shift; bootUUID="$1";       shift;;
+    -D|--dryrun)     dryRun='true';              shift;;
+    -H|-h|--help)    ramrootAction='help';       shift;;
+    -I|--incognito)  incognitoMode='true';       shift;;
+    -K|--keep)       keepBuildFiles='true';      shift;;
+    -N|--no)         promptDefault='no';         shift;;
+    -r|--root)       shift; rootUUID="$1";       shift;;
+    -t|--timeout)    shift; promptTimeout="$1";  shift;;
 esac; done
 
 # print help:
