@@ -136,12 +136,28 @@ Issues / Future Implementations
 
 *   *--rsync* option (maybe use rsync automatically if installed)
 
-*   test with full disk encryption
+*   added security
+
+    +   test compatibility with full disk encryption
+
+    +   option to require removal of boot media before starting userspace
+
+    +   option to fail boot unless loaded to RAM (requires a *chroot* to
+        make any changes)
 
 *   *flush* action to sync the RAM filesystem back to the
     initial boot device
 
 *   add support for other partitions users may have
+
+*   use config file?
+
+    +   great for setting a bunch of options
+
+    +   probably shouldn't read and parse config file during
+        pre-userspace boot for security/basic functionality reasons;
+        hooks should be rebuilt and linux boot image regenerated with
+        every config change
 
 *   test on other distros
 

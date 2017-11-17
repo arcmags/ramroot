@@ -649,10 +649,24 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 <ul class="simple">
 <li>use <em>getopts</em> to allow grouping command line options together</li>
 <li><em>--rsync</em> option (maybe use rsync automatically if installed)</li>
-<li>test with full disk encryption</li>
+<li>added security<ul>
+<li>test compatibility with full disk encryption</li>
+<li>option to require removal of boot media before starting userspace</li>
+<li>option to fail boot unless loaded to RAM (requires a <em>chroot</em> to
+make any changes)</li>
+</ul>
+</li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
 initial boot device</li>
 <li>add support for other partitions users may have</li>
+<li>use config file?<ul>
+<li>great for setting a bunch of options</li>
+<li>probably shouldn't read and parse config file during
+pre-userspace boot for security/basic functionality reasons;
+hooks should be rebuilt and linux boot image regenerated with
+every config change</li>
+</ul>
+</li>
 <li>test on other distros</li>
 </ul>
 </div>
