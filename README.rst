@@ -172,7 +172,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.4
+    1.1.5
 
 :License:
     GPL 3.0

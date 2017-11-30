@@ -2,7 +2,7 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.4"
+version="1.1.5"
 
 print_help() {
 cat <<'HELPDOC'
@@ -177,17 +177,17 @@ ramroot_enable() {
 
     # add zram to initMODULES:
     if [[ ! "$initMODULES" =~ zram ]]; then
-        if [ "$initMODULES" = 'MODULES=""' ]; then
-            initMODULES='MODULES="zram"'
+        if [ -z "$initMODULES" ]; then
+            initMODULES='zram'
         else
-            initMODULES="${initMODULES%*\"} zram\""
+            initMODULES="${initMODULES} zram"
         fi
         printf ":: zram added to mkinitcpio.conf MODULES\n"
         mkinitChange='true'
     fi
     # add ext4 to initMODULES:
     if [[ ! "$initMODULES" =~ ext4 ]]; then
-        initMODULES="${initMODULES%*\"} ext4\""
+        initMODULES="${initMODULES} ext4"
         printf ":: ext4 added to mkinitcpio.conf MODULES\n"
         mkinitChange='true'
     fi
@@ -201,8 +201,8 @@ ramroot_enable() {
     # if changes need to be made:
     if [ "$mkinitChange" = 'true' ] || [ "$dryRun" = 'true' ]; then
         # build new mkinitcpio.conf:
-        sed "s@^MODULES=.*@$initMODULES@g; \
-            s@^HOOKS=.*@$initHOOKS@g;" \
+        sed "s@^MODULES=.*@MODULES=($initMODULES)@g; \
+            s@^HOOKS=.*@HOOKS=($initHOOKS)@g;" \
             /etc/mkinitcpio.conf > mkinitcpio.conf
         # FAIL: mkinitcpio.conf not built:
         if [ ! -f mkinitcpio.conf ]; then
@@ -265,8 +265,8 @@ ramroot_disable() {
             cp /etc/mkinitcpio.conf "$dirCache/mkinitcpio~.conf"
         fi
         # build new mkinitcpio.conf:
-        sed "s@^MODULES=.*@$initMODULES@g; \
-            s@^HOOKS=.*@$initHOOKS@g;" \
+        sed "s@^MODULES=.*@MODULES=($initMODULES)@g; \
+            s@^HOOKS=.*@HOOKS=($initHOOKS)@g;" \
             /etc/mkinitcpio.conf > mkinitcpio.conf
         # FAIL: mkinitcpio.conf not built:
         if [ ! -f mkinitcpio.conf ]; then
@@ -405,8 +405,8 @@ cd "$dirBuild"
 sudo -k
 
 # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-initMODULES=`grep -P '^ *MODULES=' /etc/mkinitcpio.conf`
-initHOOKS=`grep -P '^ *HOOKS=' /etc/mkinitcpio.conf`
+initMODULES="`grep -Po '^ *MODULES=\(\K.*?(?=\))' /etc/mkinitcpio.conf`"
+initHOOKS="`grep -Po '^ *HOOKS=\(\K.*?(?=\))' /etc/mkinitcpio.conf`"
 
 # execute action:
 if [ "$ramrootAction" = 'enable' ]; then
