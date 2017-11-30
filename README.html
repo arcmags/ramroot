@@ -647,24 +647,29 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 <div class="section" id="issues-future-implementations">
 <h1>Issues / Future Implementations</h1>
 <ul class="simple">
-<li>use <em>getopts</em> to allow grouping command line options together</li>
-<li><em>--rsync</em> option (maybe use rsync automatically if installed)</li>
-<li>added security<ul>
+<li>use <em>getopts</em> to easily allow grouping command line options together</li>
+<li><em>--rsync</em> option with <em>status=progress</em> (maybe use rsync
+automatically if installed)</li>
+<li>improve security features<ul>
 <li>test compatibility with full disk encryption</li>
 <li>option to require removal of boot media before starting userspace</li>
-<li>option to fail boot unless loaded to RAM (requires a <em>chroot</em> to
-make any changes)</li>
+<li>option to fail boot unless loaded to RAM (requires <em>chroot</em> to
+make changes; advanced users)</li>
 </ul>
 </li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
 initial boot device</li>
-<li>add support for other partitions users may have</li>
+<li>support other partitions users may have<ul>
+<li><em>--fstab</em> option mounts all other (in addition to root and /boot)
+partitions in <em>/etc/fstab</em></li>
+</ul>
+</li>
 <li>use config file?<ul>
-<li>great for setting a bunch of options</li>
+<li>great for setting a bunch of options at once</li>
 <li>probably shouldn't read and parse config file during
 pre-userspace boot for security/basic functionality reasons;
 hooks should be rebuilt and linux boot image regenerated with
-every config change</li>
+every config file change</li>
 </ul>
 </li>
 <li>test on other distros</li>
@@ -680,7 +685,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5-2</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>

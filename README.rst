@@ -132,32 +132,36 @@ often exhibit a dramatic improvement in RAM sync times.
 Issues / Future Implementations
 ===================================
 
-*   use *getopts* to allow grouping command line options together
+*   use *getopts* to easily allow grouping command line options together
 
-*   *--rsync* option (maybe use rsync automatically if installed)
+*   *--rsync* option with *status=progress* (maybe use rsync
+    automatically if installed)
 
-*   added security
+*   improve security features
 
     +   test compatibility with full disk encryption
 
     +   option to require removal of boot media before starting userspace
 
-    +   option to fail boot unless loaded to RAM (requires a *chroot* to
-        make any changes)
+    +   option to fail boot unless loaded to RAM (requires *chroot* to
+        make changes; advanced users)
 
 *   *flush* action to sync the RAM filesystem back to the
     initial boot device
 
-*   add support for other partitions users may have
+*   support other partitions users may have
+
+    +   *--fstab* option mounts all other (in addition to root and /boot)
+        partitions in */etc/fstab*
 
 *   use config file?
 
-    +   great for setting a bunch of options
+    +   great for setting a bunch of options at once
 
     +   probably shouldn't read and parse config file during
         pre-userspace boot for security/basic functionality reasons;
         hooks should be rebuilt and linux boot image regenerated with
-        every config change
+        every config file change
 
 *   test on other distros
 
@@ -172,7 +176,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.5
+    1.1.5-2
 
 :License:
     GPL 3.0
