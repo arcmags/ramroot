@@ -71,7 +71,7 @@ Action performed by ramroot; one must be specified.
     Rebuild linux cpio boot image.
 
 ``enable``
-    Rebuild  build and runtime hooks in /usr/lib/initcpio.
+    Rebuild  build and runtime hooks in */usr/lib/initcpio*.
     Add ramroot to */etc/mkinitcpio.conf* HOOKS.
     Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
     Rebuild linux cpio boot image.
@@ -142,11 +142,6 @@ often exhibit a dramatic improvement in RAM sync times.
 
 Issues / Future Implementations
 ===================================
-
-*   support other partitions users may have
-
-    +   *--fstab* option mounts all other (in addition to root and /boot)
-        partitions in */etc/fstab*
 
 *   use *getopts* to easily allow grouping command line options together
 

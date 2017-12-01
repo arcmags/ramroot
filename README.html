@@ -599,7 +599,7 @@ partitions defined in <em>/etc/fstab</em>.</p>
 Remove ext4 and zram from <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
 <dt><tt class="docutils literal">enable</tt></dt>
-<dd>Rebuild  build and runtime hooks in /usr/lib/initcpio.
+<dd>Rebuild  build and runtime hooks in <em>/usr/lib/initcpio</em>.
 Add ramroot to <em>/etc/mkinitcpio.conf</em> HOOKS.
 Add ext4 and zram to <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
@@ -655,11 +655,6 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 <div class="section" id="issues-future-implementations">
 <h1>Issues / Future Implementations</h1>
 <ul class="simple">
-<li>support other partitions users may have<ul>
-<li><em>--fstab</em> option mounts all other (in addition to root and /boot)
-partitions in <em>/etc/fstab</em></li>
-</ul>
-</li>
 <li>use <em>getopts</em> to easily allow grouping command line options together</li>
 <li><em>--rsync</em> option with <em>status=progress</em> (maybe use rsync
 automatically if installed)</li>
