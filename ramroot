@@ -145,19 +145,18 @@ ramroot_enable() {
             printf ":: Detected /boot UUID: $bootUUID\n"
         fi
     fi
-    # check for hook files in /usr/lib:
-    #if [ ! -f "$hookBuild" ] || [ ! -f "$hookRuntime" ]; then
-        # check for hook files in project directory:
-        if [ -f "$dirScript/lib/install/ramroot" ] &&
-        [ -f "$dirScript/lib/hooks/ramroot" ]; then
-            hookBuild="$dirScript/lib/install/ramroot"
-            hookRuntime="$dirScript/lib/hooks/ramroot"
-        # FAIL: unable to find hook files:
-        else
-            printf ":! Unable to locate hook files.\n"
-            exit 1
-        fi
-    #fi
+    # check for hook files in local git repo:
+    if [ -f "$dirScript/lib/hooks/ramroot" ]; then
+        hookRuntime="$dirScript/lib/hooks/ramroot"
+    fi
+    if [ -f "$dirScript/lib/install/ramroot" ]; then
+        hookBuild="$dirScript/lib/install/ramroot"
+    fi
+    # FAIL: unable to find hook files:
+    if [ ! -f "$hookBuild" ] || [ ! -f "$hookRuntime" ]; then
+        printf ":! Unable to locate hook files.\n"
+        exit 1
+    fi
 
     # copy build hook:
     mkdir -p install
@@ -173,14 +172,18 @@ ramroot_enable() {
     if [ "$fstabMount" = 'true' ]; then
         sed -i "s@fstabMount='false'@fstabMount=\'true\'@g" hooks/ramroot
     fi
+    # enable custom /etc/issue:
+    if [ "$issueRAM" = 'true' ]; then
+        sed -i "s@issueRAM='false'@issueRAM=\'true\'@g" hooks/ramroot
+    fi
     # incognito mode:
     if [ "$incognitoMode" = 'true' ]; then
-        sed -i '72i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
-        sed -i '112i\        echo -e "\\E[H\\E[2J\\E[0;30m\\E[?1c" \\' \
+        sed -i '73i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
+        sed -i '114i\        echo -e "\\E[H\\E[2J\\E[0;30m\\E[?1c" \\' \
             hooks/ramroot
-        sed -i '113i\            > /zram_root/etc/issue' \
+        sed -i '115i\            > /zram_root/etc/issue' \
             hooks/ramroot
-        sed -i '114i\        chmod +x /zram_root/etc/issue' \
+        sed -i '116i\        chmod +x /zram_root/etc/issue' \
             hooks/ramroot
     fi
     # FAIL: ramroot hooks not built:

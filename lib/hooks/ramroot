@@ -93,9 +93,11 @@ run_hook() {
         cp -a /local_root/* /zram_root/
 
         # move /etc/fstab from to /etc/fstab~ in zRAM root:
-        mv /zram_root/etc/fstab /zram_root/etc/fstab~
+        if [ -f /zram_root/etc/fstab ]; then
+            mv /zram_root/etc/fstab /zram_root/etc/fstab~
+        fi
         # use other mount points from /etc/fstab normally:
-        if [ "$fstabMount" = 'true' ]; then
+        if [ "$fstabMount" = 'true' ] && [ -f /zram_root/etc/fstab~ ]; then
             sed 's@\(.* /boot .*\)@#\1@g; s@\(.* / .*\)@#\1@g;' \
                 /zram_root/etc/fstab~ > /zram_root/etc/fstab
         fi
