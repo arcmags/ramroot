@@ -150,8 +150,6 @@ Issues / Future Implementations
 
 *   use *getopts* to easily allow grouping command line options together
 
-*   custom */etc/issue* when successfully boot from RAM
-
 *   *--rsync* option with *status=progress* (maybe use rsync
     automatically if installed)
 
