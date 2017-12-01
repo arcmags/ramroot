@@ -15,13 +15,13 @@ SYNOPSIS
 ACTIONS
     disable
         Remove ramroot from /etc/mkinitcpio.conf HOOKS.
-        Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
+        Remove ext4, vfat, and zram from /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
     enable
         Rebuild  build and runtime hooks in /usr/lib/initcpio.
         Add ramroot to /etc/mkinitcpio.conf HOOKS.
-        Add ext4 and zram to /etc/mkinitcpio.conf MODULES.
+        Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
     remove
@@ -49,7 +49,7 @@ OPTIONS
         Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 
     -M, --message
-        Print 'Arch on RAM' message at login by using custom /etc/issue.
+        Print 'Arch on RAM' message at tty login by using custom /etc/issue.
 
     -N, --no
         Change startup prompt default to not load filesystem to RAM.
@@ -96,7 +96,7 @@ promptDefault='yes'
 ##========================  ramroot_enable()  ========================##
 # Generate new build and runtime hooks using local UUID of root partition.
 # Copy new hooks to /usr/lib/initcpio.
-# Add ext4 and zram to /etc/mkinitcpio.conf MODULES.
+# Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
 # Add ramroot to /etc/mkinitcpio.conf HOOKS.
 # Rebuild linux cpio boot image.
 ramroot_enable() {
@@ -211,6 +211,12 @@ ramroot_enable() {
         printf ":: ext4 added to mkinitcpio.conf MODULES\n"
         mkinitChange='true'
     fi
+    # add vfat to initMODULES:
+    if [[ ! "$initMODULES" =~ vfat ]]; then
+        initMODULES="${initMODULES} vfat"
+        printf ":: vfat added to mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
     # add ramroot to initHOOKS:
     if [[ ! "$initHOOKS" =~ ramroot ]]; then
         initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"
@@ -267,6 +273,13 @@ ramroot_disable() {
         initMODULES=`echo "$initMODULES" | \
             sed -r 's/( ext4|ext4 |ext4)//g'`
         printf ":: ext4 removed from mkinitcpio.conf MODULES\n"
+        mkinitChange='true'
+    fi
+    # remove vfat from initMODULES:
+    if [[ "$initMODULES" =~ vfat ]]; then
+        initMODULES=`echo "$initMODULES" | \
+            sed -r 's/( vfat|vfat |vfat)//g'`
+        printf ":: vfat removed from mkinitcpio.conf MODULES\n"
         mkinitChange='true'
     fi
     # remove ramroot from initHOOKS:

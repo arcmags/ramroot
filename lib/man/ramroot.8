@@ -1,4 +1,4 @@
-.TH RAMROOT 8 "November 2017" "ramroot 1.1.6" "Ramroot Manual"
+.TH RAMROOT 8 "December 2017" "ramroot 1.1.6" "Ramroot Manual"
 .SH NAME
 ramroot \- load root filesystem entirely to RAM during boot
 .SH SYNOPSIS
@@ -30,14 +30,16 @@ Action performed by ramroot; one must be specified.
 \fBdisable\fR
 .br
 Remove \fBramroot\fR from \fI/etc/mkinitcpio.conf\fR HOOKS.
-Remove \fBext4\fR and \fBzram\fR from \fI/etc/mkinitcpio.conf\fR MODULES.
+Remove \fBext4\fR, \fBvfat\fR, and \fBzram\fR from
+\fI/etc/mkinitcpio.conf\fR MODULES.
 Rebuild linux cpio boot image.
 .TP
 \fBenable\fR
 .br
 Rebuild build and runtime hooks in \fI/usr/lib/initcpio\fR.
 Add \fBramroot\fR to \fI/etc/mkinitcpio.conf\fR HOOKS.
-Add \fBext4\fR and \fBzram\fR to \fI/etc/mkinitcpio.conf\fR MODULES.
+Add \fBext4\fR, \fBvfat\fR, and \fBzram\fR to
+\fI/etc/mkinitcpio.conf\fR MODULES.
 Rebuild linux cpio boot image.
 .TP
 \fBremove\fR
@@ -69,7 +71,7 @@ Display help text and exit.
 Keep copies of new build and runtime hooks in \fI~/.cache/ramroot\fR.
 .TP
 \fB\-M\fR, \fB\-\-message\fR
-Print 'Arch on RAM' message at login by using custom \fI/etc/issue\fR.
+Print 'Arch on RAM' message tty at login by using custom \fI/etc/issue\fR.
 .TP
 \fB\-N\fR, \fB\-\-no\fR
 Change startup prompt default to not load filesystem to RAM.

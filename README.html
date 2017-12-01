@@ -596,12 +596,12 @@ partitions defined in <em>/etc/fstab</em>.</p>
 <dl class="docutils">
 <dt><tt class="docutils literal">disable</tt></dt>
 <dd>Remove ramroot from <em>/etc/mkinitcpio.conf</em> HOOKS.
-Remove ext4 and zram from <em>/etc/mkinitcpio.conf</em> MODULES.
+Remove ext4, vfat, and zram from <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
 <dt><tt class="docutils literal">enable</tt></dt>
 <dd>Rebuild  build and runtime hooks in <em>/usr/lib/initcpio</em>.
 Add ramroot to <em>/etc/mkinitcpio.conf</em> HOOKS.
-Add ext4 and zram to <em>/etc/mkinitcpio.conf</em> MODULES.
+Add ext4, vfat, and zram to <em>/etc/mkinitcpio.conf</em> MODULES.
 Rebuild linux cpio boot image.</dd>
 <dt><tt class="docutils literal">remove</tt></dt>
 <dd>Disable ramroot.
@@ -628,7 +628,7 @@ or viewing changes in <em>~/.cache/ramroot</em> before enabling.</dd>
 <dt><tt class="docutils literal"><span class="pre">-K,</span> <span class="pre">--keep</span></tt></dt>
 <dd>Keep copies of new build and runtime hooks in <em>~/.cache/ramroot</em>.</dd>
 <dt><tt class="docutils literal"><span class="pre">-M,</span> <span class="pre">--message</span></tt></dt>
-<dd>Print 'Arch on RAM' message at login by using custom <em>/etc/issue</em>.</dd>
+<dd>Print 'Arch on RAM' message at tty login by using custom <em>/etc/issue</em>.</dd>
 <dt><tt class="docutils literal"><span class="pre">-N,</span> <span class="pre">--no</span></tt></dt>
 <dd>Change startup prompt default to not load filesystem to RAM.</dd>
 <dt><tt class="docutils literal"><span class="pre">-r,</span> <span class="pre">--root</span> &lt;UUID&gt;</tt></dt>

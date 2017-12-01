@@ -67,13 +67,13 @@ Action performed by ramroot; one must be specified.
 
 ``disable``
     Remove ramroot from */etc/mkinitcpio.conf* HOOKS.
-    Remove ext4 and zram from */etc/mkinitcpio.conf* MODULES.
+    Remove ext4, vfat, and zram from */etc/mkinitcpio.conf* MODULES.
     Rebuild linux cpio boot image.
 
 ``enable``
     Rebuild  build and runtime hooks in */usr/lib/initcpio*.
     Add ramroot to */etc/mkinitcpio.conf* HOOKS.
-    Add ext4 and zram to */etc/mkinitcpio.conf* MODULES.
+    Add ext4, vfat, and zram to */etc/mkinitcpio.conf* MODULES.
     Rebuild linux cpio boot image.
 
 ``remove``
@@ -108,7 +108,7 @@ All are optional (although *--root* may be required as noted below).
     Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
 
 ``-M, --message``
-    Print 'Arch on RAM' message at login by using custom */etc/issue*.
+    Print 'Arch on RAM' message at tty login by using custom */etc/issue*.
 
 ``-N, --no``
     Change startup prompt default to not load filesystem to RAM.
