@@ -546,8 +546,8 @@ ul.auto-toc {
 <h1 class="title">ramroot</h1>
 
 <p>Run Linux entirely from RAM!  This project creates and enables a custom
-<a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio">mkinitcpio</a> hook that completely loads the root (and /boot) filesystem into
-RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki/Initial_ramdisk">initramfs</a> boot stage.</p>
+<a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio">mkinitcpio</a> hook that completely loads the <em>root</em> (and <em>/boot</em>) filesystem
+into RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki/Initial_ramdisk">initramfs</a> boot stage.</p>
 <div class="section" id="requirements">
 <h1>Requirements</h1>
 <dl class="docutils">
@@ -575,7 +575,7 @@ repository.</p>
 </div>
 <div class="section" id="description">
 <h1>Description</h1>
-<p>Ramroot can enable and disable the pre-userspace loading of the root
+<p>Ramroot can enable and disable the pre-userspace loading of the <em>root</em>
 (and <em>/boot</em>, if it exists) filesystem to RAM during system boot.</p>
 <p>When ramroot is enabled, during the initial phase of boot the amount
 of detected RAM on the computer along with the size the root filesystem
@@ -586,6 +586,9 @@ to load the root filesystem to RAM.
 <p>The size of the zram partition created is determined by taking the
 size of the root filesystem plus half of the extra available RAM
 (to a maximum of 6GB).</p>
+<p>Other partitions will not be copied to RAM or mounted by default.
+Usage of the <em>-F</em> option can be used to mount additional
+partitions defined in <em>/etc/fstab</em>.</p>
 </div>
 <div class="section" id="actions">
 <h1>Actions</h1>
@@ -617,6 +620,9 @@ Return exit status 2 if not enabled.</dd>
 <dt><tt class="docutils literal"><span class="pre">-D,</span> <span class="pre">--dryrun</span></tt></dt>
 <dd>Execute action without making any changes.  Useful for debugging
 or viewing changes in <em>~/.cache/ramroot</em> before enabling.</dd>
+<dt><tt class="docutils literal"><span class="pre">-F,</span> <span class="pre">--fstab</span></tt></dt>
+<dd>Mount all partitions (other than <em>root</em> and <em>/boot</em>) in
+<em>/etc/fstab</em> normally.</dd>
 <dt><tt class="docutils literal"><span class="pre">-H,</span> <span class="pre">--help</span></tt></dt>
 <dd>Display help text and exit.</dd>
 <dt><tt class="docutils literal"><span class="pre">-K,</span> <span class="pre">--keep</span></tt></dt>
@@ -659,11 +665,6 @@ make changes; advanced users)</li>
 </li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
 initial boot device</li>
-<li>support other partitions users may have<ul>
-<li><em>--fstab</em> option mounts all other (in addition to root and /boot)
-partitions in <em>/etc/fstab</em></li>
-</ul>
-</li>
 <li>use config file?<ul>
 <li>great for setting a bunch of options at once</li>
 <li>probably shouldn't read and parse config file during
@@ -685,7 +686,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5-2</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5-3</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>
