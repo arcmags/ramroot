@@ -9,6 +9,8 @@ run_hook() {
     # ramroot prompt:
     promptDefault='yes'
     promptTimeout=15
+    # options:
+    useFstab='false'
 
     # wait for output from other init processes:
     sleep 4
