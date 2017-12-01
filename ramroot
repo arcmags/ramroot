@@ -48,6 +48,9 @@ OPTIONS
     -K, --keep
         Keep copies of new build and runtime hooks in ~/.cache/ramroot.
 
+    -M, --message
+        Print 'Arch on RAM' message at login by using custom /etc/issue.
+
     -N, --no
         Change startup prompt default to not load filesystem to RAM.
 
@@ -80,6 +83,7 @@ hookRuntime="$dirLib/hooks/ramroot"
 incognitoMode='false'
 initMODULES=
 initHOOKS=
+issueRAM='false'
 exitStatus=0
 dryRun='false'
 fstabMount='false'
@@ -142,7 +146,7 @@ ramroot_enable() {
         fi
     fi
     # check for hook files in /usr/lib:
-    if [ ! -f "$hookBuild" ] || [ ! -f "$hookRuntime" ]; then
+    #if [ ! -f "$hookBuild" ] || [ ! -f "$hookRuntime" ]; then
         # check for hook files in project directory:
         if [ -f "$dirScript/lib/install/ramroot" ] &&
         [ -f "$dirScript/lib/hooks/ramroot" ]; then
@@ -153,7 +157,7 @@ ramroot_enable() {
             printf ":! Unable to locate hook files.\n"
             exit 1
         fi
-    fi
+    #fi
 
     # copy build hook:
     mkdir -p install
@@ -172,6 +176,12 @@ ramroot_enable() {
     # incognito mode:
     if [ "$incognitoMode" = 'true' ]; then
         sed -i '72i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
+        sed -i '112i\        echo -e "\\E[H\\E[2J\\E[0;30m\\E[?1c" \\' \
+            hooks/ramroot
+        sed -i '113i\            > /zram_root/etc/issue' \
+            hooks/ramroot
+        sed -i '114i\        chmod +x /zram_root/etc/issue' \
+            hooks/ramroot
     fi
     # FAIL: ramroot hooks not built:
     if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
@@ -348,6 +358,8 @@ ramroot_status() {
         printf ":: ramroot disabled\n"
         exitStatus=2
     fi
+
+    return 0
 }
 
 ##========================  helper functions  ========================##
@@ -358,6 +370,7 @@ ramroot_cache() {
         cp -r "$dirBuild"/* .
         cd "$dirBuild"
     fi
+
     return 0
 }
 
@@ -378,6 +391,7 @@ for arg in "$@"; do case $arg in
     -H|-h|--help)    ramrootAction='help';       shift;;
     -I|--incognito)  incognitoMode='true';       shift;;
     -K|--keep)       keepBuildFiles='true';      shift;;
+    -M|--message)    issueRAM='true';            shift;;
     -N|--no)         promptDefault='no';         shift;;
     -r|--root)       shift; rootUUID="$1";       shift;;
     -t|--timeout)    shift; promptTimeout="$1";  shift;;

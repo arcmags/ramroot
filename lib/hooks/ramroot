@@ -11,6 +11,7 @@ run_hook() {
     promptTimeout=15
     # options:
     fstabMount='false'
+    issueRAM='false'
 
     # wait for output from other init processes:
     sleep 4
@@ -98,6 +99,15 @@ run_hook() {
             sed 's@\(.* /boot .*\)@#\1@g; s@\(.* / .*\)@#\1@g;' \
                 /zram_root/etc/fstab~ > /zram_root/etc/fstab
         fi
+        # use custom /etc/issue file:
+        if [ "$issueRAM" = 'true' ] &&
+        [ -f /zram_root/usr/lib/ramroot/etc/issue ]; then
+            if [ -f /zram_root/etc/issue ]; then
+                mv /zram_root/etc/issue /zram_root/etc/issue~
+            fi
+            cp /zram_root/usr/lib/ramroot/etc/issue /zram_root/etc/issue
+            chmod +x /zram_root/etc/issue
+        fi
 
         # copy files from local boot partition (if exists) to zRAM boot:
         if [ -n "$bootUUID" ]; then
@@ -110,7 +120,7 @@ run_hook() {
         oroot_mount() {
             mount "$zdevice" "$1"
         }
-        # don't perform filesystem check on zRAM:
+        # don't perform filesystem check on new zRAM partition:
         fsck_root() {
             :
         }

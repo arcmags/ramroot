@@ -107,6 +107,9 @@ All are optional (although *--root* may be required as noted below).
 ``-K, --keep``
     Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
 
+``-M, --message``
+    Print 'Arch on RAM' message at login by using custom */etc/issue*.
+
 ``-N, --no``
     Change startup prompt default to not load filesystem to RAM.
 
