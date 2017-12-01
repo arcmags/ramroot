@@ -432,8 +432,8 @@ cd "$dirBuild"
 sudo -k
 
 # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-initMODULES="`grep -Po '^ *MODULES=\(\K.*?(?=\))' /etc/mkinitcpio.conf`"
-initHOOKS="`grep -Po '^ *HOOKS=\(\K.*?(?=\))' /etc/mkinitcpio.conf`"
+initMODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' /etc/mkinitcpio.conf`"
+initHOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' /etc/mkinitcpio.conf`"
 
 # execute action:
 if [ "$ramrootAction" = 'enable' ]; then
