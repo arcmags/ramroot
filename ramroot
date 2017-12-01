@@ -2,7 +2,7 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.5"
+version="1.1.6"
 
 print_help() {
 cat <<'HELPDOC'
@@ -181,10 +181,8 @@ ramroot_enable() {
         sed -i '73i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
         sed -i '114i\        echo -e "\\E[H\\E[2J\\E[0;30m\\E[?1c" \\' \
             hooks/ramroot
-        sed -i '115i\            > /zram_root/etc/issue' \
-            hooks/ramroot
-        sed -i '116i\        chmod +x /zram_root/etc/issue' \
-            hooks/ramroot
+        sed -i '115i\            > /zram_root/etc/issue' hooks/ramroot
+        sed -i '116i\        chmod +x /zram_root/etc/issue' hooks/ramroot
     fi
     # FAIL: ramroot hooks not built:
     if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
