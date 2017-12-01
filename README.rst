@@ -132,7 +132,14 @@ often exhibit a dramatic improvement in RAM sync times.
 Issues / Future Implementations
 ===================================
 
+*   support other partitions users may have
+
+    +   *--fstab* option mounts all other (in addition to root and /boot)
+        partitions in */etc/fstab*
+
 *   use *getopts* to easily allow grouping command line options together
+
+*   custom */etc/issue* when successfully boot from RAM
 
 *   *--rsync* option with *status=progress* (maybe use rsync
     automatically if installed)
@@ -149,11 +156,6 @@ Issues / Future Implementations
 *   *flush* action to sync the RAM filesystem back to the
     initial boot device
 
-*   support other partitions users may have
-
-    +   *--fstab* option mounts all other (in addition to root and /boot)
-        partitions in */etc/fstab*
-
 *   use config file?
 
     +   great for setting a bunch of options at once
@@ -162,6 +164,10 @@ Issues / Future Implementations
         pre-userspace boot for security/basic functionality reasons;
         hooks should be rebuilt and linux boot image regenerated with
         every config file change
+
+    +   implement some type of post-successful-RAM-load hooks
+        or scripts to make changes after userspace is loaded
+        (*systemd* hook?)
 
 *   test on other distros
 
@@ -176,7 +182,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.5-2
+    1.1.5-3
 
 :License:
     GPL 3.0

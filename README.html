@@ -647,7 +647,13 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 <div class="section" id="issues-future-implementations">
 <h1>Issues / Future Implementations</h1>
 <ul class="simple">
+<li>support other partitions users may have<ul>
+<li><em>--fstab</em> option mounts all other (in addition to root and /boot)
+partitions in <em>/etc/fstab</em></li>
+</ul>
+</li>
 <li>use <em>getopts</em> to easily allow grouping command line options together</li>
+<li>custom <em>/etc/issue</em> when successfully boot from RAM</li>
 <li><em>--rsync</em> option with <em>status=progress</em> (maybe use rsync
 automatically if installed)</li>
 <li>improve security features<ul>
@@ -659,17 +665,15 @@ make changes; advanced users)</li>
 </li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
 initial boot device</li>
-<li>support other partitions users may have<ul>
-<li><em>--fstab</em> option mounts all other (in addition to root and /boot)
-partitions in <em>/etc/fstab</em></li>
-</ul>
-</li>
 <li>use config file?<ul>
 <li>great for setting a bunch of options at once</li>
 <li>probably shouldn't read and parse config file during
 pre-userspace boot for security/basic functionality reasons;
 hooks should be rebuilt and linux boot image regenerated with
 every config file change</li>
+<li>implement some type of post-successful-RAM-load hooks
+or scripts to make changes after userspace is loaded
+(<em>systemd</em> hook?)</li>
 </ul>
 </li>
 <li>test on other distros</li>
@@ -685,7 +689,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5-2</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.5-3</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>
