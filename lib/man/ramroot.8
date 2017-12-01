@@ -5,66 +5,75 @@ ramroot \- load root filesystem entirely to RAM during boot
 .B ramroot
 <\fIACTION\fR> [\fIOPTIONS\fR]
 .SH DESCRIPTION
-\fIRamroot\fR can enable and disable the pre\-userspace loading of the
-root (and /boot, if it exists) filesystem to RAM during system boot.
+\fBRamroot\fR can enable and disable the pre\-userspace loading of the
+\fIroot\fR (and \fI/boot\fR, if it exists) filesystem to RAM during
+system boot.
 .PP
-When \fIramroot\fR is enabled, during the initial phase of boot
+When \fBramroot\fR is enabled, during the initial phase of boot
 the amount of detected RAM on the computer along with the size the
 root filesystem to be copied is shown on the screen.  If there is at
 least 500MB more RAM than the size of the filesystem, the user will
 be prompted to load the root filesystem to RAM.
 (Confirmation prompt defaults to yes with a 15 second timeout.)
 .PP
-The size of the \fIzram\fR partition created is determined by taking
+The size of the \fBzram\fR partition created is determined by taking
 the size of the root filesystem plus half of the extra available
 RAM (to a maximum of 6GB).
+.PP
+Other partitions will not be copied to RAM or mounted by default.
+Usage of the \fB\-F\fR option can be used to mount additional
+partitions defined in \fI/etc/fstab\fR.
 .SH ACTIONS
 Action performed by ramroot; one must be specified.
 .PP
 .TP
 \fBdisable\fR
 .br
-Remove \fIramroot\fR from /etc/mkinitcpio.conf HOOKS.
-Remove \fIext4\fR and \fIzram\fR from /etc/mkinitcpio.conf MODULES.
+Remove \fBramroot\fR from \fI/etc/mkinitcpio.conf\fR HOOKS.
+Remove \fBext4\fR and \fBzram\fR from \fI/etc/mkinitcpio.conf\fR MODULES.
 Rebuild linux cpio boot image.
 .TP
 \fBenable\fR
 .br
-Rebuild build and runtime hooks in /usr/lib/initcpio.
-Add \fIramroot\fR to /etc/mkinitcpio.conf HOOKS.
-Add \fIext4\fR and \fIzram\fR to /etc/mkinitcpio.conf MODULES.
+Rebuild build and runtime hooks in \fI/usr/lib/initcpio\fR.
+Add \fBramroot\fR to \fI/etc/mkinitcpio.conf\fR HOOKS.
+Add \fBext4\fR and \fBzram\fR to \fI/etc/mkinitcpio.conf\fR MODULES.
 Rebuild linux cpio boot image.
 .TP
 \fBremove\fR
 .br
-Disable ramroot.  Remove build and runtime hooks from
-/usr/lib/initcpio.
+Disable \fBramroot\fR.  Remove build and runtime hooks from
+\fI/usr/lib/initcpio\fR.
 .TP
 \fBstatus\fR
 .br
-Print ramroot status to screen.
+Print \fBramroot\fR status to screen.
 Return exit status 2 if not enabled.
 .SH OPTIONS
 .TP
 \fB\-b\fR, \fB\-\-boot\fR <\fIUUID\fR>
-Specify /boot partition UUID to use when building hooks.
+Specify \fI/boot\fR partition UUID to use when building hooks.
 .TP
 \fB\-D\fR, \fB\-\-dryrun\fR
-Execute ACTION without making any changes.  Useful for debugging
-or viewing changes in ~/.cache/ramroot before enabling.
+Execute action without making any changes.  Useful for debugging
+or viewing changes in \fI~/.cache/ramroot\fR before enabling.
+.TP
+\fB\-F\fR, \fB\-\-fstab\fR
+Mount all partitions (other than \fIroot\fR and \fI/boot\fR) in
+\fI/etc/fstab\fR normally.
 .TP
 \fB\-H\fR, \fB\-\-help\fR
 Display help text and exit.
 .TP
 \fB\-K\fR, \fB\-\-keep\fR
-Keep copies of new build and runtime hooks in ~/.cache/ramroot.
+Keep copies of new build and runtime hooks in \fI~/.cache/ramroot\fR.
 .TP
 \fB\-N\fR, \fB\-\-no\fR
 Change startup prompt default to not load filesystem to RAM.
 .TP
 \fB\-r\fR, \fB\-\-root\fR <\fIUUID\fR>
-Specify root partions UUID to use when building hooks; required if
-unable to detect UUID via lsblk or /etc/fstab.
+Specify \fIroot\fR partion UUID to use when building hooks; required if
+unable to detect UUID via \fBlsblk\fR or \fI/etc/fstab\fR.
 .TP
 \fB\-t\fR, \fB\-\-timeout\fR \fISECONDS\fR
 Set RAM boot prompt timeout (default=15).

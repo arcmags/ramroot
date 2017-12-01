@@ -39,6 +39,9 @@ OPTIONS
     -D, --dryrun
         Execute ACTION without making any changes.
 
+    -F, --fstab
+        Mount all other partitions in /etc/fstab normally.
+
     -H, --help
         Display help text and exit.
 
@@ -79,6 +82,7 @@ initMODULES=
 initHOOKS=
 exitStatus=0
 dryRun='false'
+fstabMount='false'
 promptTimeout=$promptTimeoutDefault
 promptDefault='yes'
 
@@ -161,8 +165,13 @@ ramroot_enable() {
         s@promptDefault=.*@promptDefault=\'$promptDefault\'@g; \
         s@promptTimeout=.*@promptTimeout=\'$promptTimeout\'@g;" \
         "$hookRuntime" > hooks/ramroot
+    # enable /etc/fstab:
+    if [ "$fstabMount" = 'true' ]; then
+        sed -i "s@fstabMount='false'@fstabMount=\'true\'@g" hooks/ramroot
+    fi
+    # incognito mode:
     if [ "$incognitoMode" = 'true' ]; then
-        sed -i '71i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
+        sed -i '72i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
     fi
     # FAIL: ramroot hooks not built:
     if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
@@ -365,6 +374,7 @@ for arg in "$@"; do case $arg in
     status)          ramrootAction='status';     shift;;
     -b|--boot)       shift; bootUUID="$1";       shift;;
     -D|--dryrun)     dryRun='true';              shift;;
+    -F|--fstab)      fstabMount='true';          shift;;
     -H|-h|--help)    ramrootAction='help';       shift;;
     -I|--incognito)  incognitoMode='true';       shift;;
     -K|--keep)       keepBuildFiles='true';      shift;;

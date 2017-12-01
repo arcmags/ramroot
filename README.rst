@@ -3,8 +3,8 @@ ramroot
 =======
 
 Run Linux entirely from RAM!  This project creates and enables a custom
-mkinitcpio_ hook that completely loads the root (and /boot) filesystem into
-RAM during the initramfs_ boot stage.
+mkinitcpio_ hook that completely loads the *root* (and */boot*) filesystem
+into RAM during the initramfs_ boot stage.
 
 
 Requirements
@@ -40,7 +40,7 @@ Synopsis
 Description
 ===========
 
-Ramroot can enable and disable the pre-userspace loading of the root
+Ramroot can enable and disable the pre-userspace loading of the *root*
 (and */boot*, if it exists) filesystem to RAM during system boot.
 
 When ramroot is enabled, during the initial phase of boot the amount
@@ -53,6 +53,10 @@ to load the root filesystem to RAM.
 The size of the zram partition created is determined by taking the
 size of the root filesystem plus half of the extra available RAM
 (to a maximum of 6GB).
+
+Other partitions will not be copied to RAM or mounted by default.
+Usage of the *-F* option can be used to mount additional
+partitions defined in */etc/fstab*.
 
 
 Actions
@@ -92,6 +96,10 @@ All are optional (although *--root* may be required as noted below).
 ``-D, --dryrun``
     Execute action without making any changes.  Useful for debugging
     or viewing changes in *~/.cache/ramroot* before enabling.
+
+``-F, --fstab``
+    Mount all partitions (other than *root* and */boot*) in
+    */etc/fstab* normally.
 
 ``-H, --help``
     Display help text and exit.
