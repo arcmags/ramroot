@@ -143,10 +143,18 @@ often exhibit a dramatic improvement in RAM sync times.
 Issues / Future Implementations
 ===================================
 
+*   get UUIDs during boot
+
+    +   more portable; UUIDs not hardcoded into initcpio hook
+
+    +   no need to rebuild linux image with UUID changes
+
 *   use *getopts* to easily allow grouping command line options together
 
 *   *--rsync* option with *status=progress* (maybe use rsync
     automatically if installed)
+
+*   option to create a unique hostname for each RAM boot instance
 
 *   improve security features
 
@@ -159,19 +167,6 @@ Issues / Future Implementations
 
 *   *flush* action to sync the RAM filesystem back to the
     initial boot device
-
-*   use config file?
-
-    +   great for setting a bunch of options at once
-
-    +   probably shouldn't read and parse config file during
-        pre-userspace boot for security/basic functionality reasons;
-        hooks should be rebuilt and linux boot image regenerated with
-        every config file change
-
-    +   implement some type of post-successful-RAM-load hooks
-        or scripts to make changes after userspace is loaded
-        (*systemd* hook?)
 
 *   test on other distros
 

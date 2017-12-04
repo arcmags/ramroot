@@ -655,9 +655,15 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 <div class="section" id="issues-future-implementations">
 <h1>Issues / Future Implementations</h1>
 <ul class="simple">
+<li>get UUIDs during boot<ul>
+<li>more portable; UUIDs not hardcoded into initcpio hook</li>
+<li>no need to rebuild linux image with UUID changes</li>
+</ul>
+</li>
 <li>use <em>getopts</em> to easily allow grouping command line options together</li>
 <li><em>--rsync</em> option with <em>status=progress</em> (maybe use rsync
 automatically if installed)</li>
+<li>option to create a unique hostname for each RAM boot instance</li>
 <li>improve security features<ul>
 <li>test compatibility with full disk encryption</li>
 <li>option to require removal of boot media before starting userspace</li>
@@ -667,17 +673,6 @@ make changes; advanced users)</li>
 </li>
 <li><em>flush</em> action to sync the RAM filesystem back to the
 initial boot device</li>
-<li>use config file?<ul>
-<li>great for setting a bunch of options at once</li>
-<li>probably shouldn't read and parse config file during
-pre-userspace boot for security/basic functionality reasons;
-hooks should be rebuilt and linux boot image regenerated with
-every config file change</li>
-<li>implement some type of post-successful-RAM-load hooks
-or scripts to make changes after userspace is loaded
-(<em>systemd</em> hook?)</li>
-</ul>
-</li>
 <li>test on other distros</li>
 </ul>
 </div>
