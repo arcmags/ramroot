@@ -81,8 +81,10 @@ Action performed by ramroot; one must be specified.
     Remove build and runtime hooks from */usr/lib/initcpio*.
 
 ``status``
-    Print ramroot status to screen.
-    Return exit status 2 if not enabled.
+    Print ramroot and root filesystem status to screen.
+    Return exit status 0 if enabled and currently loaded to RAM.
+    Return exit status 1 if enabled and not loaded RAM.
+    Return exit status 2 if disabled.
 
 
 Options
@@ -181,7 +183,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.6
+    1.1.7
 
 :License:
     GPL 3.0

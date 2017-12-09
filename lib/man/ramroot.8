@@ -1,4 +1,4 @@
-.TH RAMROOT 8 "December 2017" "ramroot 1.1.6" "Ramroot Manual"
+.TH RAMROOT 8 "December 2017" "ramroot 1.1.7" "Ramroot Manual"
 .SH NAME
 ramroot \- load root filesystem entirely to RAM during boot
 .SH SYNOPSIS
@@ -49,8 +49,10 @@ Disable \fBramroot\fR.  Remove build and runtime hooks from
 .TP
 \fBstatus\fR
 .br
-Print \fBramroot\fR status to screen.
-Return exit status 2 if not enabled.
+Print \fBramroot\fR and root filesystem status to screen.
+Return exit status 0 if enabled and currently loaded to RAM.
+Return exit status 1 if enabled and not loaded RAM.
+Return exit status 2 if disabled.
 .SH OPTIONS
 .TP
 \fB\-b\fR, \fB\-\-boot\fR <\fIUUID\fR>

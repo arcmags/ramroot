@@ -2,7 +2,7 @@
 ##==============================  ramroot  ===============================##
 # Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
 ##========================================================================##
-version="1.1.6"
+version="1.1.7"
 
 print_help() {
 cat <<'HELPDOC'
@@ -29,8 +29,10 @@ ACTIONS
         Remove build and runtime hooks from /usr/lib/initcpio.
 
     status
-        Print ramroot status to screen.
-        Return exit status 2 if not enabled.
+        Print ramroot and root filesystem status to screen.
+        Return exit status 0 if enabled and currently loaded to RAM.
+        Return exit status 1 if enabled and not loaded RAM.
+        Return exit status 2 if disabled.
 
 OPTIONS
     -b, --boot UUID
@@ -179,7 +181,7 @@ ramroot_enable() {
     # incognito mode:
     if [ "$incognitoMode" = 'true' ]; then
         sed -i '73i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
-        sed -i '114i\        echo -e "\\E[H\\E[2J\\E[0;30m\\E[?1c" \\' \
+        sed -i '114i\        echo -e "\\033[H\\033[2J\\033[0;30m\\033[?1c" \\' \
             hooks/ramroot
         sed -i '115i\            > /zram_root/etc/issue' hooks/ramroot
         sed -i '116i\        chmod +x /zram_root/etc/issue' hooks/ramroot
@@ -362,14 +364,26 @@ ramroot_remove() {
 ##========================  ramroot_status()  ========================##
 # Print ramroot installation status to screen.
 ramroot_status() {
+    # print root filesystem status:
+    root_stat() {
+        if (lsblk | grep -P 'zram.*?/ ?$' >/dev/null); then
+            printf ":: root filesystem loaded to RAM\n"
+        else
+            printf ":: root filesystem not loaded to RAM\n"
+            exitStatus=1
+        fi
+    }
     if [[ "$initMODULES" =~ zram ]] &&
     [[ "$initMODULES" =~ ext4 ]] &&
+    [[ "$initMODULES" =~ vfat ]] &&
     [[ "$initHOOKS" =~ ramroot ]] &&
     [ -f /usr/lib/initcpio/hooks/ramroot ] &&
     [ -f /usr/lib/initcpio/install/ramroot ]; then
-        printf ":: ramroot enabled\n"
+        printf ":: ramroot status: enabled\n"
+        root_stat
     else
         printf ":: ramroot disabled\n"
+        root_stat
         exitStatus=2
     fi
 

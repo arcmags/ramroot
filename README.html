@@ -607,8 +607,10 @@ Rebuild linux cpio boot image.</dd>
 <dd>Disable ramroot.
 Remove build and runtime hooks from <em>/usr/lib/initcpio</em>.</dd>
 <dt><tt class="docutils literal">status</tt></dt>
-<dd>Print ramroot status to screen.
-Return exit status 2 if not enabled.</dd>
+<dd>Print ramroot and root filesystem status to screen.
+Return exit status 0 if enabled and currently loaded to RAM.
+Return exit status 1 if enabled and not loaded RAM.
+Return exit status 2 if disabled.</dd>
 </dl>
 </div>
 <div class="section" id="options">
@@ -686,7 +688,7 @@ by several inquisitive <a class="reference external" href="https://bbs.archlinux
 <tbody valign="top">
 <tr class="field"><th class="field-name">Author:</th><td class="field-body">Chris Magyar</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.6</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">1.1.7</td>
 </tr>
 <tr class="field"><th class="field-name">License:</th><td class="field-body">GPL 3.0</td>
 </tr>
