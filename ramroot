@@ -35,7 +35,7 @@ ACTIONS
         Return exit status 2 if disabled.
 
 OPTIONS
-    -b, --boot UUID
+    -b, --boot <UUID>
         Specify /boot partition UUID to use when building hooks.
 
     -D, --dryrun
@@ -56,10 +56,10 @@ OPTIONS
     -N, --no
         Change startup prompt default to not load filesystem to RAM.
 
-    -r, --root UUID
+    -r, --root <UUID>
         Specify root partition UUID to use when building hooks.
 
-    -t, --timeout
+    -t, --timeout <SECONDS>
         Set RAM boot prompt timeout (default=15).
 HELPDOC
 return 0

@@ -143,7 +143,7 @@ often exhibit a dramatic improvement in RAM sync times.
 
 
 Issues / Future Implementations
-===================================
+===============================
 
 *   get UUIDs during boot
 
