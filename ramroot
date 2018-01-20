@@ -223,7 +223,7 @@ ramroot_enable() {
     if [[ ! "$initHOOKS" =~ ramroot ]]; then
         if [[ ! "$initHOOKS" =~ encrypt ]]; then
             printf ":: encrypt HOOK detected ramroot will execute after encrypt\n"
-            initHOOKS="${initHOOKS%encrypt*}encrypt ramroot${initHOOKS#*udev}"
+            initHOOKS="${initHOOKS%encrypt*}encrypt ramroot${initHOOKS#*encrypt}"
         else
             initHOOKS="${initHOOKS%udev*}udev ramroot${initHOOKS#*udev}"
         fi
