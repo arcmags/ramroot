@@ -160,8 +160,6 @@ Issues / Future Implementations
 
 *   improve security features
 
-    +   test compatibility with full disk encryption
-
     +   option to require removal of boot media before starting userspace
 
     +   option to fail boot unless loaded to RAM (requires *chroot* to
@@ -183,7 +181,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.7
+    1.1.8
 
 :License:
     GPL 3.0
