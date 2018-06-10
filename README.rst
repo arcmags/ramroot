@@ -3,8 +3,8 @@ ramroot
 =======
 
 Run Linux entirely from RAM!  This project creates and enables a custom
-mkinitcpio_ hook that completely loads the *root* (and */boot*) filesystem
-into RAM during the initramfs_ boot stage.
+mkinitcpio_ hook that completely loads the *root* (and */boot*)
+filesystem into RAM during the initramfs_ boot stage.
 
 
 Requirements
@@ -110,7 +110,8 @@ All are optional (although *--root* may be required as noted below).
     Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
 
 ``-M, --message``
-    Print 'Arch on RAM' message at tty login by using custom */etc/issue*.
+    Print 'Arch on RAM' message at tty login by using custom
+    */etc/issue*.
 
 ``-N, --no``
     Change startup prompt default to not load filesystem to RAM.
@@ -134,9 +135,10 @@ computer is reboot.  To update the system and edit files, boot the
 device without transferring the filesystem to RAM.
 
 Keep a clean and trimmed down system to maintain faster RAM sync times.
-Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.  After
-every update, if no problems occur, consider removing `old packages`_.
-Consider installer fewer packages if you indend on loading to RAM often.
+Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.
+After every update, if no problems occur, consider removing
+`old packages`_.  Consider installer fewer packages if you intend on
+loading to RAM often.
 
 Also, keep in mind that higher quality (more expensive) USB flash drives
 often exhibit a dramatic improvement in RAM sync times.
@@ -160,7 +162,8 @@ Issues / Future Implementations
 
 *   improve security features
 
-    +   option to require removal of boot media before starting userspace
+    +   option to require removal of boot media before starting
+        userspace
 
     +   option to fail boot unless loaded to RAM (requires *chroot* to
         make changes; advanced users)

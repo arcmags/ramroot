@@ -546,8 +546,8 @@ ul.auto-toc {
 <h1 class="title">ramroot</h1>
 
 <p>Run Linux entirely from RAM!  This project creates and enables a custom
-<a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio">mkinitcpio</a> hook that completely loads the <em>root</em> (and <em>/boot</em>) filesystem
-into RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki/Initial_ramdisk">initramfs</a> boot stage.</p>
+<a class="reference external" href="https://wiki.archlinux.org/index.php/mkinitcpio">mkinitcpio</a> hook that completely loads the <em>root</em> (and <em>/boot</em>)
+filesystem into RAM during the <a class="reference external" href="https://en.wikipedia.org/wiki/Initial_ramdisk">initramfs</a> boot stage.</p>
 <div class="section" id="requirements">
 <h1>Requirements</h1>
 <dl class="docutils">
@@ -630,7 +630,8 @@ or viewing changes in <em>~/.cache/ramroot</em> before enabling.</dd>
 <dt><tt class="docutils literal"><span class="pre">-K,</span> <span class="pre">--keep</span></tt></dt>
 <dd>Keep copies of new build and runtime hooks in <em>~/.cache/ramroot</em>.</dd>
 <dt><tt class="docutils literal"><span class="pre">-M,</span> <span class="pre">--message</span></tt></dt>
-<dd>Print 'Arch on RAM' message at tty login by using custom <em>/etc/issue</em>.</dd>
+<dd>Print 'Arch on RAM' message at tty login by using custom
+<em>/etc/issue</em>.</dd>
 <dt><tt class="docutils literal"><span class="pre">-N,</span> <span class="pre">--no</span></tt></dt>
 <dd>Change startup prompt default to not load filesystem to RAM.</dd>
 <dt><tt class="docutils literal"><span class="pre">-r,</span> <span class="pre">--root</span> &lt;UUID&gt;</tt></dt>
@@ -648,9 +649,10 @@ the boot process is complete, the boot media can be safely removed.</p>
 computer is reboot.  To update the system and edit files, boot the
 device without transferring the filesystem to RAM.</p>
 <p>Keep a clean and trimmed down system to maintain faster RAM sync times.
-Arch Linux stores downloaded packages in <em>/var/cache/pacman/pkg/</em>.  After
-every update, if no problems occur, consider removing <a class="reference external" href="https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache">old packages</a>.
-Consider installer fewer packages if you indend on loading to RAM often.</p>
+Arch Linux stores downloaded packages in <em>/var/cache/pacman/pkg/</em>.
+After every update, if no problems occur, consider removing
+<a class="reference external" href="https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache">old packages</a>.  Consider installer fewer packages if you intend on
+loading to RAM often.</p>
 <p>Also, keep in mind that higher quality (more expensive) USB flash drives
 often exhibit a dramatic improvement in RAM sync times.</p>
 </div>
@@ -667,7 +669,8 @@ often exhibit a dramatic improvement in RAM sync times.</p>
 automatically if installed)</li>
 <li>option to create a unique hostname for each RAM boot instance</li>
 <li>improve security features<ul>
-<li>option to require removal of boot media before starting userspace</li>
+<li>option to require removal of boot media before starting
+userspace</li>
 <li>option to fail boot unless loaded to RAM (requires <em>chroot</em> to
 make changes; advanced users)</li>
 </ul>

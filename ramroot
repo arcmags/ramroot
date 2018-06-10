@@ -1,7 +1,7 @@
 #!/bin/bash
-##==============================  ramroot  ===============================##
-# Copyright (C) 2018 Chris Magyar            GNU General Public License v3 #
-##========================================================================##
+##============================  ramroot  =============================##
+# Copyright (C) 2018 Chris Magyar        GNU General Public License v3 #
+##====================================================================##
 VERSION="1.1.8"
 
 print_help() {
@@ -66,7 +66,7 @@ return 0
 }
 
 
-##=============================  VARIABLES  ==============================##
+##===========================  VARIABLES  ============================##
 # default variables:
 DIR_CACHE="$HOME/.cache/ramroot"
 DIR_BUILD='/tmp/ramroot'
@@ -93,9 +93,9 @@ LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
 LOAD_DEFAULT='yes'
 
 
-##=============================  FUNCTIONS  ==============================##
+##===========================  FUNCTIONS  ============================##
 # Script functions.
-##========================  ramroot_enable()  ========================##
+##======================  ramroot_enable()  ======================##
 # Generate new build and runtime hooks using local UUID of root partition.
 # Copy new hooks to /usr/lib/initcpio.
 # Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
@@ -138,7 +138,8 @@ ramroot_enable() {
                 grep -Po '(^| +)/boot +\K[^ ]+'`
             # try to get /boot UUID from /etc/fstab:
             if [ -z "$UUID_BOOT" ] && [ -f /etc/fstab ]; then
-                UUID_BOOT=`grep -Po 'UUID=\K[^ ]+(?= +/boot )' /etc/fstab`
+                UUID_BOOT=`grep -Po 'UUID=\K[^ ]+(?= +/boot )' \
+                    /etc/fstab`
             fi
         fi
         if [ -z "$UUID_BOOT" ]; then
@@ -172,11 +173,13 @@ ramroot_enable() {
         "$HOOK_RUNTIME" > hooks/ramroot
     # enable /etc/fstab:
     if [ "$FLAG_FSTAB" = 'true' ]; then
-        sed -i "s@FLAG_FSTAB='false'@FLAG_FSTAB=\'true\'@g" hooks/ramroot
+        sed -i "s@FLAG_FSTAB='false'@FLAG_FSTAB=\'true\'@g" \
+            hooks/ramroot
     fi
     # enable custom /etc/issue:
     if [ "$FLAG_ISSUE" = 'true' ]; then
-        sed -i "s@FLAG_ISSUE='false'@FLAG_ISSUE=\'true\'@g" hooks/ramroot
+        sed -i "s@FLAG_ISSUE='false'@FLAG_ISSUE=\'true\'@g" \
+            hooks/ramroot
     fi
     # incognito mode:
     if [ "$FLAG_INCOGNITO" = 'true' ]; then
@@ -262,7 +265,7 @@ ramroot_enable() {
     return 0
 }
 
-##=======================  ramroot_disable()  ========================##
+##=====================  ramroot_disable()  ======================##
 # Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
 # Remove ramroot from /etc/mkinitcpio.conf HOOKS.
 # Rebuild linux cpio boot image.
@@ -329,7 +332,7 @@ ramroot_disable() {
     return 0
 }
 
-##========================  ramroot_remove()  ========================##
+##======================  ramroot_remove()  ======================##
 # Remove ramroot hooks from /usr/lib/initcpio.
 ramroot_remove() {
     # check for installed hooks:
@@ -366,7 +369,7 @@ ramroot_remove() {
     return 0
 }
 
-##========================  ramroot_status()  ========================##
+##======================  ramroot_status()  ======================##
 # Print ramroot installation status to screen.
 ramroot_status() {
     # print root filesystem status:
@@ -395,7 +398,7 @@ ramroot_status() {
     return 0
 }
 
-##========================  helper functions  ========================##
+##======================  helper functions  ======================##
 ramroot_cache() {
     if [ "$FLAG_CACHE" = 'true' ]; then
         mkdir -p "$DIR_CACHE"
@@ -408,7 +411,7 @@ ramroot_cache() {
 }
 
 
-##===============================  SCRIPT  ===============================##
+##=============================  SCRIPT  =============================##
 # get path of script:
 DIR_SCRIPT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -461,8 +464,10 @@ cd "$DIR_BUILD"
 sudo -k
 
 # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-INIT_MODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' /etc/mkinitcpio.conf`"
-INIT_HOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' /etc/mkinitcpio.conf`"
+INIT_MODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' \
+    /etc/mkinitcpio.conf`"
+INIT_HOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' \
+    /etc/mkinitcpio.conf`"
 
 # execute action:
 if [ "$ACTION" = 'enable' ]; then
