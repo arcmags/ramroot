@@ -1,8 +1,14 @@
 #!/bin/bash
-##=======================  ramroot (runtime hook)  =======================##
+##=====================  ramroot (runtime hook)  =====================##
 # Place in: /usr/lib/initcpio/hooks/
 
 run_hook() {
+    
+    ROOT_UUID=
+    PART_UUIDS=()
+    PART_MOUNTS=()
+    
+    
     # root (and boot) UUID
     UUID_BOOT=''
     UUID_ROOT=''

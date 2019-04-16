@@ -10,60 +10,40 @@ VERSION="1.2.0"
 print_help() {
 cat <<'HELPDOC'
 NAME
-    ramroot - load root (and /boot) filesystem entirely to RAM during boot
+    ramroot - load root filesystem entirely to RAM during boot
 
 SYNOPSIS
     ramroot <ACTION> [OPTIONS]
 
+DESCRIPTION
+    This script generates and 
+    
+
+
 ACTIONS
-    disable
+    -D, --disable
         Remove ramroot from /etc/mkinitcpio.conf HOOKS.
         Remove ext4, vfat, and zram from /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
-    enable
-        Rebuild  build and runtime hooks in /usr/lib/initcpio.
+    -E, --enable
+        Rebuild build and runtime hooks in /usr/lib/initcpio.
         Add ramroot to /etc/mkinitcpio.conf HOOKS.
         Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
         Rebuild linux cpio boot image.
 
-    remove
-        Disable ramroot.
-        Remove build and runtime hooks from /usr/lib/initcpio.
-
-    status
-        Print ramroot and root filesystem status to screen.
-        Return exit status 0 if enabled and currently loaded to RAM.
-        Return exit status 1 if enabled and not loaded RAM.
-        Return exit status 2 if disabled.
+    -S, --status
+        Display ramroot and root filesystem status.
 
 OPTIONS
-    -b, --boot <UUID>
-        Specify /boot partition UUID to use when building hooks.
 
-    -D, --dryrun
-        Execute ACTION without making any changes.
 
-    -F, --fstab
-        Mount all other partitions in /etc/fstab normally.
+    #-D, --dryrun
+        #Execute ACTION without making any changes.
 
-    -H, --help
-        Display help text and exit.
-
-    -K, --keep
-        Keep copies of new build and runtime hooks in ~/.cache/ramroot.
-
-    -M, --message
-        Print 'Arch on RAM' message at tty login by using custom /etc/issue.
-
-    -N, --no
-        Change startup prompt default to not load filesystem to RAM.
-
-    -r, --root <UUID>
-        Specify root partition UUID to use when building hooks.
-
-    -t, --timeout <SECONDS>
-        Set RAM boot prompt timeout (default=15).
+    -h, --help
+        Display help text and exit. 
+    
 HELPDOC
 return 0
 }
@@ -75,9 +55,12 @@ DIR_CACHE="$HOME/.cache/ramroot"
 DIR_BUILD='/tmp/ramroot'
 FLAG_CACHE='false'
 LOAD_TIMEOUT_DEFAULT=15
+
+
 # script variables (do not change):
 UUID_ROOT=
 UUID_BOOT=
+
 ACTION='none'
 DIR_HOOKS='/usr/lib/initcpio/hooks'
 DIR_INSTALL='/usr/lib/initcpio/install'
@@ -94,6 +77,9 @@ FLAG_DRYRUN='false'
 FLAG_FSTAB='false'
 LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
 LOAD_DEFAULT='yes'
+
+
+
 # basic colors:
 C_BLACK=$'\e[0;30m'
 C_BLUE_B=$'\e[1;38;5;27m'

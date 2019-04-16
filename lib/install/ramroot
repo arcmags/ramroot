@@ -3,8 +3,7 @@
 # Place in: /usb/lib/initcpio/install/
 
 build() {
-    add_dir /local_root
-    add_dir /local_boot
+    add_dir /local_part
     add_dir /zram_root
     add_binary zramctl
     add_binary free
