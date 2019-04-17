@@ -19,6 +19,7 @@ DESCRIPTION
 
 OPTIONS
     -c, --config <CONFIG FILE>
+        Config file to use when enabling ramroot.
 
     -C, --config-gen
         Generate a new config file.
@@ -45,7 +46,7 @@ FILES
         This is the primary ramroot config file.  Edit to add or
         remove mounts, change default boot prompt behavior, and
         set memory requirements for booting from RAM.  When making
-        changes to this file, you must re-enable ramroot (--enable)
+        changes to this file, you must re-enable (--enable) ramroot
         for the changes to take effect.
 
     /etc/ramroot/
@@ -59,8 +60,6 @@ FILES
 
     ~/.cache/ramroot/
         Generated hook files and updated mkinitcpio.conf.
-
-VERSION
 HELPDOC
 if [ -n "$VERSION" ]; then
     printf '\nVERSION\n    %s\n' "$VERSION"
@@ -94,13 +93,17 @@ LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
 LOAD_DEFAULT='yes'
 #### replace all this shit with a config file: ####
 
-# flag args:
+# args:
 FLAG_CONFIG_GEN='false'
 FLAG_DISABLE='false'
 FLAG_DRYRUN='false'
 FLAG_ENABLE='false'
 FLAG_STATUS='false'
-
+OPT_CONFIG=
+PARMS=()
+COUNT_PARM=0
+COUNT_FLAG=0
+COUNT_OPT=0
 # basic colors:
 C_BLACK=$'\e[0;30m'
 C_BLUE_B=$'\e[1;38;5;27m'
@@ -113,49 +116,57 @@ C_GRAY=$'\e[0;37m'
 
 ##===========================  FUNCTIONS  ============================##
 args_parse() {
-# parse all input arguments $@:
+# parse all input arguments and create positional parameters array:
     local ARGS=( "$@" )
-    local ARGS_N=0
-    local ARG="${ARGS[ARGS_N]}"
-    local FLAG_ARG_EMPTY='false'
+    local N_ARGS=0
+    local ARG="${ARGS[N_ARGS]}"
+    local FLAG_OPT_EMPTY='false'
     local FLAG_ARG_UNKNOWN='false'
     local FLAG_HELP='false'
+    PARMS=()
+    COUNT_PARM=0
+    COUNT_FLAG=0
+    COUNT_OPT=0
     while [ -n "$ARG" ]; do case "$ARG" in
         # flag args:
-        -A|--A-long)
-            FLAG_A='true'
-            ARG="${ARGS[((++ARGS_N))]}"
+        -C|--config-gen)
+            FLAG_CONFIG_GEN='true'
+            ARG="${ARGS[((++N_ARGS))]}"
             ((COUNT_FLAG++)) ;;
-        -B|--B-long)
-            FLAG_B='true'
-            ARG="${ARGS[((++ARGS_N))]}"
+        -D|--disable)
+            FLAG_DISABLE='true'
+            ARG="${ARGS[((++N_ARGS))]}"
+            ((COUNT_FLAG++)) ;;
+        --dryrun)
+            FLAG_DRYRUN='true'
+            ARG="${ARGS[((++N_ARGS))]}"
+            ((COUNT_FLAG++)) ;;
+        -E|--enable)
+            FLAG_ENABLE='true'
+            ARG="${ARGS[((++N_ARGS))]}"
+            ((COUNT_FLAG++)) ;;
+        -S|--status)
+            FLAG_STATUS='true'
+            ARG="${ARGS[((++N_ARGS))]}"
             ((COUNT_FLAG++)) ;;
         # option args:
-        -x|--x-long)
-            ARG_X="${ARGS[((++ARGS_N))]}"
-            if [ -z "${ARGS[ARGS_N]}" ]; then
-                FLAG_ARG_EMPTY='true'
+        -c|--config)
+            OPT_CONFIG="${ARGS[((++N_ARGS))]}"
+            if [ -z "${ARGS[N_ARGS]}" ]; then
+                FLAG_OPT_EMPTY='true'
                 break
             fi
-            ARG="${ARGS[((++ARGS_N))]}"
-            ((COUNT_OPT++)) ;;
-        -y|--y-long)
-            ARG_Y="${ARGS[((++ARGS_N))]}"
-            if [ -z "${ARGS[ARGS_N]}" ]; then
-                FLAG_ARG_EMPTY='true'
-                break
-            fi
-            ARG="${ARGS[((++ARGS_N))]}"
+            ARG="${ARGS[((++N_ARGS))]}"
             ((COUNT_OPT++)) ;;
         # set help flag:
         -H|--help|-h)
             FLAG_HELP='true'
             break ;;
         # all single letter flag args:
-        -[ABHh]*)
+        -[CDESHh]*)
             # all single letter args:
-            if [[ "${ARG:2:1}" =~ [ABxyHh] ]]; then
-                ARGS[((ARGS_N--))]="-${ARG:2}"
+            if [[ "${ARG:2:1}" =~ [CDEScHh] ]]; then
+                ARGS[((N_ARGS--))]="-${ARG:2}"
                 ARG="${ARG:0:2}"
             else
                 ARG="${ARG:2:1}"
@@ -163,20 +174,20 @@ args_parse() {
                 break
             fi ;;
         # all single letter option args:
-        -[xy]*)
-            ARGS[$ARGS_N]="${ARG:2}"
+        -[c]*)
+            ARGS[$N_ARGS]="${ARG:2}"
             ARG="${ARG:0:2}"
-            ((ARGS_N--)) ;;
+            ((N_ARGS--)) ;;
         # begin parms:
         --)
-            ((ARGS_N++))
+            ((N_ARGS++))
             break ;;
         *)
             break ;;
     esac; done
     # get parameters:
-    while [ -n "${ARGS[ARGS_N]}" ]; do
-        PARMS+=("${ARGS[((ARGS_N++))]}")
+    while [ -n "${ARGS[N_ARGS]}" ]; do
+        PARMS+=("${ARGS[((N_ARGS++))]}")
     done
     COUNT_PARM=${#PARMS[@]}
     # HELP:
@@ -185,11 +196,11 @@ args_parse() {
         exit 0
     # FAIL: arg unknown:
     elif [ "$FLAG_ARG_UNKNOWN" = 'true' ]; then
-        msg_error "option not recognized: $ARG"
+        msg_error "argument not recognized: $ARG"
         exit 5
     # FAIL: arg empty:
-    elif [ "$FLAG_ARG_EMPTY" = 'true' ]; then
-        msg_error "option requires an argument: $ARG"
+    elif [ "$FLAG_OPT_EMPTY" = 'true' ]; then
+        msg_error "argument requires an option: $ARG"
         exit 5
     fi
 }
@@ -221,31 +232,27 @@ msg2() {
     printf '%s  ->%s %s%s\n' "$C_BLUE_B" "$C_WHITE_B" "$1" "$C_GRAY"
 }
 
-print_value() {
-# parse value of variable name $1 from file $2 or args after '--':
-    local LINE REGEX REGEX1 REGEX2 TEXT VALUE VAR
-    VAR="$1"
-    REGEX='^ *'
-    REGEX+="$VAR"
-    REGEX1="$REGEX"+" *= *(\"|'|)(.*)(\1)"
-    REGEX2="$REGEX"+" *\+= *(\"|'|)(.*)(\1)"
-    if [ "$2" = '--' ] && [ -n "$3" ]; then
-        shift; shift
-        TEXT="$@"
-    elif [ -n "$2" ] && [ -f "$2" ]; then
-        TEXT="$(cat "$2")"
-    else
-        return 1
-    fi
-    while read LINE; do
-        if [[ "$LINE" =~ $REGEX1 ]]; then
-            VALUE="${BASH_REMATCH[2]}"
-        elif [[ "$LINE" =~ $REGEX2 ]]; then
-            VALUE+="${BASH_REMATCH[2]}"
-        fi
-    done < <(printf "$TEXT\n")
-    printf "$VALUE\n"
+
+ramroot_config_gen() {
+# generate config file from /etc/fstab:
+    local RAMROOT_MOUNTS=()
+    local RAMROOT_UUIDS=()
+    local MOUNTS=()
+    local UUIDS=()
+    local FSTAB_MOUNTS=()
+    
+    # get MOUNTS from /etc/fstab:
+    mapfile -t MOUNTS < <(grep -Po '^\s*[^#]\s*[^\s]+\s+\K/[^\s]*' \
+        /tmp/fstab | sort)
+    
+    # get UUIDs
+    
+    
+    printf '%s ->\n' "${MOUNTS[@]}"
+    
 }
+
+
 
 
 
@@ -566,79 +573,34 @@ ramroot_cache() {
 
 
 ##=============================  SCRIPT  =============================##
+# parse args:
+args_parse "$@"
 
-
-
-
-
-# parse command line arguments:
-for arg in "$@"; do case $arg in
-    disable)         ACTION='disable';          shift;;
-    enable)          ACTION='enable';           shift;;
-    remove)          ACTION='remove';           shift;;
-    status)          ACTION='status';           shift;;
-    -b|--boot)       shift; UUID_BOOT="$1";     shift;;
-    -D|--dryrun)     FLAG_DRYRUN='true';        shift;;
-    -F|--fstab)      FLAG_FSTAB='true';         shift;;
-    -H|-h|--help)    ACTION='help';             shift;;
-    -I|--incognito)  FLAG_INCOGNITO='true';     shift;;
-    -K|--keep)       FLAG_CACHE='true';         shift;;
-    -M|--message)    FLAG_ISSUE='true';         shift;;
-    -N|--no)         LOAD_DEFAULT='no';         shift;;
-    -r|--root)       shift; UUID_ROOT="$1";     shift;;
-    -t|--timeout)    shift; LOAD_TIMEOUT="$1";  shift;;
-esac; done
-
-# print help:
-if [ "$ACTION" = 'help' ]; then
-    print_help
-    exit 0
+# FAIL: too many arguments:
+if [ -n "${PARMS[0]}" ]; then
+    msg_error "too many arguments: ${PARMS[*]}"
+    exit 5
 fi
 
-# FAIL: unrecognized option:
-if [ -n "$1" ]; then
-    printf ":! Unrecognized option: $1\n"
+# FAIL: config file doesn't exist:
+if [ -n "$OPG_CONFIG" ] && [ ! -f "$OPT_CONFIG" ]; then
+    msg_error "config file not found: $OPT_CONFIG"
     exit 1
 fi
 
-# FAIL: no action specified:
-if [ "$ACTION" = 'none' ]; then
-    printf ":! No action specified.  See --help\n"
+# FAIL: disable and enable:
+if [ "$FLAG_DISABLE" = 'true' ] && [ "$FLAG_ENABLE" = 'true' ]; then
+    msg_error 'cannot disable and enable in one command'
     exit 1
 fi
 
-# WARN: invalid prompt timeout:
-if [[ ! "$LOAD_TIMEOUT" =~ ^[1-9][0-9]*$ ]]; then
-    printf ":! Invalid prompt timeout: $LOAD_TIMEOUT\n"
-    printf ":: Using default timeout: $LOAD_TIMEOUT_DEFAULT\n"
-    LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
+if [ "$FLAG_CONFIG_GEN" = 'true' ]; then
+    ramroot_config_gen
 fi
-
-# prepare build:
-mkdir -p "$DIR_BUILD"
-cd "$DIR_BUILD"
-sudo -k
 
 # get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-INIT_MODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' \
-    /etc/mkinitcpio.conf`"
-INIT_HOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' \
-    /etc/mkinitcpio.conf`"
+#INIT_MODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' \
+    #/etc/mkinitcpio.conf`"
+#INIT_HOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' \
+    #/etc/mkinitcpio.conf`"
 
-# execute action:
-if [ "$ACTION" = 'enable' ]; then
-    ramroot_enable
-elif [ "$ACTION" = 'disable' ]; then
-    ramroot_disable
-elif [ "$ACTION" = 'remove' ]; then
-    ramroot_disable
-    ramroot_remove
-elif [ "$ACTION" = 'status' ]; then
-    ramroot_status
-fi
-
-# remove build files:
-cd ..
-rm -Rd "$DIR_BUILD"
-
-exit $EXIT_STATUS
