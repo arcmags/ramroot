@@ -4,10 +4,11 @@
 
 run_hook() {
     
-    ROOT_UUID=
-    PART_UUIDS=()
-    PART_MOUNTS=()
-    
+    #ROOT_UUID=
+    UUIDS=()
+    MOUNTS=()
+    PROMPT_DEFAULT=no
+    PROMPT_TIMEOUT=5
     
     # root (and boot) UUID
     UUID_BOOT=''
@@ -15,9 +16,7 @@ run_hook() {
     # ramroot prompt:
     LOAD_DEFAULT='yes'
     LOAD_TIMEOUT=15
-    # options:
-    FLAG_FSTAB='false'
-    FLAG_ISSUE='false'
+
 
     # wait for output from other init processes:
     sleep 4
@@ -60,6 +59,8 @@ run_hook() {
         else
             INPUT='y'
         fi
+
+
     # prompt [y/N] to load filesystem to RAM:
     else
         echo -n ">: Load root filesystem to RAM? [y/N] "
@@ -91,21 +92,22 @@ run_hook() {
         ZRAM_DEVICE=$(zramctl -f -s "${ZRAM_M}M" -a lzo -t $(nproc))
         mkfs.ext4 -q "$ZRAM_DEVICE"
 
+    # copy root:
+
         # mount zRAM partition to /zram_root:
         mount "$ZRAM_DEVICE" /zram_root
         export ZRAM_DEVICE
         # copy files from local root to zRAM root:
         cp -a /local_root/* /zram_root/
 
+
         # move /etc/fstab from to /etc/fstab~ in zRAM root:
         if [ -f /zram_root/etc/fstab ]; then
             mv /zram_root/etc/fstab /zram_root/etc/fstab~
         fi
-        # use other mount points from /etc/fstab normally:
-        if [ "$FLAG_FSTAB" = 'true' ] && [ -f /zram_root/etc/fstab~ ]; then
-            sed 's@\(.* /boot .*\)@#\1@g; s@\(.* / .*\)@#\1@g;' \
-                /zram_root/etc/fstab~ > /zram_root/etc/fstab
-        fi
+        
+        
+        
         # use custom /etc/issue file:
         if [ "$FLAG_ISSUE" = 'true' ] &&
         [ -f /zram_root/usr/lib/ramroot/etc/issue ]; then
@@ -115,11 +117,17 @@ run_hook() {
             cp /zram_root/usr/lib/ramroot/etc/issue /zram_root/etc/issue
         fi
 
+    # copy other partitions:
+
         # copy files from local boot partition (if exists) to zRAM boot:
         if [ -n "$UUID_BOOT" ]; then
             mkdir -p /zram_root/boot
             cp -a /local_boot/* /zram_root/boot/
         fi
+        
+        
+        
+        
         # unmount zRAM root:
         umount /zram_root
         # set new mount_handler to use zRAM device:

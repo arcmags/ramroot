@@ -2,10 +2,7 @@
 ##============================  ramroot  =============================##
 # Copyright (C) 2019 Chris Magyar        GNU General Public License v3 #
 ##====================================================================##
-#VERSION="1.1.8"
 VERSION="1.2.0"
-
-
 
 print_help() {
 cat <<'HELPDOC'
@@ -13,54 +10,75 @@ NAME
     ramroot - load root filesystem entirely to RAM during boot
 
 SYNOPSIS
-    ramroot <ACTION> [OPTIONS]
+    ramroot [OPTIONS]
 
 DESCRIPTION
-    This script generates and 
-    
-
-
-ACTIONS
-    -D, --disable
-        Remove ramroot from /etc/mkinitcpio.conf HOOKS.
-        Remove ext4, vfat, and zram from /etc/mkinitcpio.conf MODULES.
-        Rebuild linux cpio boot image.
-
-    -E, --enable
-        Rebuild build and runtime hooks in /usr/lib/initcpio.
-        Add ramroot to /etc/mkinitcpio.conf HOOKS.
-        Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
-        Rebuild linux cpio boot image.
-
-    -S, --status
-        Display ramroot and root filesystem status.
+    This script generates build and runtime initramfs hooks that
+    allow the root filesystem and any other physical partitions to
+    be loaded directly into RAM during early userspace.
 
 OPTIONS
+    -c, --config <CONFIG FILE>
 
+    -C, --config-gen
+        Generate a new config file.
 
-    #-D, --dryrun
-        #Execute ACTION without making any changes.
+    -D, --disable
+        Remove hooks from mkinitcpio.conf anf rebuild linux boot image.
+
+    --dryrun
+        Copy generated build and runtime initramfs hooks and updated
+        mkinitcpio.conf to cache directory only.
+
+    -E, --enable
+        Generate build and runtime initramfs hooks.  Add hooks
+        to mkinicpio.conf and rebuild linux boot image.
+
+    -S, --status
+        Display ramroot status.
 
     -h, --help
-        Display help text and exit. 
-    
+        Display help text and exit.
+
+FILES
+    /etc/ramroot.conf
+        This is the primary ramroot config file.  Edit to add or
+        remove mounts, change default boot prompt behavior, and
+        set memory requirements for booting from RAM.  When making
+        changes to this file, you must re-enable ramroot (--enable)
+        for the changes to take effect.
+
+    /etc/ramroot/
+        The contents of this directory replicates the hierarchy of
+        the root file system.  Files here are copied to the root
+        file system when boot from RAM.  This can be used to copy or
+        overwrite scripts and other files when boot from RAM.
+
+    /usr/lib/ramroot/
+        Default ramroot config file and template hook files.
+
+    ~/.cache/ramroot/
+        Generated hook files and updated mkinitcpio.conf.
+
+VERSION
 HELPDOC
-return 0
+if [ -n "$VERSION" ]; then
+    printf '\nVERSION\n    %s\n' "$VERSION"
+fi
 }
 
 ##===========================  VARIABLES  ============================##
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 #### replace all this shit with a config file: ####
 # default variables:
 DIR_CACHE="$HOME/.cache/ramroot"
 DIR_BUILD='/tmp/ramroot'
 FLAG_CACHE='false'
 LOAD_TIMEOUT_DEFAULT=15
-
-
 # script variables (do not change):
 UUID_ROOT=
 UUID_BOOT=
-
 ACTION='none'
 DIR_HOOKS='/usr/lib/initcpio/hooks'
 DIR_INSTALL='/usr/lib/initcpio/install'
@@ -71,14 +89,17 @@ HOOK_RUNTIME="$DIR_LIB/hooks/ramroot"
 FLAG_INCOGNITO='false'
 INIT_MODULES=
 INIT_HOOKS=
-FLAG_ISSUE='false'
 EXIT_STATUS=0
-FLAG_DRYRUN='false'
-FLAG_FSTAB='false'
 LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
 LOAD_DEFAULT='yes'
+#### replace all this shit with a config file: ####
 
-
+# flag args:
+FLAG_CONFIG_GEN='false'
+FLAG_DISABLE='false'
+FLAG_DRYRUN='false'
+FLAG_ENABLE='false'
+FLAG_STATUS='false'
 
 # basic colors:
 C_BLACK=$'\e[0;30m'
@@ -91,6 +112,88 @@ C_WHITE_B=$'\e[1;37m'
 C_GRAY=$'\e[0;37m'
 
 ##===========================  FUNCTIONS  ============================##
+args_parse() {
+# parse all input arguments $@:
+    local ARGS=( "$@" )
+    local ARGS_N=0
+    local ARG="${ARGS[ARGS_N]}"
+    local FLAG_ARG_EMPTY='false'
+    local FLAG_ARG_UNKNOWN='false'
+    local FLAG_HELP='false'
+    while [ -n "$ARG" ]; do case "$ARG" in
+        # flag args:
+        -A|--A-long)
+            FLAG_A='true'
+            ARG="${ARGS[((++ARGS_N))]}"
+            ((COUNT_FLAG++)) ;;
+        -B|--B-long)
+            FLAG_B='true'
+            ARG="${ARGS[((++ARGS_N))]}"
+            ((COUNT_FLAG++)) ;;
+        # option args:
+        -x|--x-long)
+            ARG_X="${ARGS[((++ARGS_N))]}"
+            if [ -z "${ARGS[ARGS_N]}" ]; then
+                FLAG_ARG_EMPTY='true'
+                break
+            fi
+            ARG="${ARGS[((++ARGS_N))]}"
+            ((COUNT_OPT++)) ;;
+        -y|--y-long)
+            ARG_Y="${ARGS[((++ARGS_N))]}"
+            if [ -z "${ARGS[ARGS_N]}" ]; then
+                FLAG_ARG_EMPTY='true'
+                break
+            fi
+            ARG="${ARGS[((++ARGS_N))]}"
+            ((COUNT_OPT++)) ;;
+        # set help flag:
+        -H|--help|-h)
+            FLAG_HELP='true'
+            break ;;
+        # all single letter flag args:
+        -[ABHh]*)
+            # all single letter args:
+            if [[ "${ARG:2:1}" =~ [ABxyHh] ]]; then
+                ARGS[((ARGS_N--))]="-${ARG:2}"
+                ARG="${ARG:0:2}"
+            else
+                ARG="${ARG:2:1}"
+                FLAG_ARG_UNKNOWN='true'
+                break
+            fi ;;
+        # all single letter option args:
+        -[xy]*)
+            ARGS[$ARGS_N]="${ARG:2}"
+            ARG="${ARG:0:2}"
+            ((ARGS_N--)) ;;
+        # begin parms:
+        --)
+            ((ARGS_N++))
+            break ;;
+        *)
+            break ;;
+    esac; done
+    # get parameters:
+    while [ -n "${ARGS[ARGS_N]}" ]; do
+        PARMS+=("${ARGS[((ARGS_N++))]}")
+    done
+    COUNT_PARM=${#PARMS[@]}
+    # HELP:
+    if [ "$FLAG_HELP" = 'true' ]; then
+        print_help
+        exit 0
+    # FAIL: arg unknown:
+    elif [ "$FLAG_ARG_UNKNOWN" = 'true' ]; then
+        msg_error "option not recognized: $ARG"
+        exit 5
+    # FAIL: arg empty:
+    elif [ "$FLAG_ARG_EMPTY" = 'true' ]; then
+        msg_error "option requires an argument: $ARG"
+        exit 5
+    fi
+}
+
 msg() {
 # print status message:
     printf '%s==>%s %s%s\n' "$C_GREEN_B" "$C_WHITE_B" "$1" "$C_GRAY"
@@ -143,6 +246,7 @@ print_value() {
     done < <(printf "$TEXT\n")
     printf "$VALUE\n"
 }
+
 
 
 ##======================  ramroot_enable()  ======================##
@@ -462,8 +566,10 @@ ramroot_cache() {
 
 
 ##=============================  SCRIPT  =============================##
-# get path of script:
-DIR_SCRIPT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+
+
+
 
 # parse command line arguments:
 for arg in "$@"; do case $arg in
