@@ -240,13 +240,16 @@ ramroot_config_gen() {
     local MOUNTS=()
     local UUIDS=()
     local FSTAB_MOUNTS=()
+    local DEVICE=
     
     # get MOUNTS from /etc/fstab:
     mapfile -t MOUNTS < <(grep -Po '^\s*[^#]\s*[^\s]+\s+\K/[^\s]*' \
         /tmp/fstab | sort)
     
-    # get UUIDs
+
     
+    # get MOUNTS on same device as root partition:
+    #mapfile -t
     
     printf '%s ->\n' "${MOUNTS[@]}"
     

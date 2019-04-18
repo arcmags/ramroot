@@ -5,7 +5,6 @@
 run_hook() {
     
     #ROOT_UUID=
-    UUIDS=()
     MOUNTS=()
     PROMPT_DEFAULT=no
     PROMPT_TIMEOUT=5
