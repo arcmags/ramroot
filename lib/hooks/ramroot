@@ -5,7 +5,8 @@
 run_hook() {
     
     #ROOT_UUID=
-    MOUNTS=()
+    RAMROOT_MOUNTS=()
+    LOCAL_MOUNTS=()
     PROMPT_DEFAULT=no
     PROMPT_TIMEOUT=5
     

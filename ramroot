@@ -17,9 +17,17 @@ DESCRIPTION
     allow the root filesystem and any other physical partitions to
     be loaded directly into RAM during early userspace.
 
+    To use ramroot, a configuration file must first be created.  The
+    --config-gen option will attempt to detect the root filesystem
+    mounts and generate a sane default configuration.
+
+    Once a configuration file has been created, the ramroot initramfs
+    hooks can be created and enabled with the --enable option.
+
 OPTIONS
     -c, --config <CONFIG FILE>
-        Config file to use when enabling ramroot.
+        Config file to use when enabling ramroot.  File to save
+        to when generating new config file.
 
     -C, --config-gen
         Generate a new config file.
@@ -101,9 +109,9 @@ FLAG_ENABLE='false'
 FLAG_STATUS='false'
 OPT_CONFIG=
 PARMS=()
-COUNT_PARM=0
+COUNT_PARMS=0
 COUNT_FLAG=0
-COUNT_OPT=0
+COUNT_OPTS=0
 # basic colors:
 C_BLACK=$'\e[0;30m'
 C_BLUE_B=$'\e[1;38;5;27m'
@@ -124,31 +132,31 @@ args_parse() {
     local FLAG_ARG_UNKNOWN='false'
     local FLAG_HELP='false'
     PARMS=()
-    COUNT_PARM=0
-    COUNT_FLAG=0
-    COUNT_OPT=0
+    COUNT_PARMS=0
+    COUNT_FLAGS=0
+    COUNT_OPTS=0
     while [ -n "$ARG" ]; do case "$ARG" in
         # flag args:
         -C|--config-gen)
             FLAG_CONFIG_GEN='true'
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAG++)) ;;
+            ((COUNT_FLAGS++)) ;;
         -D|--disable)
             FLAG_DISABLE='true'
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAG++)) ;;
+            ((COUNT_FLAGS++)) ;;
         --dryrun)
             FLAG_DRYRUN='true'
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAG++)) ;;
+            ((COUNT_FLAGS++)) ;;
         -E|--enable)
             FLAG_ENABLE='true'
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAG++)) ;;
+            ((COUNT_FLAGS++)) ;;
         -S|--status)
             FLAG_STATUS='true'
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAG++)) ;;
+            ((COUNT_FLAGS++)) ;;
         # option args:
         -c|--config)
             OPT_CONFIG="${ARGS[((++N_ARGS))]}"
@@ -157,7 +165,7 @@ args_parse() {
                 break
             fi
             ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_OPT++)) ;;
+            ((COUNT_OPTS++)) ;;
         # set help flag:
         -H|--help|-h)
             FLAG_HELP='true'
@@ -189,7 +197,7 @@ args_parse() {
     while [ -n "${ARGS[N_ARGS]}" ]; do
         PARMS+=("${ARGS[((N_ARGS++))]}")
     done
-    COUNT_PARM=${#PARMS[@]}
+    COUNT_PARMS=${#PARMS[@]}
     # HELP:
     if [ "$FLAG_HELP" = 'true' ]; then
         print_help
@@ -234,25 +242,85 @@ msg2() {
 
 
 ramroot_config_gen() {
-# generate config file from /etc/fstab:
-    local RAMROOT_MOUNTS=()
-    local RAMROOT_UUIDS=()
-    local MOUNTS=()
-    local UUIDS=()
-    local FSTAB_MOUNTS=()
-    local DEVICE=
-    
-    # get MOUNTS from /etc/fstab:
-    mapfile -t MOUNTS < <(grep -Po '^\s*[^#]\s*[^\s]+\s+\K/[^\s]*' \
-        /tmp/fstab | sort)
-    
+# generate ramroot config file:
+    local MOUNTS_RAMROOT=()
+    local MOUNTS_LOCAL=()
+    local PROMPT_DEFAULT='no'
+    local PROMPT_TIMEOUT=5
+    local RAM_MINIMUM='750M'
+    local RAM_PREFERRED='4G'
+    local RAMROOT_MINIMUM='300M'
+    local RAMROOT_MAXIMUM='2.5G'
+    local MOUNT_POINTS_ALL=()
+    local MOUNT_POINTS_RAMROOT=()    
+    local MOUNT_POINTS_SKIP=()   
+    local MOUNT_POINTS_BIND=()    
+    local FLAG_BIND_MOUNT=
+    local ROOT_DEVICE=
 
-    
-    # get MOUNTS on same device as root partition:
-    #mapfile -t
-    
-    printf '%s ->\n' "${MOUNTS[@]}"
-    
+    # mountpoints from /etc/fstab:
+    if [ -f /etc/fstab ]; then
+        mapfile -t MOUNT_POINTS_ALL < <(grep -P '^\s*[^\s#]' \
+            /etc/fstab | grep -Po '^[^\s]+\s+\K/[^\s]*' | sort)
+    # mountpoints from lsblk:
+    else
+        msg_warn '/etc/fstab not found, using mountpoints from lsblk'
+        mapfile -t MOUNT_POINTS_ALL < <(lsblk -nlo MOUNTPOINT | \
+            grep -P '^/' | sort)
+    fi
+
+    # root block device address from lsblk:
+    ROOT_DEVICE="$(lsblk -nlo MOUNTPOINT,NAME | \
+        grep -Po '^/\s+\Ksd[a-z]')"
+
+    # mountpoints on same block device as root:
+    for MOUNT_POINT in "${MOUNT_POINTS_ALL[@]}"; do
+        # add mountpoint to ramroot:
+        if (lsblk -nlo MOUNTPOINT,NAME | grep -P \
+        "^${MOUNT_POINT}\s+$ROOT_DEVICE" &>/dev/null); then
+            MOUNT_POINTS_RAMROOT+=("$MOUNT_POINT")
+        # add mountpoint to skip array:
+        else
+            MOUNT_POINTS_SKIP+=("$MOUNT_POINT")
+        fi
+    done
+
+    # mountpoints to keep locally:
+    if [ -f /etc/fstab ]; then
+        # get bind-mounts to any directories on root block device:
+        mapfile -t MOUNT_POINTS_BIND < <(grep -P '^\s*[^\s#]' \
+            /etc/fstab | grep -Po '^/(?!dev)[^\s]*\s+\K/[^\s]+' | sort)
+        for BIND_MOUNT_POINT in "${MOUNT_POINTS_BIND[@]}"; do
+            FLAG_BIND_MOUNT='true'
+            for SKIP_MOUNT_POINT in "${MOUNT_POINTS_SKIP[@]}"; do
+                if (grep -P \
+                "^${SKIP_MOUNT_POINT}[^\s]*\s+${BIND_MOUNT_POINT}" \
+                /etc/fstab &>/dev/null); then
+                    FLAG_BIND_MOUNT='false'
+                fi
+            done
+            # add to local mounts:
+            if [ "$FLAG_BIND_MOUNT" = 'true' ]; then
+                MOUNTS_LOCAL+=("$(grep -P '^\s*[^\s#]' \
+                /etc/fstab | \
+                grep -P "^[^\s]+\s+${BIND_MOUNT_POINT}\s" | \
+                grep -Po '^\K[^\s]+'):${BIND_MOUNT_POINT}")
+            fi
+        done
+    fi
+
+    # ramroot mounts:
+    for RAMROOT_MOUNT_POINT in "${MOUNT_POINTS_RAMROOT[@]}"; do
+        MOUNTS_RAMROOT+=("$(lsblk -nlo MOUNTPOINT,UUID | grep -Po \
+            "^${RAMROOT_MOUNT_POINT}\s+\K[^\s]+"):$RAMROOT_MOUNT_POINT")
+    done
+
+    #printf '%s\n' "${MOUNT_POINTS_ALL[@]}"
+    #printf '\n'
+    #printf '%s\n' "${MOUNT_POINTS_RAMROOT[@]}"
+    #printf '\n'
+    printf '%s\n' "${MOUNTS_RAMROOT[@]}"
+    printf '%s\n' "${MOUNTS_LOCAL[@]}"
 }
 
 
@@ -580,7 +648,7 @@ ramroot_cache() {
 args_parse "$@"
 
 # FAIL: too many arguments:
-if [ -n "${PARMS[0]}" ]; then
+if [ "$COUNT_PARMS" -ne 0 ]; then
     msg_error "too many arguments: ${PARMS[*]}"
     exit 5
 fi
