@@ -1,4 +1,4 @@
-#!/bin/bash
+#!usr/bin/ash
 ##=====================  ramroot (runtime hook)  =====================##
 # Place in: /usr/lib/initcpio/hooks/
 

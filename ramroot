@@ -16,32 +16,25 @@ DESCRIPTION
     This script generates build and runtime initramfs hooks that
     allow the root filesystem and any other physical partitions to
     be loaded directly into RAM during early userspace.
-
-    To use ramroot, a configuration file must first be created.  The
-    --config-gen option will attempt to detect the root filesystem
-    mounts and generate a sane default configuration.
-
-    Once a configuration file has been created, the ramroot initramfs
-    hooks can be created and enabled with the --enable option.
+    
+    When enabled, if enough RAM is detected during the early initramfs
+    boot process, ramroot will prompt the user to load the root and
+    other configured partitions completely into RAM.  Partitions loaded
+    into RAM are removed from the system's usual /etc/fstab.  Other
+    partition mounting information contained in /etc/fstab will still
+    be processed allowing large volumes to be mounted normally.
 
 OPTIONS
-    -c, --config <CONFIG FILE>
-        Config file to use when enabling ramroot.  File to save
-        to when generating new config file.
-
     -C, --config-gen
-        Generate a new config file.
+        Attempt to detect the root filesystem partitions and generate
+        a new config file.  By default, all partitions on the same 
+        block device as the root filesystem are set to load to RAM. 
 
     -D, --disable
-        Remove hooks from mkinitcpio.conf anf rebuild linux boot image.
-
-    --dryrun
-        Copy generated build and runtime initramfs hooks and updated
-        mkinitcpio.conf to cache directory only.
+        Remove hook from mkinitcpio.conf and rebuild linux boot image.
 
     -E, --enable
-        Generate build and runtime initramfs hooks.  Add hooks
-        to mkinicpio.conf and rebuild linux boot image.
+        Add ramroot hook to mkinicpio.conf and rebuild linux boot image.
 
     -S, --status
         Display ramroot status.
@@ -60,14 +53,12 @@ FILES
     /etc/ramroot/
         The contents of this directory replicates the hierarchy of
         the root file system.  Files here are copied to the root
-        file system when boot from RAM.  This can be used to copy or
-        overwrite scripts and other files when boot from RAM.
+        file system when successfully boot from RAM allowing the use
+        of custom configurations and scripts in the ramroot environment. 
 
     /usr/lib/ramroot/
         Default ramroot config file and template hook files.
 
-    ~/.cache/ramroot/
-        Generated hook files and updated mkinitcpio.conf.
 HELPDOC
 if [ -n "$VERSION" ]; then
     printf '\nVERSION\n    %s\n' "$VERSION"
@@ -104,7 +95,6 @@ LOAD_DEFAULT='yes'
 # args:
 FLAG_CONFIG_GEN='false'
 FLAG_DISABLE='false'
-FLAG_DRYRUN='false'
 FLAG_ENABLE='false'
 FLAG_STATUS='false'
 OPT_CONFIG=
@@ -145,10 +135,6 @@ args_parse() {
             FLAG_DISABLE='true'
             ARG="${ARGS[((++N_ARGS))]}"
             ((COUNT_FLAGS++)) ;;
-        --dryrun)
-            FLAG_DRYRUN='true'
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAGS++)) ;;
         -E|--enable)
             FLAG_ENABLE='true'
             ARG="${ARGS[((++N_ARGS))]}"
@@ -157,15 +143,6 @@ args_parse() {
             FLAG_STATUS='true'
             ARG="${ARGS[((++N_ARGS))]}"
             ((COUNT_FLAGS++)) ;;
-        # option args:
-        -c|--config)
-            OPT_CONFIG="${ARGS[((++N_ARGS))]}"
-            if [ -z "${ARGS[N_ARGS]}" ]; then
-                FLAG_OPT_EMPTY='true'
-                break
-            fi
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_OPTS++)) ;;
         # set help flag:
         -H|--help|-h)
             FLAG_HELP='true'
@@ -173,7 +150,7 @@ args_parse() {
         # all single letter flag args:
         -[CDESHh]*)
             # all single letter args:
-            if [[ "${ARG:2:1}" =~ [CDEScHh] ]]; then
+            if [[ "${ARG:2:1}" =~ [CDESHh] ]]; then
                 ARGS[((N_ARGS--))]="-${ARG:2}"
                 ARG="${ARG:0:2}"
             else
@@ -244,83 +221,34 @@ msg2() {
 ramroot_config_gen() {
 # generate ramroot config file:
     local MOUNTS_RAMROOT=()
-    local MOUNTS_LOCAL=()
-    local PROMPT_DEFAULT='no'
-    local PROMPT_TIMEOUT=5
-    local RAM_MINIMUM='750M'
-    local RAM_PREFERRED='4G'
-    local RAMROOT_MINIMUM='300M'
-    local RAMROOT_MAXIMUM='2.5G'
-    local MOUNT_POINTS_ALL=()
-    local MOUNT_POINTS_RAMROOT=()    
-    local MOUNT_POINTS_SKIP=()   
-    local MOUNT_POINTS_BIND=()    
-    local FLAG_BIND_MOUNT=
+    local MOUNT_POINTS=()
     local ROOT_DEVICE=
 
-    # mountpoints from /etc/fstab:
+    # parse mountpoints from /etc/fstab:
     if [ -f /etc/fstab ]; then
-        mapfile -t MOUNT_POINTS_ALL < <(grep -P '^\s*[^\s#]' \
+        mapfile -t MOUNT_POINTS < <(grep -P '^\s*[^\s#]' \
             /etc/fstab | grep -Po '^[^\s]+\s+\K/[^\s]*' | sort)
-    # mountpoints from lsblk:
+    # get mountpoints from lsblk:
     else
         msg_warn '/etc/fstab not found, using mountpoints from lsblk'
-        mapfile -t MOUNT_POINTS_ALL < <(lsblk -nlo MOUNTPOINT | \
+        mapfile -t MOUNT_POINTS < <(lsblk -nlo MOUNTPOINT | \
             grep -P '^/' | sort)
     fi
 
-    # root block device address from lsblk:
+    # get root block device address from lsblk:
     ROOT_DEVICE="$(lsblk -nlo MOUNTPOINT,NAME | \
         grep -Po '^/\s+\Ksd[a-z]')"
 
-    # mountpoints on same block device as root:
-    for MOUNT_POINT in "${MOUNT_POINTS_ALL[@]}"; do
-        # add mountpoint to ramroot:
+    # add partitions on same block device as root to ramroot mounts:
+    for MOUNT_POINT in "${MOUNT_POINTS[@]}"; do
         if (lsblk -nlo MOUNTPOINT,NAME | grep -P \
         "^${MOUNT_POINT}\s+$ROOT_DEVICE" &>/dev/null); then
-            MOUNT_POINTS_RAMROOT+=("$MOUNT_POINT")
-        # add mountpoint to skip array:
-        else
-            MOUNT_POINTS_SKIP+=("$MOUNT_POINT")
+            MOUNTS_RAMROOT+=("$(lsblk -nlo MOUNTPOINT,UUID | grep -Po \
+                "^${MOUNT_POINT}\s+\K[^\s]+"):$MOUNT_POINT")
         fi
     done
-
-    # mountpoints to keep locally:
-    if [ -f /etc/fstab ]; then
-        # get bind-mounts to any directories on root block device:
-        mapfile -t MOUNT_POINTS_BIND < <(grep -P '^\s*[^\s#]' \
-            /etc/fstab | grep -Po '^/(?!dev)[^\s]*\s+\K/[^\s]+' | sort)
-        for BIND_MOUNT_POINT in "${MOUNT_POINTS_BIND[@]}"; do
-            FLAG_BIND_MOUNT='true'
-            for SKIP_MOUNT_POINT in "${MOUNT_POINTS_SKIP[@]}"; do
-                if (grep -P \
-                "^${SKIP_MOUNT_POINT}[^\s]*\s+${BIND_MOUNT_POINT}" \
-                /etc/fstab &>/dev/null); then
-                    FLAG_BIND_MOUNT='false'
-                fi
-            done
-            # add to local mounts:
-            if [ "$FLAG_BIND_MOUNT" = 'true' ]; then
-                MOUNTS_LOCAL+=("$(grep -P '^\s*[^\s#]' \
-                /etc/fstab | \
-                grep -P "^[^\s]+\s+${BIND_MOUNT_POINT}\s" | \
-                grep -Po '^\K[^\s]+'):${BIND_MOUNT_POINT}")
-            fi
-        done
-    fi
-
-    # ramroot mounts:
-    for RAMROOT_MOUNT_POINT in "${MOUNT_POINTS_RAMROOT[@]}"; do
-        MOUNTS_RAMROOT+=("$(lsblk -nlo MOUNTPOINT,UUID | grep -Po \
-            "^${RAMROOT_MOUNT_POINT}\s+\K[^\s]+"):$RAMROOT_MOUNT_POINT")
-    done
-
-    #printf '%s\n' "${MOUNT_POINTS_ALL[@]}"
-    #printf '\n'
-    #printf '%s\n' "${MOUNT_POINTS_RAMROOT[@]}"
-    #printf '\n'
+    
     printf '%s\n' "${MOUNTS_RAMROOT[@]}"
-    printf '%s\n' "${MOUNTS_LOCAL[@]}"
 }
 
 
