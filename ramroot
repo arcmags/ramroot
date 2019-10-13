@@ -2,7 +2,7 @@
 ##============================  ramroot  =============================##
 # Copyright (C) 2019 Chris Magyar        GNU General Public License v3 #
 ##====================================================================##
-VERSION="1.2.0"
+VERSION="2.0.0"
 
 print_help() {
 cat <<'HELPDOC'
