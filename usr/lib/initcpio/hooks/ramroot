@@ -1,54 +1,90 @@
 #!usr/bin/ash
 
 run_hook() {
-    local mounts_ramroot mounts_null prompt_default prompt_wait
-    local ram_min ram_pref ramroot_min ramroot_max
-    local ram_m ram_g
-    local ramroot_m=0
-    local mount_ramroot
-        
-    # wait for output from other init processes:
-    sleep 4
-    source /etc/ramroot.conf
-    
-    echo "mounts_ramroot=$mounts_ramroot"
-    echo "mounts_null=$mounts_null"
-    echo "prompt_default=$prompt_default"
-    echo "prompt_wait=$prompt_wait"
-    echo "ram_min=$ram_min"
-    echo "ram_pref=$ram_pref"
-    echo "ramroot_min=$ramroot_min"
-    echo "ramroot_max=$ramroot_max"
-    sleep 2
-    echo -n "."
-    sleep 1
-    echo -n "."
-    sleep 1
-    echo "."
-    sleep 1
-    
-    if [ ! -n "${mounts_ramroot}" ]; then
-        msg "ramroot disabled: no mounts in /etc/ramroot.conf"
-        sleep 3
-        return 1
-    # need to regex this better, maybe sed...
-    elif [ "${ram_min: -1}" != 'M' ] && \
-    [ "${ram_min: -1}" != 'G' ]; then
-        err "ramroot failed: invalid ram_min: $ram_min"
-        sleep 3
+    local config fstab fstab_ramroot mount_ramroot mount_root \
+        mounts_null mounts_ramroot prompt_default prompt_wait ram_min \
+        ram_m ram_g ram_pref ramroot_m ramroot_max ramroot_min \
+        regex_endln regex_no_yes regex_size
+    regex_endln="[\"']?(\s+$|\s+#.*$|$)"
+    regex_size="\s*=\s*[\"']?0*([0-9]+(\.[0-9]*)?[GgMm])${regex_endln}"
+    regex_int="\s*=\s*[\"']?0*([0-9]+)${regex_endln}"
+    regex_no_yes="\s*=\s*[\"']?([Yy][Ee][Ss]|[Nn][Oo])${regex_endln}"
+
+    # wait a moment to ensure udev can resolve device:
+    sleep 3
+    mount_root="$(resolve_device "$root")"
+    poll_device "$mount_root" 20
+
+    # mount root:
+    mount "$mount_root" /local_root
+    if [ $? -ne 0 ]; then
+        printf '==> FAILED: ramroot unable to mount local root\n'
         return 1
     fi
-    ### more error checking ###    
-    
-    # detect available RAM:
+    # get root size:
+    ramroot_m=$((ramroot_m + $(df -BM /local_root/ | \
+        awk 'FNR==2 {print int($3)}')))
+    # /etc/fstab -> $fstab:
+    if [ -f /local_root/etc/fstab ]; then
+        fstab="$(cat /local_root/etc/fstab)"
+    fi
+    # /etc/ramroot.con -> $config:
+    if [ -f /local_root/etc/ramroot.conf ]; then
+        config="$(cat /local_root/etc/ramroot.conf)"
+    fi
+    # umount root:
+    umount /local_root
+
+    # parse config:
+    if [ -n "$config" ]; then
+        prompt_default="$(echo "$config" | sed -En \
+            "s/^\s*prompt_default${regex_no_yes}/\1/p" | tail -n1)"
+        prompt_timeout="$(echo "$config" | \
+            sed -En "s/^\s*prompt_timeout${regex_int}/\1/p" | tail -n1)"
+        ram_min="$(echo "$config" | \
+            sed -En "s/^\s*ram_min${regex_size}/\1/p" | tail -n1)"
+        ram_pref="$(echo "$config" | \
+            sed -En "s/^\s*ram_pref${regex_size}/\1/p" | tail -n1)"
+        ramroot_min="$(echo "$config" | \
+            sed -En "s/^\s*ramroot_min${regex_size}/\1/p" | tail -n1)"
+        ramroot_max="$(echo "$config" | \
+            sed -En "s/^\s*ramroot_max${regex_size}/\1/p" | tail -n1)"
+    fi
+    # set defaults:
+    prompt_default="${prompt_default:-no}"
+    prompt_timeout="${prompt_timeout:-10}"
+    ram_min="${ram_min:-750M}"
+    ram_pref="${ram_pref:-4G}"
+    ramroot_min="${ramroot_min:-250M}"
+    ramroot_max="${ramroot_max:-2G}"
+
+
+    if [ ! -n "$config" ] || [ ! -n "$mounts_ramroot" ]; then
+        mounts_ramroot="$mount_root:/"
+        if [ -n "$fstab" ]; then
+            printf '==> using info from /etc/fstab...\n'
+        else
+            printf '==> no /etc/fstab ...\n'
+        fi
+    fi
+
     ram_m=$(free --mega | awk '/Mem/ {print int($2)}')
-    ram_g=$(( ram_m / 1000 ))    
-    
-    
-    msg "total ram: ${ram_m}M"
-    sleep 3
+    ram_g=$(( ram_m / 1000 ))
+
+    printf '==> mounts_ramroot=%s\n' "$mounts_ramroot"
+    printf '==> prompt_default=%s\n' "$prompt_default"
+    printf '==> prompt_timeout=%s\n' "$prompt_timeout"
+    printf '==> ram_min=%s\n' "$ram_min"
+    printf '==> ram_pref=%s\n' "$ram_pref"
+    printf '==> ramroot_min=%s\n' "$ramroot_min"
+    printf '==> ramroot_max=%s\n' "$ramroot_max"
+    printf '==> ramroot_m=%s\n' "$ramroot_m"
+    printf '==> ram_m=%sM\n' "${ram_m}"
+    printf '==> ram_g=%sM\n' "${ram_g}"
+    read -rsn1 -p '[waiting]'
+    printf '\n'
     return 0
-    
+
     # get root filesystem size:
     for mount_ramroot in "${mounts_ramroot[@]}"; do
         poll_device "/dev/disk/by-uuid/${mount_ramroot%:/*}" 20
@@ -57,20 +93,20 @@ run_hook() {
             awk 'FNR==2 {print int($3)}')))
         umount /local_root
     done
-    
-    
+
+
     msg "root size: ${ramroot_m}M"
-    
+
     if [ "${ram_min: -1}" != 'G' ]; then
         ram_min="${ram_min:0:-1}"
         ram_min_m=$((${ram_min%\.*} * 1000))
     fi
-    
-    
+
+
     sleep 4
     return 0
-    
-    
+
+
     # mount root partition to /local_root:
     poll_device "/dev/disk/by-uuid/$UUID_ROOT" 20
     mount -U "$UUID_ROOT" /local_root
@@ -151,9 +187,9 @@ run_hook() {
         if [ -f /zram_root/etc/fstab ]; then
             mv /zram_root/etc/fstab /zram_root/etc/fstab~
         fi
-        
-        
-        
+
+
+
         # use custom /etc/issue file:
         if [ "$FLAG_ISSUE" = 'true' ] &&
         [ -f /zram_root/usr/lib/ramroot/etc/issue ]; then
@@ -170,21 +206,21 @@ run_hook() {
             mkdir -p /zram_root/boot
             cp -a /local_boot/* /zram_root/boot/
         fi
-        
-        
-        
-        
+
+
+
+
         # unmount zRAM root:
         umount /zram_root
         # set new mount_handler to use zRAM device:
-        oroot_mount() {
+        ramroot_mount() {
             mount "$ZRAM_DEVICE" "$1"
         }
-        # don't perform filesystem check on new zRAM partition:
+        # skip zRAM filesystem check:
         fsck_root() {
             :
         }
-        mount_handler=oroot_mount
+        mount_handler=ramroot_mount
 
     # keep root filesystem on local device:
     else

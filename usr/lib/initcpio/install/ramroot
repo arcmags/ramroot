@@ -14,7 +14,6 @@ build() {
     add_binary nproc
     add_binary cp
     add_binary df
-    add_file /etc/ramroot.conf
     add_runscript
 }
 
