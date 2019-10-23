@@ -1,0 +1,22 @@
+#!/bin/bash
+
+
+post_install() {
+    :
+}
+
+pre_upgrade() {
+    :
+}
+
+post_upgrade() {
+    :
+}
+
+pre_remove() {
+    :
+}
+
+post_remove() {
+    /usr/bin/mkinitcpio -P
+}

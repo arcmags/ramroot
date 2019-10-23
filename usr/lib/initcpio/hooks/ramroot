@@ -1,232 +1,174 @@
 #!usr/bin/ash
 
 run_hook() {
-    local config fstab fstab_ramroot mount_ramroot mount_root \
-        mounts_null mounts_ramroot prompt_default prompt_wait ram_min \
-        ram_m ram_g ram_pref ramroot_m ramroot_max ramroot_min \
-        regex_endln regex_no_yes regex_size
-    regex_endln="[\"']?(\s+$|\s+#.*$|$)"
-    regex_size="\s*=\s*[\"']?0*([0-9]+(\.[0-9]*)?[GgMm])${regex_endln}"
-    regex_int="\s*=\s*[\"']?0*([0-9]+)${regex_endln}"
-    regex_no_yes="\s*=\s*[\"']?([Yy][Ee][Ss]|[Nn][Oo])${regex_endln}"
+    local mount_root mounts_null mounts_zram ps_default ps_timeout ram \
+        ram_min ram_pref zram zram_max zram_min mount_id mount_path
+    #global fsck_root mount_handler zram_device zram_mount
 
-    # wait a moment to ensure udev can resolve device:
-    sleep 3
-    mount_root="$(resolve_device "$root")"
-    poll_device "$mount_root" 20
+    msg_debug() {
+        for mount in $root:/ $mounts_zram; do
+            printf '] mount_zram= %s\n' "$mount"
+        done
+        for mount in $mounts_null; do
+            printf '] mount_null= %s\n' "$mount"
+        done
+        printf '] ps_default= %s\n' "$ps_default"
+        printf '] ps_timeout= %s\n' "$ps_timeout"
+        printf '] ram=        %s\n' "$ram"
+        printf '] ram_min=    %s\n' "$ram_min"
+        printf '] ram_pref=   %s\n' "$ram_pref"
+        printf '] zram=       %s\n' "$zram"
+        printf '] zram_min=   %s\n' "$zram_min"
+        printf '] zram_max=   %s\n\n' "$zram_max"
+    }
 
-    # mount root:
-    mount "$mount_root" /local_root
-    if [ $? -ne 0 ]; then
-        printf '==> FAILED: ramroot unable to mount local root\n'
-        return 1
-    fi
-    # get root size:
-    ramroot_m=$((ramroot_m + $(df -BM /local_root/ | \
-        awk 'FNR==2 {print int($3)}')))
-    # /etc/fstab -> $fstab:
-    if [ -f /local_root/etc/fstab ]; then
-        fstab="$(cat /local_root/etc/fstab)"
-    fi
-    # /etc/ramroot.con -> $config:
-    if [ -f /local_root/etc/ramroot.conf ]; then
-        config="$(cat /local_root/etc/ramroot.conf)"
-    fi
-    # umount root:
-    umount /local_root
-
-    # parse config:
-    if [ -n "$config" ]; then
-        prompt_default="$(echo "$config" | sed -En \
-            "s/^\s*prompt_default${regex_no_yes}/\1/p" | tail -n1)"
-        prompt_timeout="$(echo "$config" | \
-            sed -En "s/^\s*prompt_timeout${regex_int}/\1/p" | tail -n1)"
-        ram_min="$(echo "$config" | \
-            sed -En "s/^\s*ram_min${regex_size}/\1/p" | tail -n1)"
-        ram_pref="$(echo "$config" | \
-            sed -En "s/^\s*ram_pref${regex_size}/\1/p" | tail -n1)"
-        ramroot_min="$(echo "$config" | \
-            sed -En "s/^\s*ramroot_min${regex_size}/\1/p" | tail -n1)"
-        ramroot_max="$(echo "$config" | \
-            sed -En "s/^\s*ramroot_max${regex_size}/\1/p" | tail -n1)"
-    fi
-    # set defaults:
-    prompt_default="${prompt_default:-no}"
-    prompt_timeout="${prompt_timeout:-10}"
-    ram_min="${ram_min:-750M}"
-    ram_pref="${ram_pref:-4G}"
-    ramroot_min="${ramroot_min:-250M}"
-    ramroot_max="${ramroot_max:-2G}"
-
-
-    if [ ! -n "$config" ] || [ ! -n "$mounts_ramroot" ]; then
-        mounts_ramroot="$mount_root:/"
-        if [ -n "$fstab" ]; then
-            printf '==> using info from /etc/fstab...\n'
-        else
-            printf '==> no /etc/fstab ...\n'
+    size_to_bytes() {
+        local bytes input lhs rhs suffix
+        input="$1"
+        if (echo "$input" | \
+        grep -Ei '^[0-9]*(\.[0-9]*)?$' &>/dev/null); then
+            lhs="${input%.*}"; lhs="${lhs:-0}"
+            bytes="$(echo "$lhs" | sed 's/^0*//')"
+        elif (echo "$input" | \
+        grep -Ei '^[0-9]*(\.[0-9]*)?[TGMK]$' &>/dev/null); then
+            suffix="${input: -1}"
+            input="${input:0:-1}"
+            lhs="${input%.*}"; lhs="${lhs:-0}"
+            rhs="${input#*.}"; rhs="${rhs:-0}"
+            [ "$lhs" = "$rhs" ] && rhs=
+            if [ "$suffix" = 'T' ] || [ "$suffix" = 't' ]; then
+                lhs=$((lhs*1000000000000))
+                rhs="$(printf '%-12s' "$rhs")"
+            elif [ "$suffix" = 'G' ] || [ "$suffix" = 'g' ]; then
+                lhs=$((lhs*1000000000))
+                rhs="$(printf '%-9s' "$rhs")"
+            elif [ "$suffix" = 'M' ] || [ "$suffix" = 'm' ]; then
+                lhs=$((lhs*1000000))
+                rhs="$(printf '%-6s' "$rhs")"
+            elif [ "$suffix" = 'K' ] || [ "$suffix" = 'k' ]; then
+                lhs=$((lhs*1000))
+                rhs="$(printf '%-3s' "$rhs")"
+            fi
+            rhs="$(echo "${rhs// /0}" | sed 's/^0*//')"
+            bytes=$((lhs+rhs))
         fi
+        if [ $bytes -gt 0 ]; then
+            printf '%d' $bytes
+        fi
+    }
+
+    # wait a moment for udev to initialize:
+    printf '==> loading ramroot .'; sleep 1
+    printf '.'; sleep 1
+    printf '.\n'; sleep 1
+
+    # source config, set defaults:
+    source /etc/ramroot.conf
+    if (echo "$ps_default" | grep -Ei '^(y|yes)$' &>/dev/null); then
+        ps_default='yes'
+    else
+        ps_default='no'
     fi
+    if (! echo "$ps_timeout" | grep -Ei \
+    '^[1-9]+[0-9]*$' &>/dev/null); then
+        ps_timeout=5
+    fi
+    ram_min="$(size_to_bytes "$ram_min")"
+    if [ ! -n "$ram_min" ]; then
+        ram_min="$(size_to_bytes 750M)"
+    fi
+    ram_pref="$(size_to_bytes "$ram_pref")"
+    if [ ! -n "$ram_pref" ]; then
+        ram_pref="$(size_to_bytes 4G)"
+    fi
+    zram_min="$(size_to_bytes "$zram_min")"
+    if [ ! -n "$zram_min" ]; then
+        zram_min="$(size_to_bytes 250M)"
+    fi
+    zram_max="$(size_to_bytes "$zram_max")"
+    if [ ! -n "$zram_max" ]; then
+        zram_max="$(size_to_bytes 1G)"
+    fi
+    if [ $ram_min -gt $ram_pref ]; then
+        ram_pref=$ram_min
+    fi
+    if [ $zram_min -gt $zram_max ]; then
+        zram_min=$zram_max
+    fi
+    # get available ram:
+    ram="$(free | awk '/Mem/ {print int($2)}')000"
 
-    ram_m=$(free --mega | awk '/Mem/ {print int($2)}')
-    ram_g=$(( ram_m / 1000 ))
-
-    printf '==> mounts_ramroot=%s\n' "$mounts_ramroot"
-    printf '==> prompt_default=%s\n' "$prompt_default"
-    printf '==> prompt_timeout=%s\n' "$prompt_timeout"
-    printf '==> ram_min=%s\n' "$ram_min"
-    printf '==> ram_pref=%s\n' "$ram_pref"
-    printf '==> ramroot_min=%s\n' "$ramroot_min"
-    printf '==> ramroot_max=%s\n' "$ramroot_max"
-    printf '==> ramroot_m=%s\n' "$ramroot_m"
-    printf '==> ram_m=%sM\n' "${ram_m}"
-    printf '==> ram_g=%sM\n' "${ram_g}"
-    read -rsn1 -p '[waiting]'
-    printf '\n'
-    return 0
-
-    # get root filesystem size:
-    for mount_ramroot in "${mounts_ramroot[@]}"; do
-        poll_device "/dev/disk/by-uuid/${mount_ramroot%:/*}" 20
-        mount -U "${mount_ramroot%:/*}" /local_root
-        ramroot_m=$((ramroot_m + $(df -BM /local_root/ | \
-            awk 'FNR==2 {print int($3)}')))
+    # get zram size:
+    for mount in $root:/ $mounts_zram; do
+        mount_id="$(resolve_device "${mount%:*}")"
+        poll_device "$mount_id" 20
+        mount "$mount_id" /local_root
+        # FAIL: unable to mount:
+        if [ $? -ne 0 ]; then
+            printf '==> ramroot FAILED: unable to mount: %s\n' \
+                "${mount%:*}"
+            return 1
+        fi
+        zram=$((zram + $(df /local_root/ | \
+            awk 'FNR==2 {print int($3)}') * 1000))
         umount /local_root
     done
 
-
-    msg "root size: ${ramroot_m}M"
-
-    if [ "${ram_min: -1}" != 'G' ]; then
-        ram_min="${ram_min:0:-1}"
-        ram_min_m=$((${ram_min%\.*} * 1000))
-    fi
-
-
-    sleep 4
-    return 0
-
-
-    # mount root partition to /local_root:
-    poll_device "/dev/disk/by-uuid/$UUID_ROOT" 20
-    mount -U "$UUID_ROOT" /local_root
-    # get size of /local_root:
-    ROOT_M=`df -BM /local_root/ | awk 'FNR==2 {print int($3)}'`
-
-    # mount boot partition (if exists) to /local_boot:
-    if [ -n "$UUID_BOOT" ]; then
-        poll_device "/dev/disk/by-uuid/$UUID_BOOT" 20
-        mount -U "$UUID_BOOT" /local_boot
-        # add size of /local_boot:
-        ROOT_M=$(( $ROOT_M + `df -BM /local_boot/ | \
-            awk 'FNR==2 {print int($3)}'` ))
-    fi
-
-    # check and print available memory:
-    echo ":: Total RAM available  : ${RAM_M}M"
-    echo ":: Root filesystem size : ${ROOT_M}M"
-    RAM_EXTRA_M=$(( $RAM_M - $ROOT_M ))
-    if [ $RAM_EXTRA_M -lt 500 ]; then
-        echo ":! Not enough RAM available."
-        INPUT='n'
-
-    # prompt [Y/n] to load filesystem to RAM:
-    elif [ "$LOAD_DEFAULT" = 'yes' ]; then
-        echo -n ">: Load root filesystem to RAM? [Y/n] "
-        INPUT='y'
-        read -s -r -t $LOAD_TIMEOUT -n 1 INPUT
-        if [ "$INPUT" = 'n' ] || [ "$INPUT" = 'N' ] ||
-        [ "$INPUT" = 'q' ] || [ "INPUT" = 'Q' ]; then
-            INPUT='n'
+    # WARM: not enough ram
+    if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
+        printf '==> ramroot SKIPPED: not enough ram\n'
+        return 0
+    # calculate zram size:
+    elif [ $((ram-ram_pref-zram-zram_min)) -gt 0 ]; then
+        if [ $((ram-ram_pref-zram-zram_max)) -gt 0 ]; then
+            zram=$((zram+zram_max))
         else
-            INPUT='y'
+            zram=$((ram-ram_pref))
         fi
-
-
-    # prompt [y/N] to load filesystem to RAM:
     else
-        echo -n ">: Load root filesystem to RAM? [y/N] "
-        INPUT='n'
-        read -s -r -t $LOAD_TIMEOUT -n 1 INPUT
-        if [ "$INPUT" = 'y' ] || [ "INPUT" = 'Y' ] ; then
-            INPUT='y'
-        else
-            INPUT='n'
-        fi
+        zram=$((zram+zram_min))
     fi
+    ram=$((ram-zram))
 
-    # copy root filesystem to RAM:
-    if [ "$INPUT" = 'y' ]; then
-        echo "yes"
-        echo ":: Copying root filesystem to RAM..."
+    
 
-        # enable zRAM devices:
-        if [ ! -b "/dev/zram0" ]; then
-            modprobe zram num_devices=$(nproc)
-        fi
 
-        # make zRAM partition using half of available free RAM (max +6G)
-        ROOT_ADD_M=$(( $RAM_EXTRA_M / 2 ))
-        if [ $ROOT_ADD_M -gt 6000 ]; then
-            ROOT_ADD_M=6000
-        fi
-        ZRAM_M=$(( $ROOT_M + $ROOT_ADD_M ))
-        ZRAM_DEVICE=$(zramctl -f -s "${ZRAM_M}M" -a lzo -t $(nproc))
-        mkfs.ext4 -q "$ZRAM_DEVICE"
+
+    busybox ash
+    return 0
+    
+    # make zram device:
+    if [ ! -b "/dev/zram0" ]; then
+        modprobe zram
+    fi
+    zram_device=$(zramctl -f -s $zram -a lzo)
+    mkfs.ext4 -q "$zram_device"
+    mount "$zram_device" /zram_root
+
+    
 
     # copy root:
 
-        # mount zRAM partition to /zram_root:
-        mount "$ZRAM_DEVICE" /zram_root
-        export ZRAM_DEVICE
-        # copy files from local root to zRAM root:
-        cp -a /local_root/* /zram_root/
+    # mount zram partition to /zram_root:
+    mount "$ZRAM_DEVICE" /zram_root
+    export ZRAM_DEVICE
+    # copy files from local root to zram root:
+    cp -a /local_root/* /zram_root/
 
+    # unmount zRAM root:
+    umount /zram_root
 
-        # move /etc/fstab from to /etc/fstab~ in zRAM root:
-        if [ -f /zram_root/etc/fstab ]; then
-            mv /zram_root/etc/fstab /zram_root/etc/fstab~
-        fi
+    # set new mount_handler to use zRAM device:
+    zram_mount() {
+        mount "$ZRAM_DEVICE" "$1"
+    }
+    # skip zRAM filesystem check:
+    fsck_root() {
+        :
+    }
+    mount_handler=zram_mount
+    export flag_anon flag_quiet zram_device
 
-
-
-        # use custom /etc/issue file:
-        if [ "$FLAG_ISSUE" = 'true' ] &&
-        [ -f /zram_root/usr/lib/ramroot/etc/issue ]; then
-            if [ -f /zram_root/etc/issue ]; then
-                mv /zram_root/etc/issue /zram_root/etc/issue~
-            fi
-            cp /zram_root/usr/lib/ramroot/etc/issue /zram_root/etc/issue
-        fi
-
-    # copy other partitions:
-
-        # copy files from local boot partition (if exists) to zRAM boot:
-        if [ -n "$UUID_BOOT" ]; then
-            mkdir -p /zram_root/boot
-            cp -a /local_boot/* /zram_root/boot/
-        fi
-
-
-
-
-        # unmount zRAM root:
-        umount /zram_root
-        # set new mount_handler to use zRAM device:
-        ramroot_mount() {
-            mount "$ZRAM_DEVICE" "$1"
-        }
-        # skip zRAM filesystem check:
-        fsck_root() {
-            :
-        }
-        mount_handler=ramroot_mount
-
-    # keep root filesystem on local device:
-    else
-        echo "no"
-        echo ":: Keeping root filesystem on local device..."
-    fi
 
     # unmount /local_root and /local_boot:
     umount /local_root
@@ -234,3 +176,4 @@ run_hook() {
         umount /local_boot
     fi
 }
+

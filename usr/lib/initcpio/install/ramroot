@@ -5,15 +5,13 @@
 build() {
     add_dir /local_root
     add_dir /zram_root
+    add_file /etc/ramroot.conf
     add_module ext4
     add_module vfat
     add_module zram
     add_binary zramctl
-    add_binary free
     add_binary mkfs.ext4
-    add_binary nproc
     add_binary cp
-    add_binary df
     add_runscript
 }
 
