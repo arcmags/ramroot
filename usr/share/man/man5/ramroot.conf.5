@@ -15,8 +15,8 @@ changes to be built into a new initramfs image.
 .PP
 All \fIUUID\fR (or \fIPARTUUID\fR) values must include the proper
 \fIUUID=\fR prefix.  A \fImountpath\fR is a full relative path (as
-given in \fI/etc/fstab\fR).  Every size is a whole number of megabytes
-without any suffix.
+given in \fI/etc/fstab\fR).  Every size is a whole number of
+\fImegabytes\fR with \fIno suffix\fR.
 .SH VARIABLES
 .TP
 \fBmounts_zram\fR
@@ -35,26 +35,27 @@ Default zram y/n prompt value.  Valid values are \fIyes\fR or \fIno\fR.
 .TP
 \fBps_timeout\fR
 Boot prompt timeout, positive integer.  After this many seconds, the
-zram y/n prompt will assume the \fBps_default\fI value.
+zram y/n prompt will assume the \fBps_default\fR value.
 .TP
 \fBram_min\fR
-Minimum amount of free ram in Mb required.
+Minimum amount of free ram required.
 .TP
 \fBzram_min\fR
-Minimum amount of free zram in Mb required.  If both this and
+Minimum amount of free zram required.  If both this and
 \fBram_min\fR cannot be satisfied, the boot prompt automatically
 selects \fIno\fR.
 .TP
 \fBram_pref\fR
-Preferred amount of free ram in Mb.  If both \fBram_min\fR and
+Preferred amount of free ram.  If both \fBram_min\fR and
 \fBzram_min\fR are satisfied, additional memory is allocated to ram
 up to this preferred ram value.
 .TP
 \fBzram_max\fR
-Maximum amount of free zram in Mb to create.  Once \fBram_pref\fR is satisfied, the amount of free zram is further extended to \fBzram_max\fR.
+Maximum amount of free zram to create.  Once \fBram_pref\fR is
+satisfied, the amount of free zram is further extended
+to \fBzram_max\fR.
 .PP
 All remaining memory is allocated towards ram.
-
 .SH SEE ALSO
 \fBramroot\fR(8), <\fBhttps://github.com/arcmags/ramroot/\fR>
 .SH AUTHOR

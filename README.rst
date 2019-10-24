@@ -53,7 +53,7 @@ to be built into a new initramfs image.
 
 All *UUID* (or *PARTUUID*) values must include the proper ``UUID=``
 prefix.  A *mountpath* is a full relative path (given in */etc/fstab*).
-Every size is a whole number of megabytes without any suffix.
+Every size is a whole number of *megabytes* with *no-suffix*.
 
 ``mounts_zram``
     Defines additional mounts to load to zram during initramfs.
@@ -75,20 +75,20 @@ Every size is a whole number of megabytes without any suffix.
     the zram y/n prompt will assume the ``ps_default`` value.
 
 ``ram_min``
-    Minimum amount of free ram in Mb required.
+    Minimum amount of free ram required.
 
 ``zram_min``
-    Minimum amount of free zram in Mb required.  If both this and
+    Minimum amount of free zram required.  If both this and
     ``ram_min`` cannot be satisfied, the boot prompt automatically
     selects *no*.
 
 ``ram_pref``
-    Preferred amount of free ram in Mb.  If both ``ram_min`` and
+    Preferred amount of free ram.  If both ``ram_min`` and
     ``zram_min`` are satisfied, additional memory is allocated
     to ram up to this preferred ram value.
 
 ``zram_max``
-    Maximum amount of free zram in Mb to create.  Once ``ram_pref`` is
+    Maximum amount of free zram to create.  Once ``ram_pref`` is
     satisfied, the amount of free zram is further extended to
     ``zram_max``.
 
@@ -128,6 +128,9 @@ Options
 
 ``-o, --output <FILE>``
     Save new config to *FILE* instead of */etc/mkinitcpio.conf*.
+
+``-Y, --yes``
+    Overwrite output files without asking.
 
 ``-H, --help``
     Display help text and exit.

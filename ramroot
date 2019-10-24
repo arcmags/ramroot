@@ -28,6 +28,9 @@ OPTIONS
     -o, --output <FILE>
         Save new config to FILE instead of /etc/mkinitcpio.conf.
 
+    -Y, --yes
+        Overwrite output files without asking.
+
     -H, --help
         Display help text and exit.
 
