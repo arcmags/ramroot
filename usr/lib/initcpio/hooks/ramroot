@@ -82,6 +82,7 @@ run_hook() {
 
     # get zram size:
     for mount in $mounts_zram; do
+        sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
         poll_device "$mount_id" 20
@@ -144,6 +145,7 @@ run_hook() {
 
     # copy root to zram:
     for mount in $mounts_zram; do
+        sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
         mount "$mount_id" /local_root
