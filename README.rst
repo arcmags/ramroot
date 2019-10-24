@@ -2,176 +2,154 @@
 ramroot
 =======
 
-Run Linux entirely from RAM!  This project creates and enables a custom
-mkinitcpio_ hook that completely loads the *root* (and */boot*)
-filesystem into RAM during the initramfs_ boot stage.
+Run Linux entirely from RAM!  This is customizable mkinitcpio_ hook
+that completely loads the *root* file system to a zram partition
+during the initramfs_ boot stage.
 
 
-Requirements
-============
+Usage
+=====
 
-Arch Linux
-    This package is designed specifically to work with the Arch Linux
-    `boot process`_.  I suspect these scripts may work with slight
-    modifications on other distributions as well, however this is
-    currently untested.
+During early system boot, the ramroot initcpio hook determines the
+host machine's total ram and prompts the user y/n to load the root file
+system to zram if enough space is available.
 
-sudo
-    The ramroot script can be run as root or as a normal user.  If
-    executed as a normal user, *sudo* will be called when necessary
-    to modify or create initcpio files, and the user will be prompted
-    for his or her sudo password.
-
+A ramroot helper script easily enables/disables and/or generates
+additional ramroot config files.
 
 Installation
-============
+------------
 
-This package is available in the AUR_ for easy installation, however the
-ramroot script can also be run directly from a local git clone of this
-repository.
+This package is available in the AUR_ for easy installation.  A basic
+config file is created during initial installation.
 
+Requirements
+------------
 
-Synopsis
-========
+Arch Linux
+    ramroot is designed specifically to work with the Arch Linux
+    `boot process`_.  These scripts work with slight modifications on
+    other distributions from time to time, however this not
+    officially supported
 
-``ramroot <action> [options]``
-
-
-Description
-===========
-
-Ramroot can enable and disable the pre-userspace loading of the *root*
-(and */boot*, if it exists) filesystem to RAM during system boot.
-
-When ramroot is enabled, during the initial phase of boot the amount
-of detected RAM on the computer along with the size the root filesystem
-to be copied is shown on the screen.  If there is at least 500MB
-more RAM than the size of the filesystem, the user will be prompted
-to load the root filesystem to RAM.
-(Confirmation prompt defaults to yes with a 15 second timeout.)
-
-The size of the zram partition created is determined by taking the
-size of the root filesystem plus half of the extra available RAM
-(to a maximum of 6GB).
-
-Other partitions will not be copied to RAM or mounted by default.
-Usage of the *-F* option can be used to mount additional
-partitions defined in */etc/fstab*.
+mkinitcpio
+    A dependency of the linux package.  This is included here as
+    linux is no longer included in the Arch Linux base package set.
 
 
-Actions
-=======
+Configuration
+=============
 
-Action performed by ramroot; one must be specified.
+/etc/ramroot.conf
+-----------------
+
+This file is an ash shell script.  Many common bash builtins are
+not available here and the syntax tends to be a bit stricter.  The
+fallback config file can be viewed at */usr/lib/ramroot/ramroot.conf*.
+
+After any changes are made to */etc/ramroot.conf*, a user must
+execute ``ramroot -E`` or ``mkinitcpio -P`` in order for those changes
+to be built into a new initramfs image.
+
+All *UUID* (or *PARTUUID*) values must include the proper ``UUID=``
+prefix.  A *mountpath* is a full relative path (given in */etc/fstab*).
+Every size is a whole number of megabytes without any suffix.
+
+``mounts_zram``
+    Defines additional mounts to load to zram during initramfs.
+    A mount consists of the *UUID* separated from the
+    *mountpath* by a colon.  Multiple mounts are separated by spaces
+    or newlines.
+
+``mounts_null``
+    Defines mounts to specifically ignore by ramroot.  The
+    *UUID* is optional for these mounts.  These will not
+    be loaded to zram or mounted normally.  If */* is specified in
+    ``mounts_null``, ramroot will skip loading altogether.
+
+``ps_default``
+    Default zram y/n prompt value.  Valid values are *yes* or *no*.
+
+``ps_timeout``
+    Boot prompt timeout, positive integer.  After this many seconds,
+    the zram y/n prompt will assume the ``ps_default`` value.
+
+``ram_min``
+    Minimum amount of free ram in Mb required.
+
+``zram_min``
+    Minimum amount of free zram in Mb required.  If both this and
+    ``ram_min`` cannot be satisfied, the boot prompt automatically
+    selects *no*.
+
+``ram_pref``
+    Preferred amount of free ram in Mb.  If both ``ram_min`` and
+    ``zram_min`` are satisfied, additional memory is allocated
+    to ram up to this preferred ram value.
+
+``zram_max``
+    Maximum amount of free zram in Mb to create.  Once ``ram_pref`` is
+    satisfied, the amount of free zram is further extended to
+    ``zram_max``.
+
+All remaining memory is allocated towards ram.
+
+/etc/ramroot/*
+--------------
+
+The structure of this directory mirrors the hierarchy of the
+root file system.  Upon a successful sync to zram, any files and
+directories contained in */etc/ramroot/* are non-persistently
+overwritten to the root directory.
+
+This can be used to load any number of custom scripts, binaries,
+configs, etc when boot from zram.
 
 
-``disable``
-    Remove ramroot from */etc/mkinitcpio.conf* HOOKS.
-    Remove ext4, vfat, and zram from */etc/mkinitcpio.conf* MODULES.
-    Rebuild linux cpio boot image.
+Ramroot Script
+==============
 
-``enable``
-    Rebuild  build and runtime hooks in */usr/lib/initcpio*.
-    Add ramroot to */etc/mkinitcpio.conf* HOOKS.
-    Add ext4, vfat, and zram to */etc/mkinitcpio.conf* MODULES.
-    Rebuild linux cpio boot image.
-
-``remove``
-    Disable ramroot.
-    Remove build and runtime hooks from */usr/lib/initcpio*.
-
-``status``
-    Print ramroot and root filesystem status to screen.
-    Return exit status 0 if enabled and currently loaded to RAM.
-    Return exit status 1 if enabled and not loaded RAM.
-    Return exit status 2 if disabled.
-
+``ramroot <options>``
 
 Options
-=======
+-------
 
-All are optional (although *--root* may be required as noted below).
+``-C, --config-gen``
+    Attempt to detect the root file system partitions and generate
+    a new config file.
 
-``-b, --boot <UUID>``
-    Specify */boot* partition UUID to use when building hooks.
+``-D, --disable``
+    Remove ramroot hook from */etc/mkinitcpio.conf* and rebuild
+    initramfs image.
 
-``-D, --dryrun``
-    Execute action without making any changes.  Useful for debugging
-    or viewing changes in *~/.cache/ramroot* before enabling.
+``-E, --enable``
+    Add ramroot hook to */etc/mkinitcpio.conf* and rebuild
+    initramfs image.
 
-``-F, --fstab``
-    Mount all partitions (other than *root* and */boot*) in
-    */etc/fstab* normally.
+``-o, --output <FILE>``
+    Save new config to *FILE* instead of */etc/mkinitcpio.conf*.
 
 ``-H, --help``
     Display help text and exit.
-
-``-K, --keep``
-    Keep copies of new build and runtime hooks in *~/.cache/ramroot*.
-
-``-M, --message``
-    Print 'Arch on RAM' message at tty login by using custom
-    */etc/issue*.
-
-``-N, --no``
-    Change startup prompt default to not load filesystem to RAM.
-
-``-r, --root <UUID>``
-    Specify root partition UUID to use when building hooks;
-    required if unable to detect UUID via lsblk or */etc/fstab*.
-
-``-t, --timeout <SECONDS>``
-    Set RAM boot prompt timeout (default=15).
 
 
 Notes
 =====
 
-The filesystem transfer to RAM can take several minutes.  As soon as
+The file system transfer to ram takes several minutes.  As soon as
 the boot process is complete, the boot media can be safely removed.
 
-Remember that all changes to files in RAM are completely lost once the
-computer is reboot.  To update the system and edit files, boot the
-device without transferring the filesystem to RAM.
+Remember that all changes to files in ram are completely lost when the
+host machine is power cycled.  To persistently update the system and
+edit files, boot the device without transferring the filesystem to ram.
 
-Keep a clean and trimmed down system to maintain faster RAM sync times.
+Keep a clean and trimmed down system to maintain faster zram sync times.
 Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.
 After every update, if no problems occur, consider removing
-`old packages`_.  Consider installer fewer packages if you intend on
-loading to RAM often.
+`old packages`_.
 
-Also, keep in mind that higher quality (more expensive) USB flash drives
-often exhibit a dramatic improvement in RAM sync times.
-
-
-Issues / Future Implementations
-===============================
-
-*   get UUIDs during boot
-
-    +   more portable; UUIDs not hardcoded into initcpio hook
-
-    +   no need to rebuild linux image with UUID changes
-
-*   use *getopts* to easily allow grouping command line options together
-
-*   *--rsync* option with *status=progress* (maybe use rsync
-    automatically if installed)
-
-*   option to create a unique hostname for each RAM boot instance
-
-*   improve security features
-
-    +   option to require removal of boot media before starting
-        userspace
-
-    +   option to fail boot unless loaded to RAM (requires *chroot* to
-        make changes; advanced users)
-
-*   *flush* action to sync the RAM filesystem back to the
-    initial boot device
-
-*   test on other distros
+Also, keep in mind that higher quality (more expensive) USB flash
+drives often exhibit a dramatic improvement in zram sync times.
 
 
 Credits
@@ -184,7 +162,7 @@ by several inquisitive `forum posts`_.
     Chris Magyar
 
 :Version:
-    1.1.8
+    2.0.0
 
 :License:
     GPL 3.0
@@ -192,7 +170,6 @@ by several inquisitive `forum posts`_.
 :Donate(xmr):
     41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61xoP
     uxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
-
 
 
 .. _AUR: https://aur.archlinux.org/packages/ramroot/

@@ -1,69 +1,52 @@
 #!usr/bin/ash
 
 run_hook() {
-    local mount_root mounts_null mounts_zram ps_default ps_timeout ram \
-        ram_min ram_pref zram zram_max zram_min mount_id mount_path
-    #global fsck_root mount_handler zram_device zram_mount
+    local flag_tmp mount mount_id mount_path mounts_null mounts_tmp \
+        mounts_zram mount_tmp mount_tmp ps_default ps_input ps_timeout \
+        ram ram_min ram_pref zram zram_max zram_min
+    #global fsck_root mount_handler root zram_device zram_mount
 
-    msg_debug() {
-        for mount in $root:/ $mounts_zram; do
-            printf '] mount_zram= %s\n' "$mount"
-        done
-        for mount in $mounts_null; do
-            printf '] mount_null= %s\n' "$mount"
-        done
-        printf '] ps_default= %s\n' "$ps_default"
-        printf '] ps_timeout= %s\n' "$ps_timeout"
-        printf '] ram=        %s\n' "$ram"
-        printf '] ram_min=    %s\n' "$ram_min"
-        printf '] ram_pref=   %s\n' "$ram_pref"
-        printf '] zram=       %s\n' "$zram"
-        printf '] zram_min=   %s\n' "$zram_min"
-        printf '] zram_max=   %s\n\n' "$zram_max"
-    }
-
-    size_to_bytes() {
-        local bytes input lhs rhs suffix
-        input="$1"
-        if (echo "$input" | \
-        grep -Ei '^[0-9]*(\.[0-9]*)?$' &>/dev/null); then
-            lhs="${input%.*}"; lhs="${lhs:-0}"
-            bytes="$(echo "$lhs" | sed 's/^0*//')"
-        elif (echo "$input" | \
-        grep -Ei '^[0-9]*(\.[0-9]*)?[TGMK]$' &>/dev/null); then
-            suffix="${input: -1}"
-            input="${input:0:-1}"
-            lhs="${input%.*}"; lhs="${lhs:-0}"
-            rhs="${input#*.}"; rhs="${rhs:-0}"
-            [ "$lhs" = "$rhs" ] && rhs=
-            if [ "$suffix" = 'T' ] || [ "$suffix" = 't' ]; then
-                lhs=$((lhs*1000000000000))
-                rhs="$(printf '%-12s' "$rhs")"
-            elif [ "$suffix" = 'G' ] || [ "$suffix" = 'g' ]; then
-                lhs=$((lhs*1000000000))
-                rhs="$(printf '%-9s' "$rhs")"
-            elif [ "$suffix" = 'M' ] || [ "$suffix" = 'm' ]; then
-                lhs=$((lhs*1000000))
-                rhs="$(printf '%-6s' "$rhs")"
-            elif [ "$suffix" = 'K' ] || [ "$suffix" = 'k' ]; then
-                lhs=$((lhs*1000))
-                rhs="$(printf '%-3s' "$rhs")"
-            fi
-            rhs="$(echo "${rhs// /0}" | sed 's/^0*//')"
-            bytes=$((lhs+rhs))
-        fi
-        if [ $bytes -gt 0 ]; then
-            printf '%d' $bytes
-        fi
-    }
-
-    # wait a moment for udev to initialize:
-    printf '==> loading ramroot .'; sleep 1
-    printf '.'; sleep 1
-    printf '.\n'; sleep 1
-
-    # source config, set defaults:
+    # wait a moment for udev to hopefully finish initializing:
+    sleep 2
     source /etc/ramroot.conf
+
+    # set mounts:
+    for mount in $root:/ $mounts_zram; do
+        flag_tmp=true
+        for mount_tmp in $mounts_null; do
+            if [ "$mount" = "$mount_tmp" ] || \
+            [ "${mount#*:}" = "$mount_tmp" ]; then
+                flag_tmp=false
+            fi
+        done
+        for mount_tmp in $mounts_tmp; do
+            if [ "$mount" = "$mount_tmp" ] || \
+            [ "${mount#*:}" = "$mount_tmp" ]; then
+                flag_tmp=false
+            fi
+        done
+        if [ "$flag_tmp" = 'true' ]; then
+            mounts_tmp="$mounts_tmp$mount "
+        fi
+    done
+    mounts_zram="$mounts_tmp"
+    # RETURN: root in mounts_null:
+    if [ "${mounts_zram%% *}" != "$root:/" ]; then
+        return 0
+    fi
+    # FAIL: mount not found:
+    for mount in $mounts_zram; do
+        mount_id="$(resolve_device "${mount%:*}")"
+        mount_path="${mount#*:}"
+        if [ "$mount_id" = "$mount_path" ] || \
+        [ -z "$mount_id" ] || [ -z "$mount_path" ]; then
+            printf '\e[1;31m==> FAILED: \e[1;37m%s %s\e[0;37m\n' \
+                'ramroot mount not found:' "$mount"
+            return 1
+        fi
+    done
+
+    # set prompt:
     if (echo "$ps_default" | grep -Ei '^(y|yes)$' &>/dev/null); then
         ps_default='yes'
     else
@@ -71,52 +54,53 @@ run_hook() {
     fi
     if (! echo "$ps_timeout" | grep -Ei \
     '^[1-9]+[0-9]*$' &>/dev/null); then
-        ps_timeout=5
+        ps_timeout=8
     fi
-    ram_min="$(size_to_bytes "$ram_min")"
-    if [ ! -n "$ram_min" ]; then
-        ram_min="$(size_to_bytes 750M)"
+
+    # set sizes:
+    if (! echo "$ram_min" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
+        ram_min=750
     fi
-    ram_pref="$(size_to_bytes "$ram_pref")"
-    if [ ! -n "$ram_pref" ]; then
-        ram_pref="$(size_to_bytes 4G)"
+    if (! echo "$ram_pref" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
+        ram_pref=4000
     fi
-    zram_min="$(size_to_bytes "$zram_min")"
-    if [ ! -n "$zram_min" ]; then
-        zram_min="$(size_to_bytes 250M)"
+    if (! echo "$zram_min" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
+        zram_min=250
     fi
-    zram_max="$(size_to_bytes "$zram_max")"
-    if [ ! -n "$zram_max" ]; then
-        zram_max="$(size_to_bytes 1G)"
+    if (! echo "$zram_max" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
+        zram_max=1000
     fi
-    if [ $ram_min -gt $ram_pref ]; then
+    if [ $ram_min -ge $ram_pref ]; then
         ram_pref=$ram_min
     fi
-    if [ $zram_min -gt $zram_max ]; then
+    if [ $zram_min -ge $zram_max ]; then
         zram_min=$zram_max
     fi
+
     # get available ram:
-    ram="$(free | awk '/Mem/ {print int($2)}')000"
+    ram="$(($(free | awk '/Mem/ {print int($2)}')/1000))"
 
     # get zram size:
-    for mount in $root:/ $mounts_zram; do
+    for mount in $mounts_zram; do
         mount_id="$(resolve_device "${mount%:*}")"
+        mount_path="${mount#*:}"
         poll_device "$mount_id" 20
         mount "$mount_id" /local_root
         # FAIL: unable to mount:
         if [ $? -ne 0 ]; then
-            printf '==> ramroot FAILED: unable to mount: %s\n' \
-                "${mount%:*}"
+            printf '\e[1;31m==> FAILED: \e[1;37m%s %s\e[0;37m\n' \
+                'ramroot unable to mount:' "${mount%:*}"
             return 1
         fi
-        zram=$((zram + $(df /local_root/ | \
-            awk 'FNR==2 {print int($3)}') * 1000))
+        zram=$((zram+$(df /local_root/ | \
+            awk 'FNR==2 {print int($3)}')/1000))
         umount /local_root
     done
 
     # WARM: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
-        printf '==> ramroot SKIPPED: not enough ram\n'
+        printf '\e[1;33m==> SKIPPED: \e[1;37m%s\e[0;37m\n' \
+            'ramroot: not enough ram'
         return 0
     # calculate zram size:
     elif [ $((ram-ram_pref-zram-zram_min)) -gt 0 ]; then
@@ -130,50 +114,82 @@ run_hook() {
     fi
     ram=$((ram-zram))
 
-    
+    # prompt for input:
+    printf '\e[1;34m:: \e[1;37mLoad root file system to zram? '
+    if [ "$ps_default" = 'yes' ]; then
+        printf '[Y/n] \e[0;37m'
+    else
+        printf '[y/N] \e[0;37m'
+    fi
+    read -r -t $ps_timeout ps_input
+    if [ $? -ne 0 ]; then
+        printf '\n'
+    fi
+    ps_input="$(echo "${ps_input:=$ps_default}" | \
+        awk '{print tolower($0)}')"
+    if  [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
+        return 0
+    fi
+    if [ "$flag_quiet" = 'true' ]; then
+        printf '\e[0;30m'; clear
+    fi
 
-
-
-    busybox ash
-    return 0
-    
     # make zram device:
     if [ ! -b "/dev/zram0" ]; then
         modprobe zram
     fi
-    zram_device=$(zramctl -f -s $zram -a lzo)
+    zram_device=$(zramctl -f -s ${zram}M -a lzo)
     mkfs.ext4 -q "$zram_device"
     mount "$zram_device" /zram_root
 
-    
+    # copy root to zram:
+    for mount in $mounts_zram; do
+        mount_id="$(resolve_device "${mount%:*}")"
+        mount_path="${mount#*:}"
+        mount "$mount_id" /local_root
+        mkdir -p "/zram_root$mount_path"
+        if [ "$flag_quiet" != 'true' ]; then
+            printf '\e[1;32m==> \e[1;37mLoading %s %s\e[0;37m\n' \
+                "$mount_path" 'to zram...'
+        fi
+        cp -a /local_root/* "/zram_root$mount_path"
+        umount /local_root
+    done
 
-    # copy root:
+    # modify /etc/fstab:
+    if [ -f /zram_root/etc/fstab ]; then
+        for mount in $mounts_zram; do
+            mount_path="${mount#*:}"
+            sed -Ei "s|^(\s*[^\s]+\s+${mount_path}\s+.*)$|#\1|g;" \
+                /zram_root/etc/fstab
+        done
+        for mount in $mounts_null; do
+            mount_path="${mount#*:}"
+            sed -Ei -e "s|^(\s*[^\s]+\s+${mount_path}\s+.*)$|#\1|g;" \
+                -e "s|^(\s*${mount_path}/[^\s]+\s+.*)$|#\1|g;" \
+                /zram_root/etc/fstab
+        done
+    fi
 
-    # mount zram partition to /zram_root:
-    mount "$ZRAM_DEVICE" /zram_root
-    export ZRAM_DEVICE
-    # copy files from local root to zram root:
-    cp -a /local_root/* /zram_root/
+    # copy ramroot files:
+    if [ -d /zram_root/etc/ramroot ]; then
+        cp -a /zram_root/etc/ramroot/* /zram_root
+    fi
+    if [ "$flag_quiet" = 'true' ]; then
+        printf "\\033[H\\033[2J\\033[0;30m\\033[?1c\n" > \
+            /zram_root/etc/issue
+    fi
 
-    # unmount zRAM root:
+    # unmount zram device:
     umount /zram_root
 
-    # set new mount_handler to use zRAM device:
+    # set new mount_handler:
     zram_mount() {
-        mount "$ZRAM_DEVICE" "$1"
+        mount "$zram_device" "$1"
     }
-    # skip zRAM filesystem check:
     fsck_root() {
         :
     }
     mount_handler=zram_mount
-    export flag_anon flag_quiet zram_device
-
-
-    # unmount /local_root and /local_boot:
-    umount /local_root
-    if [ -n "$UUID_BOOT" ]; then
-        umount /local_boot
-    fi
+    export zram_device
 }
-

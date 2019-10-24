@@ -1,22 +1,21 @@
 #!/bin/bash
 
-
 post_install() {
-    :
+    /usr/bin/ramroot -CE
 }
 
 pre_upgrade() {
-    :
+    if [[ "$2" =~ ^1 ]]; then
+        /user/bin/ramroot remove
+    fi
 }
 
 post_upgrade() {
-    :
+    if [[ "$2" =~ ^1 ]]; then
+        /user/bin/ramroot -CE
+    fi
 }
 
 pre_remove() {
-    :
-}
-
-post_remove() {
-    /usr/bin/mkinitcpio -P
+    /usr/bin/ramroot -D
 }

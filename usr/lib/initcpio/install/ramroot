@@ -1,23 +1,25 @@
 #!/bin/bash
-##========================  ramroot (build hook)  ========================##
-# Place in: /usb/lib/initcpio/install/
 
 build() {
+    add_binary cp
+    add_binary mkfs.ext4
+    add_binary zramctl
     add_dir /local_root
     add_dir /zram_root
     add_file /etc/ramroot.conf
+    if [ -f /etc/ramroot.conf ]; then
+        add_file /etc/ramroot.conf
+    else
+        add_file /usr/lib/ramroot/ramroot.conf /etc/ramroot.conf
+    fi
     add_module ext4
     add_module vfat
     add_module zram
-    add_binary zramctl
-    add_binary mkfs.ext4
-    add_binary cp
     add_runscript
 }
 
 help() {
     cat <<HELPEOF
-This hook provides the option to load the root filesystem completely
-into RAM during boot.
+This hook optionally loads the root filesystem into zram during boot
 HELPEOF
 }

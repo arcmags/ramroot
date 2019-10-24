@@ -1,108 +1,34 @@
-.TH RAMROOT 8 "January 2018" "ramroot 1.1.8" "Ramroot Manual"
+.TH RAMROOT 8 "October 2019" "ramroot 2.0.0" "Ramroot Manual"
 .SH NAME
-ramroot \- load root filesystem entirely to RAM during boot
+ramroot \- enable/disable ramroot initcpio hook and/or generate config
+file
 .SH SYNOPSIS
-.B ramroot
-<\fIACTION\fR> [\fIOPTIONS\fR]
-.SH DESCRIPTION
-\fBRamroot\fR can enable and disable the pre\-userspace loading of the
-\fIroot\fR (and \fI/boot\fR, if it exists) filesystem to RAM during
-system boot.
-.PP
-When \fBramroot\fR is enabled, during the initial phase of boot
-the amount of detected RAM on the computer along with the size the
-root filesystem to be copied is shown on the screen.  If there is at
-least 500MB more RAM than the size of the filesystem, the user will
-be prompted to load the root filesystem to RAM.
-(Confirmation prompt defaults to yes with a 15 second timeout.)
-.PP
-The size of the \fBzram\fR partition created is determined by taking
-the size of the root filesystem plus half of the extra available
-RAM (to a maximum of 6GB).
-.PP
-Other partitions will not be copied to RAM or mounted by default.
-Usage of the \fB\-F\fR option can be used to mount additional
-partitions defined in \fI/etc/fstab\fR.
-.SH ACTIONS
-Action performed by ramroot; one must be specified.
-.PP
-.TP
-\fBdisable\fR
-.br
-Remove \fBramroot\fR from \fI/etc/mkinitcpio.conf\fR HOOKS.
-Remove \fBext4\fR, \fBvfat\fR, and \fBzram\fR from
-\fI/etc/mkinitcpio.conf\fR MODULES.
-Rebuild linux cpio boot image.
-.TP
-\fBenable\fR
-.br
-Rebuild build and runtime hooks in \fI/usr/lib/initcpio\fR.
-Add \fBramroot\fR to \fI/etc/mkinitcpio.conf\fR HOOKS.
-Add \fBext4\fR, \fBvfat\fR, and \fBzram\fR to
-\fI/etc/mkinitcpio.conf\fR MODULES.
-Rebuild linux cpio boot image.
-.TP
-\fBremove\fR
-.br
-Disable \fBramroot\fR.  Remove build and runtime hooks from
-\fI/usr/lib/initcpio\fR.
-.TP
-\fBstatus\fR
-.br
-Print \fBramroot\fR and root filesystem status to screen.
-Return exit status 0 if enabled and currently loaded to RAM.
-Return exit status 1 if enabled and not loaded RAM.
-Return exit status 2 if disabled.
+\fBramroot\fR <\fIOPTIONS\fR>
 .SH OPTIONS
 .TP
-\fB\-b\fR, \fB\-\-boot\fR <\fIUUID\fR>
-Specify \fI/boot\fR partition UUID to use when building hooks.
+\fB\-C\fR, \fB\-\-config\-gen\fR
+Attempt to detect the root file system partitions and generate a
+new config file.
 .TP
-\fB\-D\fR, \fB\-\-dryrun\fR
-Execute action without making any changes.  Useful for debugging
-or viewing changes in \fI~/.cache/ramroot\fR before enabling.
+\fB\-D\fR, \fB\-\-disable\fR
+Remove ramroot hook from \fI/etc/mkinitcpio.conf\fR and rebuild
+initramfs image.
 .TP
-\fB\-F\fR, \fB\-\-fstab\fR
-Mount all partitions (other than \fIroot\fR and \fI/boot\fR) in
-\fI/etc/fstab\fR normally.
+\fB\-E\fR, \fB\-\-enable\fR
+Add ramroot hook to \fI/etc/mkinitcpio.conf\fR and rebuild
+initramfs image.
+.TP
+\fB\-o\fR, \fB\-\-output\fR <\fIfile\fR>
+Save new config to \fIfile\fR instead of \fI/etc/mkinitcpio.conf\fR.
 .TP
 \fB\-H\fR, \fB\-\-help\fR
 Display help text and exit.
-.TP
-\fB\-K\fR, \fB\-\-keep\fR
-Keep copies of new build and runtime hooks in \fI~/.cache/ramroot\fR.
-.TP
-\fB\-M\fR, \fB\-\-message\fR
-Print 'Arch on RAM' message tty at login by using custom \fI/etc/issue\fR.
-.TP
-\fB\-N\fR, \fB\-\-no\fR
-Change startup prompt default to not load filesystem to RAM.
-.TP
-\fB\-r\fR, \fB\-\-root\fR <\fIUUID\fR>
-Specify \fIroot\fR partion UUID to use when building hooks; required if
-unable to detect UUID via \fBlsblk\fR or \fI/etc/fstab\fR.
-.TP
-\fB\-t\fR, \fB\-\-timeout\fR <\fISECONDS\fR>
-Set RAM boot prompt timeout (default=15).
-.SH NOTES
-The filesystem transfer to RAM can take several minutes.  As soon as
-the boot process is complete, the boot media can be safely removed.
-.PP
-All changes to files in RAM are completely lost once the
-computer is reboot.  To update the system and edit files, boot
-the device without transferring the filesystem to RAM.
-.PP
-Keep a clean and trimmed down system to maintain faster RAM sync times.
-Remove old packages and cached files after system
-upgrades to keep the size of the root filesystem down.
-Consider installing fewer packages if you intend on loading
-to RAM often.
+.SH SEE ALSO
+\fBramroot.conf\fR(5), <\fBhttps://github.com/arcmags/ramroot/\fR>
 .SH AUTHOR
 Written by Chris Magyar.
 .SH COPYRIGHT
-Copyright \(co 2017 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+Copyright \(co 2017 Free Software Foundation, Inc. License GPLv3+:
+GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
-.SH "SEE ALSO"
-Official ramroot source: <https://github.com/arcmags/ramroot/>

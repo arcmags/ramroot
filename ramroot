@@ -2,604 +2,338 @@
 ##============================  ramroot  =============================##
 # Copyright (C) 2019 Chris Magyar        GNU General Public License v3 #
 ##====================================================================##
-VERSION="2.0.0"
+version_script="2.0.0"
 
 print_help() {
 cat <<'HELPDOC'
 NAME
-    ramroot - load root filesystem entirely to RAM during boot
+    ramroot - enable/disable initcpio hook and/or generate config file
 
 SYNOPSIS
-    ramroot [OPTIONS]
-
-DESCRIPTION
-    This script generates build and runtime initramfs hooks that
-    allow the root filesystem and any other physical partitions to
-    be loaded directly into RAM during early userspace.
-    
-    When enabled, if enough RAM is detected during the early initramfs
-    boot process, ramroot will prompt the user to load the root and
-    other configured partitions completely into RAM.  Partitions loaded
-    into RAM are removed from the system's usual /etc/fstab.  Other
-    partition mounting information contained in /etc/fstab will still
-    be processed allowing large volumes to be mounted normally.
+    ramroot <OPTIONS>
 
 OPTIONS
     -C, --config-gen
-        Attempt to detect the root filesystem partitions and generate
-        a new config file.  By default, all partitions on the same 
-        block device as the root filesystem are set to load to RAM. 
+        Attempt to detect the root file system partitions and
+        generate a new config file.
 
     -D, --disable
-        Remove hook from mkinitcpio.conf and rebuild linux boot image.
+        Remove ramroot hook from /etc/mkinitcpio.conf and rebuild
+        initramfs image.
 
     -E, --enable
-        Add ramroot hook to mkinicpio.conf and rebuild linux boot image.
+        Add ramroot hook to /etc/mkinitcpio.conf and rebuild
+        initramfs image.
 
-    -S, --status
-        Display ramroot status.
+    -o, --output <FILE>
+        Save new config to FILE instead of /etc/mkinitcpio.conf.
 
-    -h, --help
+    -H, --help
         Display help text and exit.
 
-FILES
-    /etc/ramroot.conf
-        This is the primary ramroot config file.  Edit to add or
-        remove mounts, change default boot prompt behavior, and
-        set memory requirements for booting from RAM.  When making
-        changes to this file, you must re-enable (--enable) ramroot
-        for the changes to take effect.
-
-    /etc/ramroot/
-        The contents of this directory replicates the hierarchy of
-        the root file system.  Files here are copied to the root
-        file system when successfully boot from RAM allowing the use
-        of custom configurations and scripts in the ramroot environment. 
-
-    /usr/lib/ramroot/
-        Default ramroot config file and template hook files.
-
+VERSION
 HELPDOC
-if [ -n "$VERSION" ]; then
-    printf '\nVERSION\n    %s\n' "$VERSION"
-fi
+printf '    %s\n' "$version_script"
 }
 
-##===========================  VARIABLES  ============================##
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-#### replace all this shit with a config file: ####
-# default variables:
-DIR_CACHE="$HOME/.cache/ramroot"
-DIR_BUILD='/tmp/ramroot'
-FLAG_CACHE='false'
-LOAD_TIMEOUT_DEFAULT=15
-# script variables (do not change):
-UUID_ROOT=
-UUID_BOOT=
-ACTION='none'
-DIR_HOOKS='/usr/lib/initcpio/hooks'
-DIR_INSTALL='/usr/lib/initcpio/install'
-DIR_LIB='/usr/lib/ramroot'
-DIR_SCRIPT=
-HOOK_BUILD="$DIR_LIB/install/ramroot"
-HOOK_RUNTIME="$DIR_LIB/hooks/ramroot"
-FLAG_INCOGNITO='false'
-INIT_MODULES=
-INIT_HOOKS=
-EXIT_STATUS=0
-LOAD_TIMEOUT=$LOAD_TIMEOUT_DEFAULT
-LOAD_DEFAULT='yes'
-#### replace all this shit with a config file: ####
-
+##=========================  VARIABLES  ==========================##
+dir_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# settings:
+file_config='/etc/ramroot.conf'
+ram_machine=8000
+ps_default=no
+ps_timeout=8
+ram_min=750
+ram_pref=4000
+zram_min=250
+zram_max=1000
 # args:
-FLAG_CONFIG_GEN='false'
-FLAG_DISABLE='false'
-FLAG_ENABLE='false'
-FLAG_STATUS='false'
-OPT_CONFIG=
-PARMS=()
-COUNT_PARMS=0
-COUNT_FLAG=0
-COUNT_OPTS=0
-# basic colors:
-C_BLACK=$'\e[0;30m'
-C_BLUE_B=$'\e[1;38;5;27m'
-C_GREEN_B=$'\e[1;38;5;46m'
-C_RED_B=$'\e[1;38;5;196m'
-C_YELLOW_B=$'\e[1;33m'
-C_WHITE=$'\e[0;38;5;15m'
-C_WHITE_B=$'\e[1;37m'
-C_GRAY=$'\e[0;37m'
+flag_config_gen='false'
+flag_disable='false'
+flag_enable='false'
+flag_yes='false'
+opt_output="$file_config"
+parms=()
+count_parms=0
+count_flags=0
+count_opts=0
+# control:
+hooks=
+# colors:
+c_blue_b=$'\e[1;38;5;27m'
+c_green_b=$'\e[1;38;5;46m'
+c_red_b=$'\e[1;38;5;196m'
+c_yellow_b=$'\e[1;33m'
+c_white=$'\e[0;38;5;15m'
+c_white_b=$'\e[1;37m'
+c_gray=$'\e[0;37m'
 
-##===========================  FUNCTIONS  ============================##
+##=========================  FUNCTIONS  ==========================##
+msg() {
+# print status message:
+    printf '%s==>%s %s%s\n' "$c_green_b" "$c_white_b" "$1" "$c_gray"
+}
+
+msg_ask() {
+# print ask message:
+    printf '%s::%s %s%s ' "$c_blue_b" "$c_white_b" "$1" "$c_gray"
+}
+
+msg_error() {
+# print error message:
+    printf '%s==> ERROR:%s %s%s\n' "$c_red_b" "$c_white_b" \
+        "$1" "$c_gray" 1>&2
+}
+
+msg_warn() {
+# print warning message:
+    printf '%s==> WARNING:%s %s%s\n' "$c_yellow_b" "$c_white_b" \
+        "$1" "$c_gray"
+}
+
 args_parse() {
-# parse all input arguments and create positional parameters array:
-    local ARGS=( "$@" )
-    local N_ARGS=0
-    local ARG="${ARGS[N_ARGS]}"
-    local FLAG_OPT_EMPTY='false'
-    local FLAG_ARG_UNKNOWN='false'
-    local FLAG_HELP='false'
-    PARMS=()
-    COUNT_PARMS=0
-    COUNT_FLAGS=0
-    COUNT_OPTS=0
-    while [ -n "$ARG" ]; do case "$ARG" in
+# parse all input arguments; fill positional parameter array:
+    local arg args flag_arg_unknown flag_help  flag_opt_empty n_args
+    #global count_flags count_opts count_parms parms
+    args=("$@")
+    n_args=0
+    arg="${args[n_args]}"
+    flag_opt_empty='false'
+    flag_arg_unknown='false'
+    flag_help='false'
+    count_flags=0
+    count_opts=0
+    count_parms=0
+    parms=()
+    while [ -n "$arg" ]; do case "$arg" in
         # flag args:
-        -C|--config-gen)
-            FLAG_CONFIG_GEN='true'
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAGS++)) ;;
+        -C|--config_gen)
+            flag_config_gen='true'
+            arg="${args[((++n_args))]}"
+            ((count_flags++)) ;;
         -D|--disable)
-            FLAG_DISABLE='true'
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAGS++)) ;;
+            flag_disable='true'
+            arg="${args[((++n_args))]}"
+            ((count_flags++)) ;;
         -E|--enable)
-            FLAG_ENABLE='true'
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAGS++)) ;;
-        -S|--status)
-            FLAG_STATUS='true'
-            ARG="${ARGS[((++N_ARGS))]}"
-            ((COUNT_FLAGS++)) ;;
-        # set help flag:
+            flag_enable='true'
+            arg="${args[((++n_args))]}"
+            ((count_flags++)) ;;
+        -Y|--yes)
+            flag_yes='true'
+            arg="${args[((++n_args))]}"
+            ((count_flags++)) ;;
+        # option args:
+        -o|--output)
+            opt_output="${args[((++n_args))]}"
+            if [ -z "${args[n_args]}" ]; then
+                flag_opt_empty='true'
+                break
+            fi
+            arg="${args[((++n_args))]}"
+            ((count_opts++)) ;;
+        # help:
         -H|--help|-h)
-            FLAG_HELP='true'
+            flag_help='true'
             break ;;
         # all single letter flag args:
-        -[CDESHh]*)
+        -[CDEYHh]*)
             # all single letter args:
-            if [[ "${ARG:2:1}" =~ [CDESHh] ]]; then
-                ARGS[((N_ARGS--))]="-${ARG:2}"
-                ARG="${ARG:0:2}"
+            if [[ "${arg:2:1}" =~ [CDEYoHh] ]]; then
+                args[((n_args--))]="-${arg:2}"
+                arg="${arg:0:2}"
             else
-                ARG="${ARG:2:1}"
-                FLAG_ARG_UNKNOWN='true'
+                arg="${arg:2:1}"
+                flag_arg_unknown='true'
                 break
             fi ;;
         # all single letter option args:
-        -[c]*)
-            ARGS[$N_ARGS]="${ARG:2}"
-            ARG="${ARG:0:2}"
-            ((N_ARGS--)) ;;
+        -[o]*)
+            args[$n_args]="${arg:2}"
+            arg="${arg:0:2}"
+            ((n_args--)) ;;
         # begin parms:
         --)
-            ((N_ARGS++))
+            ((n_args++))
             break ;;
         *)
             break ;;
     esac; done
     # get parameters:
-    while [ -n "${ARGS[N_ARGS]}" ]; do
-        PARMS+=("${ARGS[((N_ARGS++))]}")
+    while [ -n "${args[n_args]}" ]; do
+        parms+=("${args[((n_args++))]}")
     done
-    COUNT_PARMS=${#PARMS[@]}
-    # HELP:
-    if [ "$FLAG_HELP" = 'true' ]; then
-        print_help
-        exit 0
+    count_parms=${#parms[@]}
     # FAIL: arg unknown:
-    elif [ "$FLAG_ARG_UNKNOWN" = 'true' ]; then
-        msg_error "argument not recognized: $ARG"
+    if [ "$flag_arg_unknown" = 'true' ]; then
+        msg_error "argument not recognized: $arg"
         exit 5
     # FAIL: arg empty:
-    elif [ "$FLAG_OPT_EMPTY" = 'true' ]; then
-        msg_error "argument requires an option: $ARG"
+    elif [ "$flag_opt_empty" = 'true' ]; then
+        msg_error "argument requires an option: $arg"
         exit 5
+    # HELP:
+    elif [ "$flag_help" = 'true' ]; then
+        print_help
+        exit 0
     fi
 }
-
-msg() {
-# print status message:
-    printf '%s==>%s %s%s\n' "$C_GREEN_B" "$C_WHITE_B" "$1" "$C_GRAY"
-}
-
-msg_ask() {
-# print ask message:
-    printf '%s::%s %s%s ' "$C_BLUE_B" "$C_WHITE_B" "$1" "$C_GRAY"
-}
-
-msg_error() {
-# print error message:
-    printf '%s==> ERROR:%s %s%s\n' "$C_RED_B" "$C_WHITE_B" \
-        "$1" "$C_GRAY"
-}
-
-msg_warn() {
-# print warning message:
-    printf '%s==> WARNING:%s %s%s\n' "$C_YELLOW_B" "$C_WHITE_B" \
-        "$1" "$C_GRAY"
-}
-
-msg2() {
-# print status sub-message:
-    printf '%s  ->%s %s%s\n' "$C_BLUE_B" "$C_WHITE_B" "$1" "$C_GRAY"
-}
-
 
 ramroot_config_gen() {
 # generate ramroot config file:
-    local MOUNTS_RAMROOT=()
-    local MOUNT_POINTS=()
-    local ROOT_DEVICE=
-
-    # parse mountpoints from /etc/fstab:
-    if [ -f /etc/fstab ]; then
-        mapfile -t MOUNT_POINTS < <(grep -P '^\s*[^\s#]' \
-            /etc/fstab | grep -Po '^[^\s]+\s+\K/[^\s]*' | sort)
-    # get mountpoints from lsblk:
-    else
-        msg_warn '/etc/fstab not found, using mountpoints from lsblk'
-        mapfile -t MOUNT_POINTS < <(lsblk -nlo MOUNTPOINT | \
-            grep -P '^/' | sort)
+    local config mount mount_id mount_path mounts_fstab mounts_zram \
+        ps_input zram
+    #global file_config flag_yes opt_output ps_default ps_timeout \
+        #ram_machine ram_min ram_pref zram_max zram_min
+    # RETURN: trying to save to directory:
+    if [ -d "$opt_output" ]; then
+        msg_error "$opt_output is a directory"
+        return
+    # ASK: overwrite existing file?
+    elif [ -f "$opt_output" ] && [ "$flag_yes" != 'true' ]; then
+        msg_ask "overwrite $opt_output? [y/N]"
+        read -r -t 300 ps_input
+        ps_input="${ps_input:-no}"
+        # RETURN:
+        if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
+            return 0
+        fi
     fi
 
-    # get root block device address from lsblk:
-    ROOT_DEVICE="$(lsblk -nlo MOUNTPOINT,NAME | \
-        grep -Po '^/\s+\Ksd[a-z]')"
-
-    # add partitions on same block device as root to ramroot mounts:
-    for MOUNT_POINT in "${MOUNT_POINTS[@]}"; do
-        if (lsblk -nlo MOUNTPOINT,NAME | grep -P \
-        "^${MOUNT_POINT}\s+$ROOT_DEVICE" &>/dev/null); then
-            MOUNTS_RAMROOT+=("$(lsblk -nlo MOUNTPOINT,UUID | grep -Po \
-                "^${MOUNT_POINT}\s+\K[^\s]+"):$MOUNT_POINT")
+    if (mountpoint -q /); then
+        zram=$(($(df -m / | \
+            awk 'FNR==2 {print int($3)}')+ram_min+zram_min))
+        # get /boot, /efi, /esp, /home from /etc/fstab:
+        if [ -f /etc/fstab ]; then
+            mapfile -t mounts_fstab < <(sed -En \
+            's@^\s*((UUID|PARTUUID)=[^\s]+)\s+(/[^ \s]+).*$@\3:\1@p;' \
+                /etc/fstab | sort)
+            for mount in ${mounts_fstab[@]}; do
+                mount_id="${mount#*:}"
+                mount_path="${mount%:*}"
+                # attempt to check if mount is small enough:
+                if [[ "${mount_path,,}" =~ /(boot|efi|esp|home)$ ]] || \
+                (mountpoint -q "$mount_path") && \
+                [ $((ram_machine - zram - $(df -m "$mount_path" | \
+                awk 'FNR==2 {print int($3)}'))) -gt 0 ]; then
+                    zram=$((zram+$(df -m "$mount_path" | \
+                        awk 'FNR==2 {print int($3)}')))
+                    mounts_zram+=("$mount_id:$mount_path")
+                fi
+            done
         fi
-    done
-    
-    printf '%s\n' "${MOUNTS_RAMROOT[@]}"
+    fi
+
+    # build config:
+    config=$'#!usr/bin/ash\n\n# mounts loaded to zram:\nmounts_zram=\''
+    if [ -n "${mounts_zram[1]}" ]; then
+        config+=$'\n'
+        for mount in ${mounts_zram[@]}; do
+            config+="    $mount"
+            config+=$'\n'
+        done
+    else
+        config+="${mounts_zram[0]}"
+    fi
+    config+=$'\'\n\n# mounts ignored:\nmounts_null=\'\'\n\n'
+    config+=$'# prompt default:\nps_default='
+    config+="$ps_default"
+    config+=$'\n\n# prompt timout:\nps_timeout='
+    config+="$ps_timeout"
+    config+=$'\n\n# minimum Mb free ram:\nram_min='
+    config+="$ram_min"
+    config+=$'\n\n# minimum Mb free zram:\nzram_min='
+    config+="$zram_min"
+    config+=$'\n\n# preferred Mb free ram:\nram_pref='
+    config+="$ram_pref"
+    config+=$'\n\n# maximum Mb free ram:\nzram_max='
+    config+="$zram_max"
+
+    # save config:
+    printf '%s\n' "$config" > "$opt_output"
 }
 
-
-
-
-
-##======================  ramroot_enable()  ======================##
-# Generate new build and runtime hooks using local UUID of root partition.
-# Copy new hooks to /usr/lib/initcpio.
-# Add ext4, vfat, and zram to /etc/mkinitcpio.conf MODULES.
-# Add ramroot to /etc/mkinitcpio.conf HOOKS.
-# Rebuild linux cpio boot image.
-ramroot_enable() {
-    local FLAG_CHANGE='false'
-    # check for user specified root UUID:
-    if [ -n "$UUID_ROOT" ]; then
-        printf ":: Using root UUID: $UUID_ROOT\n"
-    else
-        # FAIL: root not mounted:
-        if (! mountpoint / >/dev/null 2>&1); then
-            printf ":! Nothing mounted at /.\n"
-            exit 1
-        fi
-        # try to get root UUID from lsblk:
-        UUID_ROOT=`lsblk -n -o mountpoint,UUID | \
-            grep -Po '(^| +)/ +\K[^ ]+'`
-        # try to get root UUID from /etc/fstab:
-        if [ -z "$UUID_ROOT" ] && [ -f /etc/fstab ]; then
-            UUID_ROOT=`grep -Po 'UUID=\K[^ ]+(?= +/ )' /etc/fstab`
-        fi
-        # FAIL: unable to determine root UUID:
-        if [ -z "$UUID_ROOT" ]; then
-            printf ":! Unable to determine root UUID.\n"
-            exit 1
-        else
-            printf ":: Detected root UUID: $UUID_ROOT\n"
-        fi
-    fi
-    # check for user specified /boot UUID:
-    if [ -n "$UUID_BOOT" ]; then
-        printf ":: Using /boot UUID: $UUID_BOOT\n"
-    else
-        # check if /boot mounted:
-        if (mountpoint /boot >/dev/null 2>&1); then
-            # try to get /boot UUID from lsblk:
-            UUID_BOOT=`lsblk -n -o mountpoint,UUID | \
-                grep -Po '(^| +)/boot +\K[^ ]+'`
-            # try to get /boot UUID from /etc/fstab:
-            if [ -z "$UUID_BOOT" ] && [ -f /etc/fstab ]; then
-                UUID_BOOT=`grep -Po 'UUID=\K[^ ]+(?= +/boot )' \
-                    /etc/fstab`
-            fi
-        fi
-        if [ -z "$UUID_BOOT" ]; then
-            printf ":: No /boot UUID detected.\n"
-        else
-            printf ":: Detected /boot UUID: $UUID_BOOT\n"
-        fi
-    fi
-    # check for hook files in local git repo:
-    if [ -f "$DIR_SCRIPT/lib/hooks/ramroot" ]; then
-        HOOK_RUNTIME="$DIR_SCRIPT/lib/hooks/ramroot"
-    fi
-    if [ -f "$DIR_SCRIPT/lib/install/ramroot" ]; then
-        HOOK_BUILD="$DIR_SCRIPT/lib/install/ramroot"
-    fi
-    # FAIL: unable to find hook files:
-    if [ ! -f "$HOOK_BUILD" ] || [ ! -f "$HOOK_RUNTIME" ]; then
-        printf ":! Unable to locate hook files.\n"
-        exit 1
-    fi
-
-    # copy build hook:
-    mkdir -p install
-    cp "$HOOK_BUILD" install/ramroot
-    # make runtime hook:
-    mkdir -p hooks
-    sed "s@UUID_ROOT=.*@UUID_ROOT=\'$UUID_ROOT\'@g; \
-        s@UUID_BOOT=.*@UUID_BOOT=\'$UUID_BOOT\'@g; \
-        s@LOAD_DEFAULT=.*@LOAD_DEFAULT=\'$LOAD_DEFAULT\'@g; \
-        s@LOAD_TIMEOUT=.*@LOAD_TIMEOUT=\'$LOAD_TIMEOUT\'@g;" \
-        "$HOOK_RUNTIME" > hooks/ramroot
-    # enable /etc/fstab:
-    if [ "$FLAG_FSTAB" = 'true' ]; then
-        sed -i "s@FLAG_FSTAB='false'@FLAG_FSTAB=\'true\'@g" \
-            hooks/ramroot
-    fi
-    # enable custom /etc/issue:
-    if [ "$FLAG_ISSUE" = 'true' ]; then
-        sed -i "s@FLAG_ISSUE='false'@FLAG_ISSUE=\'true\'@g" \
-            hooks/ramroot
-    fi
-    # incognito mode:
-    if [ "$FLAG_INCOGNITO" = 'true' ]; then
-        sed -i '73i\        echo -e "\\e[0;30m"; clear' hooks/ramroot
-        sed -i '112i\        echo -e "\\033[H\\033[2J\\033[0;30m\\033[?1c" \\' \
-            hooks/ramroot
-        sed -i '113i\            > /zram_root/etc/issue' hooks/ramroot
-    fi
-    # FAIL: ramroot hooks not built:
-    if [ ! -f hooks/ramroot ] || [ ! -f install/ramroot ]; then
-        printf ":! ramroot hooks not built.\n"
-        exit 1
-    fi
-    # check for hook changes:
-    if (! diff -q install/ramroot "$DIR_INSTALL/ramroot" >/dev/null 2>&1) ||
-    (! diff -q hooks/ramroot "$DIR_HOOKS/ramroot" >/dev/null 2>&1); then
-        FLAG_CHANGE='true'
-    fi
-
-    # add zram to INIT_MODULES:
-    if [[ ! "$INIT_MODULES" =~ zram ]]; then
-        if [ -z "$INIT_MODULES" ]; then
-            INIT_MODULES='zram'
-        else
-            INIT_MODULES="${INIT_MODULES} zram"
-        fi
-        printf ":: zram added to mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
-    fi
-    # add ext4 to INIT_MODULES:
-    if [[ ! "$INIT_MODULES" =~ ext4 ]]; then
-        INIT_MODULES="${INIT_MODULES} ext4"
-        printf ":: ext4 added to mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
-    fi
-    # add vfat to INIT_MODULES:
-    if [[ ! "$INIT_MODULES" =~ vfat ]]; then
-        INIT_MODULES="${INIT_MODULES} vfat"
-        printf ":: vfat added to mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
-    fi
-    # add ramroot to INIT_HOOKS:
-    if [[ ! "$INIT_HOOKS" =~ ramroot ]]; then
-        if [[ "$INIT_HOOKS" =~ encrypt ]]; then
-            INIT_HOOKS="${INIT_HOOKS%encrypt*}encrypt ramroot${INIT_HOOKS#*encrypt}"
-        elif [[ "$INIT_HOOKS" =~ udev ]]; then
-            INIT_HOOKS="${INIT_HOOKS%udev*}udev ramroot${INIT_HOOKS#*udev}"
-        else
-            INIT_HOOKS="${INIT_HOOKS%base*}base ramroot${INIT_HOOKS#*base}"
-        fi
-        printf ":: ramroot added to mkinitcpio.conf HOOKS\n"
-        FLAG_CHANGE='true'
-    fi
-
-    # if changes need to be made:
-    if [ "$FLAG_CHANGE" = 'true' ] || [ "$FLAG_DRYRUN" = 'true' ]; then
-        # build new mkinitcpio.conf:
-        sed "s@^MODULES=.*@MODULES=($INIT_MODULES)@g; \
-            s@^HOOKS=.*@HOOKS=($INIT_HOOKS)@g;" \
-            /etc/mkinitcpio.conf > mkinitcpio.conf
-        # FAIL: mkinitcpio.conf not built:
-        if [ ! -f mkinitcpio.conf ]; then
-            printf ":! mkinitcpio.conf not built.\n"
-            exit 1
-        fi
-        # keep build files in cache:
-        ramroot_cache
-        if [ "$FLAG_DRYRUN" = 'false' ]; then
-            # copy mkinitcpio.conf to /etc and hooks to /usr/lib/initcpio:
-            printf ":: Enabling ramroot...\n"
-            sudo cp hooks/ramroot "$DIR_HOOKS/ramroot" &&
-            sudo cp install/ramroot "$DIR_INSTALL/ramroot" &&
-            sudo cp mkinitcpio.conf /etc/mkinitcpio.conf &&
-            sudo mkinitcpio -p linux &&
-            printf ":: ramroot enabled.\n"
-        else
-            printf ":: ramroot enable dryrun successful.\n"
-        fi
-    else
-        printf ":: ramroot already enabled.\n"
-    fi
-
-    return 0
-}
-
-##=====================  ramroot_disable()  ======================##
-# Remove ext4 and zram from /etc/mkinitcpio.conf MODULES.
-# Remove ramroot from /etc/mkinitcpio.conf HOOKS.
-# Rebuild linux cpio boot image.
 ramroot_disable() {
-    local FLAG_CHANGE='false'
-    # remove zram from INIT_MODULES:
-    if [[ "$INIT_MODULES" =~ zram ]]; then
-        INIT_MODULES=`echo "$INIT_MODULES" | \
-            sed -r 's/( zram|zram |zram)//g'`
-        printf ":: zram removed from mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
+# remove ramroot from mkinitcpio.conf HOOKS, rebuild all preset images:
+    #global hooks
+    if [[ " $hooks " =~ ' ramroot ' ]]; then
+        hooks="$(sed -E 's/^(.*) ramroot(.*)/\1\2/g' <<<"$hooks")"
+        sed -Ei "s/^(\s*HOOKS=).*/\1\(${hooks}\)/g" /etc/mkinitcpio.conf
+        msg 'ramroot removed from /etc/mkinitcpio.conf HOOKS'
     fi
-    # remove ext4 from INIT_MODULES:
-    if [[ "$INIT_MODULES" =~ ext4 ]]; then
-        INIT_MODULES=`echo "$INIT_MODULES" | \
-            sed -r 's/( ext4|ext4 |ext4)//g'`
-        printf ":: ext4 removed from mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
-    fi
-    # remove vfat from INIT_MODULES:
-    if [[ "$INIT_MODULES" =~ vfat ]]; then
-        INIT_MODULES=`echo "$INIT_MODULES" | \
-            sed -r 's/( vfat|vfat |vfat)//g'`
-        printf ":: vfat removed from mkinitcpio.conf MODULES\n"
-        FLAG_CHANGE='true'
-    fi
-    # remove ramroot from INIT_HOOKS:
-    if [[ "$INIT_HOOKS" =~ ramroot ]]; then
-        INIT_HOOKS=`echo "$INIT_HOOKS" | \
-            sed -r 's/( ramroot|ramroot |ramroot)//g'`
-        printf ":: ramroot removed from mkinitcpio.conf HOOKS\n"
-        FLAG_CHANGE='true'
-    fi
-
-    # if changes need to be made:
-    if [ "$FLAG_CHANGE" = 'true' ] || [ "$FLAG_DRYRUN" = 'true' ]; then
-        # keep copy of old mkinitcpio.conf:
-        if [ "$FLAG_CACHE" = 'true' ]; then
-            mkdir -p "$DIR_CACHE"
-            cp /etc/mkinitcpio.conf "$DIR_CACHE/mkinitcpio~.conf"
-        fi
-        # build new mkinitcpio.conf:
-        sed "s@^MODULES=.*@MODULES=($INIT_MODULES)@g; \
-            s@^HOOKS=.*@HOOKS=($INIT_HOOKS)@g;" \
-            /etc/mkinitcpio.conf > mkinitcpio.conf
-        # FAIL: mkinitcpio.conf not built:
-        if [ ! -f mkinitcpio.conf ]; then
-            printf ":! mkinitcpio.conf not built.\n"
-            exit 1
-        fi
-        # keep build files in cache:
-        ramroot_cache
-        # copy mkinitcpio.conf to /etc and rebuild linux cpio image:
-        if [ "$FLAG_DRYRUN" = 'false' ]; then
-            printf ":: Disabling ramroot...\n"
-            sudo cp mkinitcpio.conf /etc/mkinitcpio.conf &&
-            sudo mkinitcpio -p linux &&
-            printf ":: ramroot disabled.\n"
-        else
-            printf ":: ramroot disable dryrun successful.\n"
-        fi
-    fi
-
-    return 0
+    mkinitcpio -P
 }
 
-##======================  ramroot_remove()  ======================##
-# Remove ramroot hooks from /usr/lib/initcpio.
-ramroot_remove() {
-    # check for installed hooks:
-    if [ -f /usr/lib/initcpio/hooks/ramroot ] ||
-    [ -f /usr/lib/initcpio/install/ramroot ] ||
-    [ "$FLAG_DRYRUN" = 'true' ]; then
-        # keep copy of old hooks:
-        if [ "$FLAG_CACHE" = 'true' ]; then
-            if [ -f /usr/lib/initcpio/hooks/ramroot ]; then
-                mkdir -p "$DIR_CACHE/hooks"
-                cp /usr/lib/initcpio/hooks/ramroot \
-                    "$DIR_CACHE/hooks/ramroot"
-            fi
-            if [ -f /usr/lib/initcpio/install/ramroot ]; then
-                mkdir -p "$DIR_CACHE/install"
-                cp /usr/lib/initcpio/install/ramroot \
-                    "$DIR_CACHE/install/ramroot"
-            fi
-        fi
-        # remove ramroot hooks:
-        if [ "$FLAG_DRYRUN" = 'false' ]; then
-            printf ":: Removing ramroot hooks...\n"
-            if [ -f /usr/lib/initcpio/hooks/ramroot ]; then
-                sudo rm /usr/lib/initcpio/hooks/ramroot
-            fi
-            if [ -f /usr/lib/initcpio/install/ramroot ]; then
-                sudo rm /usr/lib/initcpio/install/ramroot
-            fi
-        else
-            printf ":: ramroot remove dryrun successful.\n"
-        fi
+ramroot_enable() {
+# add ramroot to mkinitcpio.conf HOOKS, rebuild all preset images:
+    #global hooks
+    if [[ ! " $hooks " =~ ' ramroot ' ]]; then
+        hooks="$(sed -E \
+            's/^(.*(encrypt|udev|base)) (.*)/\1 ramroot \3/g' \
+            <<<"$hooks")"
+        sed -Ei "s/^(\s*HOOKS=).*/\1\(${hooks}\)/g" /etc/mkinitcpio.conf
+        msg 'ramroot added to /etc/mkinitcpio.conf HOOKS'
     fi
-
-    return 0
+    mkinitcpio -P
 }
 
-##======================  ramroot_status()  ======================##
-# Print ramroot installation status to screen.
-ramroot_status() {
-    # print root filesystem status:
-    root_stat() {
-        if (lsblk | grep -P 'zram.*?/ ?$' >/dev/null); then
-            printf ":: root filesystem loaded to RAM\n"
-        else
-            printf ":: root filesystem not loaded to RAM\n"
-            EXIT_STATUS=1
-        fi
-    }
-    if [[ "$INIT_MODULES" =~ zram ]] &&
-    [[ "$INIT_MODULES" =~ ext4 ]] &&
-    [[ "$INIT_MODULES" =~ vfat ]] &&
-    [[ "$INIT_HOOKS" =~ ramroot ]] &&
-    [ -f /usr/lib/initcpio/hooks/ramroot ] &&
-    [ -f /usr/lib/initcpio/install/ramroot ]; then
-        printf ":: ramroot status: enabled\n"
-        root_stat
-    else
-        printf ":: ramroot disabled\n"
-        root_stat
-        EXIT_STATUS=2
-    fi
-
-    return 0
-}
-
-##======================  helper functions  ======================##
-ramroot_cache() {
-    if [ "$FLAG_CACHE" = 'true' ]; then
-        mkdir -p "$DIR_CACHE"
-        cd "$DIR_CACHE"
-        cp -r "$DIR_BUILD"/* .
-        cd "$DIR_BUILD"
-    fi
-
-    return 0
-}
-
-
-##=============================  SCRIPT  =============================##
+##===========================  SCRIPT  ===========================##
 # parse args:
 args_parse "$@"
 
-# FAIL: too many arguments:
-if [ "$COUNT_PARMS" -ne 0 ]; then
-    msg_error "too many arguments: ${PARMS[*]}"
+# HELP: no args:
+if [ -z "$1" ]; then
+    print_help
+    exit 0
+fi
+# FAIL: /usr/bin/mkinitcpio required:
+if [ ! -f /usr/bin/mkinitcpio ] || [ ! -f /etc/mkinitcpio.conf ]; then
+    msg_error 'mkinitcpio required for ramroot to function'
+fi
+# FAIL: unknown arguments:
+if [ "$count_parms" -ne 0 ]; then
+    msg_error "unknown arguments: ${parms[*]}"
     exit 5
 fi
-
-# FAIL: config file doesn't exist:
-if [ -n "$OPG_CONFIG" ] && [ ! -f "$OPT_CONFIG" ]; then
-    msg_error "config file not found: $OPT_CONFIG"
+# FAIL: must be root to perform operation:
+if [ $EUID -ne 0 ]; then
+    if [ "$flag_disable" = 'true' ] || [ "$flag_enable" = 'true' ]; then
+        msg_error 'you must be root to perform this operation'
+        exit 1
+    fi
+    if [ "$flag_config_gen" = 'true' ]; then
+        if [ -f "$opt_output" ]; then
+            if (! touch -c "$opt_output" &>/dev/null); then
+                msg_error 'you must be root to perform this operation'
+                exit 1
+            fi
+        else
+            if [ "$(ls -ld $(dirname "$opt_output") | \
+                cut -d' ' -f3)" != "$(whoami)" ] && \
+            [ "$(ls -ld $(dirname "$opt_output") | \
+            cut -c9)" != 'w' ]; then
+                msg_error 'you must be root to perform this operation'
+                exit 1
+            fi
+        fi
+    fi
+fi
+# FAIL: both disable and enable:
+if [ "$flag_disable" = 'true' ] && [ "$flag_enable" = 'true' ]; then
+    msg_error 'cannot both disable and enable'
     exit 1
 fi
 
-# FAIL: disable and enable:
-if [ "$FLAG_DISABLE" = 'true' ] && [ "$FLAG_ENABLE" = 'true' ]; then
-    msg_error 'cannot disable and enable in one command'
-    exit 1
-fi
-
-if [ "$FLAG_CONFIG_GEN" = 'true' ]; then
+# get current hooks:
+hooks="$(grep -Po '^\s*HOOKS=\(\K.*?(?=\))' /etc/mkinitcpio.conf | \
+        sed -E 's/\s+/ /g; s/\s+$//g')"
+# generate ramroot config file:
+if [ "$flag_config_gen" = 'true' ]; then
     ramroot_config_gen
 fi
-
-# get current MODULES and HOOKS from /etc/mkinitcpio.conf:
-#INIT_MODULES="`grep -Po '^ *MODULES=(\(|")\K.*?(?=(\)|"))' \
-    #/etc/mkinitcpio.conf`"
-#INIT_HOOKS="`grep -Po '^ *HOOKS=(\(|")\K.*?(?=(\)|"))' \
-    #/etc/mkinitcpio.conf`"
-
+# disable/enable ramroot:
+if [ "$flag_disable" = 'true' ]; then
+    ramroot_disable
+elif [ "$flag_enable" = 'true' ]; then
+    ramroot_enable
+fi
