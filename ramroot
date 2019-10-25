@@ -45,7 +45,7 @@ dir_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 file_config='/etc/ramroot.conf'
 ram_machine=8000
 ps_default=no
-ps_timeout=8
+ps_timeout=5
 ram_min=750
 ram_pref=4000
 zram_min=250
@@ -188,6 +188,7 @@ ramroot_config_gen() {
         ps_input zram
     #global file_config flag_yes opt_output ps_default ps_timeout \
         #ram_machine ram_min ram_pref zram_max zram_min
+
     # RETURN: trying to save to directory:
     if [ -d "$opt_output" ]; then
         msg_error "$opt_output is a directory"
@@ -200,13 +201,13 @@ ramroot_config_gen() {
         # RETURN:
         if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
             return 0
-        fi
-    fi
+    fi; fi
 
+    # only possible to generate custom config if root is mounted:
     if (mountpoint -q /); then
         zram=$(($(df -m / | \
             awk 'FNR==2 {print int($3)}')+ram_min+zram_min))
-        # get /boot, /efi, /esp, /home from /etc/fstab:
+        # source /etc/fstab:
         if [ -f /etc/fstab ]; then
             mapfile -t mounts_fstab < <(sed -En \
             's@^\s*((UUID|PARTUUID)=[^\s]+)\s+(/[^ \s]+).*$@\3:\1@p;' \
@@ -214,18 +215,16 @@ ramroot_config_gen() {
             for mount in ${mounts_fstab[@]}; do
                 mount_id="${mount#*:}"
                 mount_path="${mount%:*}"
-                # attempt to check if mount is small enough:
-                if [[ "${mount_path,,}" =~ /(boot|efi|esp|home)$ ]] || \
-                (mountpoint -q "$mount_path") && \
-                [ $((ram_machine - zram - $(df -m "$mount_path" | \
-                awk 'FNR==2 {print int($3)}'))) -gt 0 ]; then
-                    zram=$((zram+$(df -m "$mount_path" | \
-                        awk 'FNR==2 {print int($3)}')))
-                    mounts_zram+=("$mount_id:$mount_path")
-                fi
-            done
-        fi
-    fi
+                # get /boot, /efi, /esp, /home from /etc/fstab:
+                if [[ "${mount_path,,}" =~ /(boot|efi|esp|home)$ ]] && \
+                (mountpoint -q "$mount_path"); then
+                    # attempt to determine if mount is small enough:
+                    part=$(df -m "$mount_path" | \
+                        awk 'FNR==2 {print int($3)}')
+                    if [ $((ram_machine-zram-part)) -gt 0 ]; then
+                        zram=$((zram+part))
+                        mounts_zram+=("$mount_id:$mount_path")
+    fi; fi; done; fi; fi
 
     # build config:
     config=$'#!usr/bin/ash\n\n# mounts loaded to zram:\nmounts_zram=\''
@@ -252,7 +251,7 @@ ramroot_config_gen() {
     config+=$'\n\n# maximum Mb free ram:\nzram_max='
     config+="$zram_max"
 
-    # save config:
+    # write config:
     printf '%s\n' "$config" > "$opt_output"
 }
 
@@ -317,10 +316,8 @@ if [ $EUID -ne 0 ]; then
             cut -c9)" != 'w' ]; then
                 msg_error 'you must be root to perform this operation'
                 exit 1
-            fi
-        fi
-    fi
-fi
+fi; fi; fi; fi
+
 # FAIL: both disable and enable:
 if [ "$flag_disable" = 'true' ] && [ "$flag_enable" = 'true' ]; then
     msg_error 'cannot both disable and enable'
