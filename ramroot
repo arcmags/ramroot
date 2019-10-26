@@ -185,7 +185,7 @@ args_parse() {
 ramroot_config_gen() {
 # generate ramroot config file:
     local config mount mount_id mount_path mounts_fstab mounts_zram \
-        ps_input zram
+        part ps_input zram
     #global file_config flag_yes opt_output ps_default ps_timeout \
         #ram_machine ram_min ram_pref zram_max zram_min
 
