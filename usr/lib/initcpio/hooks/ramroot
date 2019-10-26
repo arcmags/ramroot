@@ -95,8 +95,8 @@ run_hook() {
             sleep 2
             return 1
         fi
-        zram=$((zram+$(df /local_root/ | \
-            awk 'FNR==2 {print int($3)}')/1000))
+        zram=$((zram+($(df /local_root/ | \
+            awk 'FNR==2 {print int($3)}')/1000)))
         umount /local_root
     done
 
