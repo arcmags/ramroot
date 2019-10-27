@@ -242,13 +242,13 @@ ramroot_config_gen() {
     config+="$ps_default"
     config+=$'\n\n# prompt timout:\nps_timeout='
     config+="$ps_timeout"
-    config+=$'\n\n# minimum Mb free ram:\nram_min='
+    config+=$'\n\n# minimum MiB free ram:\nram_min='
     config+="$ram_min"
-    config+=$'\n\n# minimum Mb free zram:\nzram_min='
+    config+=$'\n\n# minimum MiB free zram:\nzram_min='
     config+="$zram_min"
-    config+=$'\n\n# preferred Mb free ram:\nram_pref='
+    config+=$'\n\n# preferred MiB free ram:\nram_pref='
     config+="$ram_pref"
-    config+=$'\n\n# maximum Mb free ram:\nzram_max='
+    config+=$'\n\n# maximum MiB free ram:\nzram_max='
     config+="$zram_max"
 
     # write config:

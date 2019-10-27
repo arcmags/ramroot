@@ -53,7 +53,7 @@ to be built into a new initramfs image.
 
 All *UUID* (or *PARTUUID*) values must include the proper ``UUID=``
 prefix.  A *mountpath* is a full relative path (given in */etc/fstab*).
-Every size is a whole number of *megabytes* with *no-suffix*.
+Every size is a whole number of *mebibytes* with *no-suffix*.
 
 ``mounts_zram``
     Defines additional mounts to load to zram during initramfs.
