@@ -57,7 +57,7 @@ run_hook() {
     fi
     if (! echo "$ps_timeout" | grep -Ei \
     '^[1-9]+[0-9]*$' &>/dev/null); then
-        ps_timeout=5
+        ps_timeout=8
     fi
 
     # set sizes:
@@ -113,14 +113,12 @@ run_hook() {
         sleep 2
         return 0
     # calculate zram size:
-    elif [ $((ram-ram_pref-zram-zram_min)) -gt 0 ]; then
-        if [ $((ram-ram_pref-zram-zram_max)) -gt 0 ]; then
-            zram=$((zram+zram_max))
-        else
-            zram=$((ram-ram_min-zram_min))
-        fi
-    else
+    elif [ $((ram-ram_pref-zram-zram_min)) -le 0 ]; then
         zram=$((zram+zram_min))
+    elif [ $((ram-ram_pref-zram-zram_max)) -le 0 ]; then
+        zram=$((ram-ram_pref))
+    else
+        zram=$((zram+zram_max))
     fi
 
     # prompt for input:

@@ -2,7 +2,7 @@
 ##============================  ramroot  =============================##
 # Copyright (C) 2019 Chris Magyar        GNU General Public License v3 #
 ##====================================================================##
-version_script="2.0.0"
+version_script="2.0.1"
 
 print_help() {
 cat <<'HELPDOC'
@@ -45,7 +45,7 @@ dir_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 file_config='/etc/ramroot.conf'
 ram_machine=8000
 ps_default=no
-ps_timeout=5
+ps_timeout=8
 ram_min=750
 ram_pref=4000
 zram_min=250
@@ -253,6 +253,7 @@ ramroot_config_gen() {
 
     # write config:
     printf '%s\n' "$config" > "$opt_output"
+    msg 'ramroot config written to %s\n' "$opt_output"
 }
 
 ramroot_disable() {
