@@ -48,7 +48,7 @@ ps_default=no
 ps_timeout=5
 ram_min=750
 ram_pref=4000
-zram_min=100
+zram_min=150
 zram_max=1000
 # args:
 flag_config_gen='false'

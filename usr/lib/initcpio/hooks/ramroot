@@ -68,7 +68,7 @@ run_hook() {
         ram_pref=4000
     fi
     if (! echo "$zram_min" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
-        zram_min=100
+        zram_min=150
     fi
     if (! echo "$zram_max" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
         zram_max=1000
