@@ -3,7 +3,7 @@
 run_hook() {
     local flag_tmp mount mount_id mount_path mounts_null mounts_tmp \
         mounts_zram mount_tmp mount_tmp ps_default ps_input ps_timeout \
-        ram ram_min ram_pref zram zram_max zram_min
+        ram ram_min ram_pref s zram zram_max zram_min
     #global fsck_root mount_handler root zram_device zram_mount
 
     # wait a moment for udev to hopefully finish initializing:
@@ -51,13 +51,15 @@ run_hook() {
 
     # set prompt:
     if (echo "$ps_default" | grep -Ei '^(y|yes)$' &>/dev/null); then
-        ps_default='yes'
+        ps_default='y'
     else
-        ps_default='no'
+        ps_default='n'
     fi
     if (! echo "$ps_timeout" | grep -Ei \
     '^[1-9]+[0-9]*$' &>/dev/null); then
-        ps_timeout=8
+        ps_timeout=6
+    elif [ 24 -lt $ps_timeout ]; then
+        ps_timeout=24
     fi
 
     # set sizes:
@@ -122,21 +124,32 @@ run_hook() {
     fi
 
     # prompt for input:
-    printf '\e[1;34m:: \e[1;37mLoad root file system to zram? '
-    if [ "$ps_default" = 'yes' ]; then
-        printf '[Y/n] \e[0;37m'
+    printf "\033[1K\e[1;34m:: \e[1;37mLoad root file system to zram? "
+    if [ "$ps_default" = 'y' ]; then
+        printf '[Y/n] '
     else
-        printf '[y/N] \e[0;37m'
+        printf '[y/N] '
     fi
-    read -r -t $ps_timeout ps_input
-    if [ $? -ne 0 ]; then
-        printf '\n'
-    fi
-    ps_input="$(echo "${ps_input:=$ps_default}" | \
-        awk '{print tolower($0)}')"
-    if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
+    # visual countdown:
+    s=0
+    while [ $s -lt $ps_timeout ]; do
+        printf '.'
+        s=$((s+1))
+    done
+    while [ ! -n "$ps_input" ] && [ 0 -lt $ps_timeout ]; do
+        printf '\b \b'
+        read -rsn1 -t1 ps_input
+        if [ $? -eq 0 ]; then
+            ps_timeout=0
+        fi
+        ps_timeout=$((ps_timeout-1))
+    done
+    ps_input="${ps_input:=$ps_default}"
+    if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'Y' ]; then
+        printf ' no\n'
         return 0
     fi
+    printf ' yes\n'
     if [ "$flag_quiet" = 'true' ]; then
         printf '\e[0;30m'; clear
     fi
@@ -147,7 +160,7 @@ run_hook() {
         # FAIL: zram module error:
         if [ $? -ne 0 ]; then
             printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-                'zram module error'
+                'error loading zram module'
             sleep 2
             return 1
         fi
