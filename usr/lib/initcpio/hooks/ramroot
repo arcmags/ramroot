@@ -34,6 +34,8 @@ run_hook() {
     if [ "${mounts_zram%% *}" != "$root:/" ]; then
         return 0
     fi
+    printf '\e[1;32m==> \e[1;37mChecking memory resources...\n'
+
     # FAIL: mount not found:
     for mount in $mounts_zram; do
         mount_id="$(resolve_device "${mount%:*}")"
@@ -66,7 +68,7 @@ run_hook() {
         ram_pref=4000
     fi
     if (! echo "$zram_min" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
-        zram_min=250
+        zram_min=100
     fi
     if (! echo "$zram_max" | grep -E '^[1-9][0-9]*$' &>/dev/null); then
         zram_max=1000
@@ -79,7 +81,7 @@ run_hook() {
     fi
 
     # get available ram:
-    ram="$(($(free | awk '/Mem/ {print int($2)}')/1000))"
+    ram="$(($(free | awk '/Mem/ {print int($2)}')/1024))"
 
     # get zram size:
     for mount in $mounts_zram; do
@@ -95,11 +97,15 @@ run_hook() {
             sleep 2
             return 1
         fi
-        zram=$((zram+($(df /local_root/ | \
-            awk 'FNR==2 {print int($3)}')/1000)))
+        zram=$((zram+$(df -m /local_root/ | \
+            awk 'FNR==2 {print int($3)}')))
         umount /local_root
     done
+    # add 10% for root reserved space:
+    zram=$((zram*110/100))
 
+    printf '\e[1;34m  -> \e[1;37maval: %dM\n\e[1;34m  -> ' $ram
+    printf '\e[1;37mreqd: %dM\n' $((zram+zram_min+ram_min))
     # WARM: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
         printf '\e[1;33m==> SKIPPED: \e[1;37m%s\e[0;37m\n' \
@@ -111,12 +117,11 @@ run_hook() {
         if [ $((ram-ram_pref-zram-zram_max)) -gt 0 ]; then
             zram=$((zram+zram_max))
         else
-            zram=$((ram-ram_pref))
+            zram=$((ram-ram_min-zram_min))
         fi
     else
         zram=$((zram+zram_min))
     fi
-    ram=$((ram-zram))
 
     # prompt for input:
     printf '\e[1;34m:: \e[1;37mLoad root file system to zram? '
@@ -131,7 +136,7 @@ run_hook() {
     fi
     ps_input="$(echo "${ps_input:=$ps_default}" | \
         awk '{print tolower($0)}')"
-    if  [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
+    if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'yes' ]; then
         return 0
     fi
     if [ "$flag_quiet" = 'true' ]; then
@@ -141,9 +146,30 @@ run_hook() {
     # make zram device:
     if [ ! -b "/dev/zram0" ]; then
         modprobe zram
+        # FAIL: zram module error:
+        if [ $? -ne 0 ]; then
+            printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
+                'zram module error'
+            sleep 2
+            return 1
+        fi
     fi
     zram_device=$(zramctl -f -s ${zram}M -a lzo)
+    # FAIL: error initializing zram device:
+    if [ $? -ne 0 ]; then
+        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
+            'error initializing zram device'
+        sleep 2
+        return 1
+    fi
     mkfs.ext4 -q "$zram_device"
+    # FAIL: error formatting zram device:
+    if [ $? -ne 0 ]; then
+        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
+            'error formatting zram device'
+        sleep 2
+        return 1
+    fi
     mount "$zram_device" /zram_root
 
     # copy root to zram:
