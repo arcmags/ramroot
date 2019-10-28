@@ -149,7 +149,7 @@ run_hook() {
         printf ' no\n'
         return 0
     fi
-    printf ' yes\n'
+    printf 'yes\n'
     if [ "$flag_quiet" = 'true' ]; then
         printf '\e[0;30m'; clear
     fi
@@ -188,13 +188,13 @@ run_hook() {
         sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
-        mount "$mount_id" /local_root
-        mkdir -p "/zram_root$mount_path"
         if [ "$flag_quiet" != 'true' ]; then
             printf '\e[1;32m==> \e[1;37mLoading %s %s\e[0;37m\n' \
                 "$mount_path" 'to zram...'
         fi
-        cp -a /local_root/* "/zram_root$mount_path"
+        mount "$mount_id" /local_root
+        mkdir -p "/zram_root$mount_path"
+        cp -a /local_root/. "/zram_root$mount_path"
         umount /local_root
     done
 
@@ -215,7 +215,7 @@ run_hook() {
 
     # copy ramroot files:
     if [ -d /zram_root/etc/ramroot ]; then
-        cp -a /zram_root/etc/ramroot/* /zram_root
+        cp -a --remove-destination /zram_root/etc/ramroot/. /zram_root
     fi
     if [ "$flag_quiet" = 'true' ]; then
         printf "\\033[H\\033[2J\\033[0;30m\\033[?1c\n" > \
