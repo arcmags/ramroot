@@ -105,6 +105,11 @@ overwritten to the root directory.
 This can be used to load any number of custom scripts, binaries,
 configs, etc when boot from zram.
 
+Any files copied from */etc/ramroot/* to */* in this manner preserve
+all ownerships.  Also note that symbolic links (rather than their
+target files) will be overwritten by this action (due to the fact
+that they aren't resolved yet during early initramfs).
+
 
 Ramroot Script
 ==============
