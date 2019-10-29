@@ -150,9 +150,6 @@ run_hook() {
         return 0
     fi
     printf 'yes\n'
-    if [ "$flag_quiet" = 'true' ]; then
-        printf '\e[0;30m'; clear
-    fi
 
     # make zram device:
     if [ ! -b "/dev/zram0" ]; then
@@ -165,7 +162,7 @@ run_hook() {
             return 1
         fi
     fi
-    zram_device=$(zramctl -f -s ${zram}M -a lzo)
+    zram_device="$(zramctl -f -s ${zram}M -a lzo)"
     # FAIL: error initializing zram device:
     if [ $? -ne 0 ]; then
         printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
@@ -182,6 +179,16 @@ run_hook() {
         return 1
     fi
     mount "$zram_device" /zram_root
+    # FAIL: error mounting zram device:
+    if [ $? -ne 0 ]; then
+        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
+            'error mounting zram device'
+        sleep 2
+        return 1
+    fi
+    if [ "$flag_quiet" = 'true' ]; then
+        printf '\e[0;30m'; clear
+    fi
 
     # copy root to zram:
     for mount in $mounts_zram; do

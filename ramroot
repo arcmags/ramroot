@@ -253,7 +253,7 @@ ramroot_config_gen() {
 
     # write config:
     printf '%s\n' "$config" > "$opt_output"
-    msg 'ramroot config written to %s\n' "$opt_output"
+    msg "ramroot config written to $opt_output"
 }
 
 ramroot_disable() {
