@@ -52,8 +52,9 @@ execute ``ramroot -E`` or ``mkinitcpio -P`` in order for those changes
 to be built into a new initramfs image.
 
 All *UUID* (or *PARTUUID*) values must include the proper ``UUID=``
-prefix.  A *mountpath* is a full relative path (given in */etc/fstab*).
-Every size is a whole number of *mebibytes* with *no-suffix*.
+prefix.  A *mountpath* is an absolute mount path (as given in
+*/etc/fstab*). Every size is a whole number of *mebibytes*
+with *no-suffix*.
 
 ``mounts_zram``
     Defines additional mounts to load to zram during initramfs.
@@ -71,8 +72,9 @@ Every size is a whole number of *mebibytes* with *no-suffix*.
     Default zram y/n prompt value.  Valid values are *yes* or *no*.
 
 ``ps_timeout``
-    Boot prompt timeout, positive integer.  After this many seconds,
-    the zram y/n prompt will assume the ``ps_default`` value.
+    Boot prompt timeout, positive integer between 1 and 33.  After
+    this many seconds, the zram y/n prompt will assume
+    the ``ps_default`` value.
 
 ``ram_min``
     Minimum amount of free ram required.

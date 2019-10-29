@@ -14,7 +14,7 @@ execute \fBramroot -E\fR or \fBmkinitcpio -P\fR in order for those
 changes to be built into a new initramfs image.
 .PP
 All \fIUUID\fR (or \fIPARTUUID\fR) values must include the proper
-\fIUUID=\fR prefix.  A \fImountpath\fR is a full relative path (as
+\fIUUID=\fR prefix.  A \fImountpath\fR is an absolute mount path (as
 given in \fI/etc/fstab\fR).  Every size is a whole number of
 \fImebibytes\fR with \fIno suffix\fR.
 .SH VARIABLES
@@ -34,8 +34,9 @@ ramroot will skip loading altogether.
 Default zram y/n prompt value.  Valid values are \fIyes\fR or \fIno\fR.
 .TP
 \fBps_timeout\fR
-Boot prompt timeout, positive integer.  After this many seconds, the
-zram y/n prompt will assume the \fBps_default\fR value.
+Boot prompt timeout, positive integer between 1 and 33.  After this
+many seconds, the zram y/n prompt will assume the
+\fBps_default\fR value.
 .TP
 \fBram_min\fR
 Minimum amount of free ram required.
