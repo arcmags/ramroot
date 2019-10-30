@@ -109,7 +109,7 @@ args_parse() {
     count_parms=0
     parms=()
     while [ -n "$arg" ]; do case "$arg" in
-        # flag args:
+        # flags:
         -C|--config_gen)
             flag_config_gen='true'
             arg="${args[((++n_args))]}"
@@ -126,7 +126,7 @@ args_parse() {
             flag_yes='true'
             arg="${args[((++n_args))]}"
             ((count_flags++)) ;;
-        # option args:
+        # options:
         -o|--output)
             opt_output="${args[((++n_args))]}"
             if [ -z "${args[n_args]}" ]; then
@@ -139,9 +139,9 @@ args_parse() {
         -H|--help|-h)
             flag_help='true'
             break ;;
-        # all single letter flag args:
+        # all flags:
         -[CDEYHh]*)
-            # all single letter args:
+            # all flags and options:
             if [[ "${arg:2:1}" =~ [CDEYoHh] ]]; then
                 args[((n_args--))]="-${arg:2}"
                 arg="${arg:0:2}"
@@ -150,12 +150,12 @@ args_parse() {
                 flag_arg_unknown='true'
                 break
             fi ;;
-        # all single letter option args:
+        # all options:
         -[o]*)
             args[$n_args]="${arg:2}"
             arg="${arg:0:2}"
             ((n_args--)) ;;
-        # begin parms:
+        # parms:
         --)
             ((n_args++))
             break ;;
@@ -318,7 +318,6 @@ if [ $EUID -ne 0 ]; then
                 msg_error 'you must be root to perform this operation'
                 exit 1
 fi; fi; fi; fi
-
 # FAIL: both disable and enable:
 if [ "$flag_disable" = 'true' ] && [ "$flag_enable" = 'true' ]; then
     msg_error 'cannot both disable and enable'

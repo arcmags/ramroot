@@ -30,16 +30,18 @@ run_hook() {
         fi
     done
     mounts_zram="$mounts_tmp"
+
     # RETURN: root in mounts_null:
     if [ "${mounts_zram%% *}" != "$root:/" ]; then
         return 0
     fi
     printf '\e[1;32m==> \e[1;37mChecking memory resources...\n'
 
-    # FAIL: mount not found:
+    # check mounts_zram:
     for mount in $mounts_zram; do
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
+        # FAIL: mount not found:
         if [ "$mount_id" = "$mount_path" ] || \
         [ -z "$mount_id" ] || [ -z "$mount_path" ]; then
             printf '\e[1;31m==> FAILED: \e[1;37m%s %s\e[0;37m\n' \
@@ -58,7 +60,7 @@ run_hook() {
     if (! echo "$ps_timeout" | grep -Ei \
     '^[2-9]+[0-9]*$' &>/dev/null); then
         ps_timeout=8
-    elif [ 32 -lt $ps_timeout ]; then
+    elif [ $ps_timeout -gt 32 ]; then
         ps_timeout=32
     fi
 
@@ -103,7 +105,7 @@ run_hook() {
             awk 'FNR==2 {print int($3)}')))
         umount /local_root
     done
-    # add 10% for root reserved space:
+    # 10% free space reserved for root:
     zram=$((zram*110/100))
 
     printf '\e[1;34m  -> \e[1;37maval: %dM\n\e[1;34m  -> ' $ram
@@ -136,13 +138,14 @@ run_hook() {
         printf '.'
         s=$((s+1))
     done
-    while [ ! -n "$ps_input" ] && [ 0 -lt $ps_timeout ]; do
+    s=0
+    while [ $s -lt $ps_timeout ]; do
         printf '\b\b  \b'
         read -rsn1 -t1 ps_input
         if [ $? -eq 0 ]; then
-            ps_timeout=0
+            s=$ps_timeout
         fi
-        ps_timeout=$((ps_timeout-1))
+        s=$((s+1))
     done
     ps_input="${ps_input:=$ps_default}"
     if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'Y' ]; then

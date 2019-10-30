@@ -10,30 +10,18 @@ busybox shell
 =============
 
 The Arch Linux initramfs uses a modified version of the busybox_
-ash_ shell.  By modified, I mean it contains only of fraction of
-the usual busybox builtins.  The core Arch repository contains
-a mkinitcpio-busybox_ which ... ahhhhhh!! God, just spent over 4
-hours trying to figure out why *read* ain't working in ash and I'm
-still stuck.
+ash_ shell.  To test out this trimmed down shell, install
+mkinitcpio-busybox_ and run::
 
-
-Somehow, whenever the damn prompt timer runs out, zramctl fails and I
-have absolutely no clue why.
-
-
-visual countdown broken
-no awk
-no tr
-no -gt , only -lt
-shell subs fucked
-no ((n++))
-no -z
+    PATH= /usr/lib/initcpio/busybox ash
 
 
 Upcoming Features
 =================
 
 * ~/.ramroot user directory for ramroot specific user files
+
+* systemd unit to copy custom ramroot files post initramfs stage?
 
 * possibly an option to drop to the busybox shell during initramfs
 
