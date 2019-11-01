@@ -1,5 +1,5 @@
 =================
-ramroot dev-notes
+ramroot dev notes
 =================
 
 A place to organize ideas, list new features, keep track of what
@@ -24,6 +24,16 @@ Upcoming Features
 * systemd unit to copy custom ramroot files post initramfs stage?
 
 * possibly an option to drop to the busybox shell during initramfs
+
+
+Questions
+=========
+
+* Where should the */etc/ramroot* folder really go?  Should it be named
+  *ramroot.d*?  It doesn't really fit what a *.d* directory is for;
+  heck, it doesn't really fit what any system directory is for.  Hmm...
+  Maybe */etc/ramroot.r* then?  Or even better, */etc/ramroot.z*, I
+  like it.  
 
 
 .. _ash: https://linux.die.net/man/1/ash
