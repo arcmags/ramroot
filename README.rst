@@ -107,6 +107,9 @@ overwritten to the root directory.
 This can be used to load any number of custom scripts, binaries,
 configs, etc when boot from zram.
 
+As an example, you could place a custom hostname file at
+*/etc/ramroot/etc/hostname* to be used only when boot from zram.
+
 Any files copied from */etc/ramroot/* to */* in this manner preserve
 all ownerships.  Also note that symbolic links (rather than their
 target files) will be overwritten by this action (due to the fact
