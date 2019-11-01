@@ -33,7 +33,13 @@ Questions
   *ramroot.d*?  It doesn't really fit what a *.d* directory is for;
   heck, it doesn't really fit what any system directory is for.  Hmm...
   Maybe */etc/ramroot.r* then?  Or even better, */etc/ramroot.z*, I
-  like it.  
+  like it.
+
+* When should */etc/ramroot* files be copied to the root filesystem?
+  Right now it happens during initramfs, but I feel like this isn't
+  the time you want to be doing something like that.  A systemd unit
+  starting right after local-fs.target would probably work as well.
+  The idea is to have any custom files copied before any service that sources them starts.  Need to look into this...
 
 
 .. _ash: https://linux.die.net/man/1/ash
