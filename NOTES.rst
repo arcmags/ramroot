@@ -40,6 +40,20 @@ Questions
   The idea is to have any custom files copied before any service that sources them starts.  Need to look into this...
 
 
+Bugs
+====
+
+* Something is really weird with the visual countdown prompt. (Official
+  release is okay, I'm talking about the current master branch.)  For
+  some reason I have failed to determine after literally days of
+  toil, initializing the zram device fails on some machines every time
+  the boot timer is allowed to expire and succeeds every time a key is
+  pressed before the timer expires.  It appears to have something to
+  do with the timer expiring yet there is absolutely no logical
+  reason this should matter.  WTF?  I may remove the visual countdown
+  prompt as it seems to be the only solution at this point...
+
+
 .. _ash: https://linux.die.net/man/1/ash
 .. _busybox: https://busybox.net/downloads/BusyBox.html
 .. _dracut: https://dracut.wiki.kernel.org/index.php/Main_Page
