@@ -21,9 +21,7 @@ Upcoming Features
 
 * ~/.ramroot user directory for ramroot specific user files
 
-* systemd unit to copy custom ramroot files post initramfs stage?
-
-* possibly an option to drop to the busybox shell during initramfs
+* Eventually going to have to get this working with dracut_...
 
 
 Questions
@@ -44,4 +42,5 @@ Questions
 
 .. _ash: https://linux.die.net/man/1/ash
 .. _busybox: https://busybox.net/downloads/BusyBox.html
+.. _dracut: https://dracut.wiki.kernel.org/index.php/Main_Page
 .. _mkinitcpio-busybox: https://www.archlinux.org/packages/core/x86_64/mkinitcpio-busybox/
