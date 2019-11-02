@@ -1,12 +1,11 @@
 #!usr/bin/ash
 
 run_hook() {
-    local flag_tmp mount mount_id mount_path mounts_null mounts_tmp \
-        mounts_zram mount_tmp mount_tmp ps_default ps_input ps_timeout \
-        ram ram_min ram_pref s zram zram_max zram_min
+    local dir_home flag_tmp mount mount_id mount_path mounts_null \
+        mounts_tmp mounts_zram mount_tmp mount_tmp ps_default ps_input \
+        ps_timeout ram ram_min ram_pref s zram zram_max zram_min
     #global fsck_root mount_handler root zram_device zram_mount
 
-    # wait a moment for udev to hopefully finish initializing:
     sleep 2
     source /etc/ramroot.conf
 
@@ -164,7 +163,7 @@ run_hook() {
             sleep 2
             return 1
         fi
-        sleep 1
+        sleep 2
     fi
     sleep 1
     zram_device="$(zramctl -f -s ${zram}M -a lzo)"
@@ -225,10 +224,15 @@ run_hook() {
         done
     fi
 
-    # copy ramroot files:
-    if [ -d /zram_root/etc/ramroot ]; then
-        cp -a --remove-destination /zram_root/etc/ramroot/. /zram_root
+    # copy /etc/ramroot.z files:
+    if [ -d /zram_root/etc/ramroot.z ]; then
+        cp -a --remove-destination /zram_root/etc/ramroot.z/. /zram_root
     fi
+    # copy /home/<user>/.ramroot.z files:
+    for dir_home in /zram_root/home/*; do
+    if [ -d "$dir_home/.ramroot.z" ]; then
+        cp -a --remove-destination "$dir_home/.ramroot.z/." "$dir_home"
+    fi; done
     if [ "$flag_quiet" = 'true' ]; then
         printf "\\033[H\\033[2J\\033[0;30m\\033[?1c\n" > \
             /zram_root/etc/issue

@@ -48,10 +48,8 @@ Bugs
   some reason I have failed to determine after literally days of
   toil, initializing the zram device fails on some machines every time
   the boot timer is allowed to expire and succeeds every time a key is
-  pressed before the timer expires.  It appears to have something to
-  do with the timer expiring yet there is absolutely no logical
-  reason this should matter.  WTF?  I may remove the visual countdown
-  prompt as it seems to be the only solution at this point...
+  pressed before the timer expires.  It appears that adding some extra
+  sleep pauses has fixed this issue.  Still testing...
 
 
 .. _ash: https://linux.die.net/man/1/ash
