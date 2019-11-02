@@ -19,37 +19,12 @@ mkinitcpio-busybox_ and run::
 Upcoming Features
 =================
 
-* ~/.ramroot user directory for ramroot specific user files
+*   ~/.ramroot user directory for ramroot specific user files
 
-* Eventually going to have to get this working with dracut_...
+*   Eventually going to have to get this working with dracut_...
 
-
-Questions
-=========
-
-* Where should the */etc/ramroot* folder really go?  Should it be named
-  *ramroot.d*?  It doesn't really fit what a *.d* directory is for;
-  heck, it doesn't really fit what any system directory is for.  Hmm...
-  Maybe */etc/ramroot.r* then?  Or even better, */etc/ramroot.z*, I
-  like it.
-
-* When should */etc/ramroot* files be copied to the root filesystem?
-  Right now it happens during initramfs, but I feel like this isn't
-  the time you want to be doing something like that.  A systemd unit
-  starting right after local-fs.target would probably work as well.
-  The idea is to have any custom files copied before any service that sources them starts.  Need to look into this...
-
-
-Bugs
-====
-
-* Something is really weird with the visual countdown prompt. (Official
-  release is okay, I'm talking about the current master branch.)  For
-  some reason I have failed to determine after literally days of
-  toil, initializing the zram device fails on some machines every time
-  the boot timer is allowed to expire and succeeds every time a key is
-  pressed before the timer expires.  It appears that adding some extra
-  sleep pauses has fixed this issue.  Still testing...
+*   Possibly use a systemed unit to copy files from */etc/ramroot.z*
+    after local-fs.target instead of during initramfs.
 
 
 .. _ash: https://linux.die.net/man/1/ash

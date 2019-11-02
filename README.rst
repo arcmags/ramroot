@@ -96,8 +96,8 @@ with *no-suffix*.
 
 All remaining memory is allocated towards ram.
 
-/etc/ramroot/*
---------------
+/etc/ramroot.z/
+---------------
 
 The structure of this directory mirrors the hierarchy of the
 root file system.  Upon a successful sync to zram, any files and
@@ -105,15 +105,25 @@ directories contained in */etc/ramroot/* are non-persistently
 overwritten to the root directory.
 
 This can be used to load any number of custom scripts, binaries,
-configs, etc when boot from zram.
-
-As an example, you could place a custom hostname file at
-*/etc/ramroot/etc/hostname* to be used only when boot from zram.
+configs, etc when boot from zram.  Just a few use case examples for
+this include: a custom zram hostname at */etc/ramroot.z/etc/hostname*,
+enable autologin when boot from zram via a
+*/etc/ramroot.z/etc/systemd/system/getty@tty1.service.d/override.conf*
+file, or even add more sudo access with drop in files in
+*/etc/ramroot.z/etc/sudoers.d/*.
 
 Any files copied from */etc/ramroot/* to */* in this manner preserve
 all ownerships.  Also note that symbolic links (rather than their
 target files) will be overwritten by this action (due to the fact
 that they aren't resolved yet during early initramfs).
+
+
+/home/<user>/.ramroot.z/
+------------------------
+
+Any files contained within a *.ramroot.z* directory in a user's home
+folder are non-persistently overwritten to their home folders upon a
+sync to zram as above.
 
 
 Ramroot Script
