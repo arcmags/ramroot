@@ -118,8 +118,8 @@ target files) will be overwritten by this action (due to the fact
 that they aren't resolved yet during early initramfs).
 
 
-/home/<user>/.ramroot.z/
-------------------------
+~/.ramroot.z/
+-------------
 
 Any files contained within a *.ramroot.z* directory in a user's home
 folder are non-persistently overwritten to their home folders upon a

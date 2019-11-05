@@ -163,7 +163,7 @@ run_hook() {
             sleep 2
             return 1
         fi
-        sleep 2
+        sleep 1
     fi
     sleep 1
     zram_device="$(zramctl -f -s ${zram}M -a lzo)"
