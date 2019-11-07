@@ -137,13 +137,14 @@ run_hook() {
         printf '.'
         s=$((s+1))
     done
+    printf ' '
     s=0
     while [ $s -lt $ps_timeout ]; do
-        printf '\b\b  \b'
         read -rsn1 -t1 ps_input
         if [ $? -eq 0 ]; then
             s=$ps_timeout
         fi
+        printf '\b\b  \b'
         s=$((s+1))
     done
     ps_input="${ps_input:=$ps_default}"
