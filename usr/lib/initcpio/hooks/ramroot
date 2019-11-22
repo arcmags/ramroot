@@ -147,7 +147,7 @@ run_hook() {
         printf '\b\b  \b'
         s=$((s+1))
     done
-    ps_input="${ps_input:=$ps_default}"
+    ps_input="${ps_input:-$ps_default}"
     if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'Y' ]; then
         printf 'no\n'
         return 0
