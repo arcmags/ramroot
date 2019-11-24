@@ -42,7 +42,7 @@ printf '    %s\n' "$version_script"
 ##=========================  VARIABLES  ==========================##
 dir_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # settings:
-file_config='/etc/ramroot.conf'
+file_config=/etc/ramroot.conf
 ram_machine=8000
 ps_default=no
 ps_timeout=8
@@ -51,10 +51,10 @@ ram_pref=4000
 zram_min=250
 zram_max=1000
 # args:
-flag_config_gen='false'
-flag_disable='false'
-flag_enable='false'
-flag_yes='false'
+flag_config_gen=false
+flag_disable=false
+flag_enable=false
+flag_yes=false
 opt_output="$file_config"
 parms=()
 count_parms=0
@@ -101,9 +101,9 @@ args_parse() {
     args=("$@")
     n_args=0
     arg="${args[n_args]}"
-    flag_opt_empty='false'
-    flag_arg_unknown='false'
-    flag_help='false'
+    flag_opt_empty=false
+    flag_arg_unknown=false
+    flag_help=false
     count_flags=0
     count_opts=0
     count_parms=0
@@ -111,33 +111,33 @@ args_parse() {
     while [ -n "$arg" ]; do case "$arg" in
         # flags:
         -C|--config_gen)
-            flag_config_gen='true'
+            flag_config_gen=true
             arg="${args[((++n_args))]}"
             ((count_flags++)) ;;
         -D|--disable)
-            flag_disable='true'
+            flag_disable=true
             arg="${args[((++n_args))]}"
             ((count_flags++)) ;;
         -E|--enable)
-            flag_enable='true'
+            flag_enable=true
             arg="${args[((++n_args))]}"
             ((count_flags++)) ;;
         -Y|--yes)
-            flag_yes='true'
+            flag_yes=true
             arg="${args[((++n_args))]}"
             ((count_flags++)) ;;
         # options:
         -o|--output)
             opt_output="${args[((++n_args))]}"
             if [ -z "${args[n_args]}" ]; then
-                flag_opt_empty='true'
+                flag_opt_empty=true
                 break
             fi
             arg="${args[((++n_args))]}"
             ((count_opts++)) ;;
         # help:
         -H|--help|-h)
-            flag_help='true'
+            flag_help=true
             break ;;
         # all flags:
         -[CDEYHh]*)
@@ -147,7 +147,7 @@ args_parse() {
                 arg="${arg:0:2}"
             else
                 arg="${arg:2:1}"
-                flag_arg_unknown='true'
+                flag_arg_unknown=true
                 break
             fi ;;
         # all options:
@@ -168,15 +168,15 @@ args_parse() {
     done
     count_parms=${#parms[@]}
     # FAIL: arg unknown:
-    if [ "$flag_arg_unknown" = 'true' ]; then
+    if [ "$flag_arg_unknown" = true ]; then
         msg_error "argument not recognized: $arg"
         exit 5
     # FAIL: arg empty:
-    elif [ "$flag_opt_empty" = 'true' ]; then
+    elif [ "$flag_opt_empty" = true ]; then
         msg_error "argument requires an option: $arg"
         exit 5
     # HELP:
-    elif [ "$flag_help" = 'true' ]; then
+    elif [ "$flag_help" = true ]; then
         print_help
         exit 0
     fi
@@ -194,7 +194,7 @@ ramroot_config_gen() {
         msg_error "$opt_output is a directory"
         return
     # ASK: overwrite existing file?
-    elif [ -f "$opt_output" ] && [ "$flag_yes" != 'true' ]; then
+    elif [ -f "$opt_output" ] && [ "$flag_yes" != true ]; then
         msg_ask "overwrite $opt_output? [y/N]"
         read -r -t 300 ps_input
         ps_input="${ps_input:-no}"
@@ -300,11 +300,11 @@ if [ "$count_parms" -ne 0 ]; then
 fi
 # FAIL: must be root to perform operation:
 if [ $EUID -ne 0 ]; then
-    if [ "$flag_disable" = 'true' ] || [ "$flag_enable" = 'true' ]; then
+    if [ "$flag_disable" = true ] || [ "$flag_enable" = true ]; then
         msg_error 'you must be root to perform this operation'
         exit 1
     fi
-    if [ "$flag_config_gen" = 'true' ]; then
+    if [ "$flag_config_gen" = true ]; then
         if [ -f "$opt_output" ]; then
             if (! touch -c "$opt_output" &>/dev/null); then
                 msg_error 'you must be root to perform this operation'
@@ -319,7 +319,7 @@ if [ $EUID -ne 0 ]; then
                 exit 1
 fi; fi; fi; fi
 # FAIL: both disable and enable:
-if [ "$flag_disable" = 'true' ] && [ "$flag_enable" = 'true' ]; then
+if [ "$flag_disable" = true ] && [ "$flag_enable" = true ]; then
     msg_error 'cannot both disable and enable'
     exit 1
 fi
@@ -328,12 +328,12 @@ fi
 hooks="$(grep -Po '^\s*HOOKS=\(\K.*?(?=\))' /etc/mkinitcpio.conf | \
         sed -E 's/\s+/ /g; s/\s+$//g')"
 # generate ramroot config file:
-if [ "$flag_config_gen" = 'true' ]; then
+if [ "$flag_config_gen" = true ]; then
     ramroot_config_gen
 fi
 # disable/enable ramroot:
-if [ "$flag_disable" = 'true' ]; then
+if [ "$flag_disable" = true ]; then
     ramroot_disable
-elif [ "$flag_enable" = 'true' ]; then
+elif [ "$flag_enable" = true ]; then
     ramroot_enable
 fi

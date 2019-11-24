@@ -24,7 +24,7 @@ run_hook() {
                 flag_tmp=false
             fi
         done
-        if [ "$flag_tmp" = 'true' ]; then
+        if [ "$flag_tmp" = true ]; then
             mounts_tmp="$mounts_tmp$mount "
         fi
     done
@@ -191,7 +191,7 @@ run_hook() {
         sleep 2
         return 1
     fi
-    if [ "$flag_quiet" = 'true' ]; then
+    if [ "$flag_quiet" = true ]; then
         printf '\e[0;30m'; clear
     fi
 
@@ -200,7 +200,7 @@ run_hook() {
         sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
-        if [ "$flag_quiet" != 'true' ]; then
+        if [ "$flag_quiet" != true ]; then
             printf '\e[1;32m==> \e[1;37mLoading %s %s\e[0;37m\n' \
                 "$mount_path" 'to zram...'
         fi
@@ -234,7 +234,7 @@ run_hook() {
     if [ -d "$dir_home/.ramroot.z" ]; then
         cp -a --remove-destination "$dir_home/.ramroot.z/." "$dir_home"
     fi; done
-    if [ "$flag_quiet" = 'true' ]; then
+    if [ "$flag_quiet" = true ]; then
         printf "\\033[H\\033[2J\\033[0;30m\\033[?1c\n" > \
             /zram_root/etc/issue
     fi
