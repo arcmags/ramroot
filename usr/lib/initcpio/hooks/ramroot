@@ -175,9 +175,9 @@ run_hook() {
         sleep 2
         return 1
     fi
+    # Show auto selected default comp_algorithm
     block=$(echo "${zram_device/dev/block}")
     cat /sys"$block"/comp_algorithm | grep -o '\[.*\]'
-    # Show auto selected default comp_algorithm
     mkfs.ext4 -q "$zram_device"
     # FAIL: error formatting zram device:
     if [ $? -ne 0 ]; then
