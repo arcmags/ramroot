@@ -167,7 +167,7 @@ run_hook() {
         sleep 1
     fi
     sleep 1
-    zram_device="$(zramctl -f -s ${zram}M -a lz4)"
+    zram_device="$(zramctl -f -s ${zram}M)"
     # FAIL: error initializing zram device:
     if [ $? -ne 0 ]; then
         printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
@@ -175,6 +175,9 @@ run_hook() {
         sleep 2
         return 1
     fi
+    block=$(echo "${zram_device/dev/block}")
+    cat /sys"$block"/comp_algorithm | grep -o '\[.*\]'
+    # Show auto selected default comp_algorithm
     mkfs.ext4 -q "$zram_device"
     # FAIL: error formatting zram device:
     if [ $? -ne 0 ]; then
