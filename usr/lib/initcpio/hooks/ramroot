@@ -109,7 +109,7 @@ run_hook() {
 
     printf '\e[1;34m  -> \e[1;37maval: %dM\n\e[1;34m  -> ' $ram
     printf '\e[1;37mreqd: %dM\n' $((zram+zram_min+ram_min))
-    # WARM: not enough ram
+    # WARN: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
         printf '\e[1;33m==> SKIPPED: \e[1;37m%s\e[0;37m\n' \
             'ramroot: not enough ram'
@@ -168,12 +168,18 @@ run_hook() {
     fi
     sleep 1
     zram_device="$(zramctl -f -s ${zram}M -a lz4)"
-    # FAIL: error initializing zram device:
+    # ERROR: error initializing with lz4:
     if [ $? -ne 0 ]; then
-        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-            'error initializing zram device'
-        sleep 2
-        return 1
+        printf '\e[1;33m==> NOTICE: \e[1;37m%s\e[0;37m\n' \
+            'cannot initialize zram device with lz4, trying lzo'
+        zram_device="$(zramctl -f -s ${zram}M -a lzo)"
+        # FAIL: cannot create zram device with preferred algorithms
+        if [ $? -ne 0 ]; then
+            printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
+            'cannot initialize zram device'
+            sleep 2
+            return 1
+        fi
     fi
     mkfs.ext4 -q "$zram_device"
     # FAIL: error formatting zram device:
