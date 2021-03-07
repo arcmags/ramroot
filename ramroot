@@ -1,8 +1,8 @@
 #!/bin/bash
 ##============================  ramroot  =============================##
-# Copyright (C) 2019 Chris Magyar        GNU General Public License v3 #
+# Copyright (C) 2021 Chris Magyar        GNU General Public License v3 #
 ##====================================================================##
-version_script="2.0.1"
+version_script="2.0.2"
 
 print_help() {
 cat <<'HELPDOC'

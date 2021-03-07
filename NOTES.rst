@@ -19,8 +19,6 @@ mkinitcpio-busybox_ and run::
 Upcoming Features
 =================
 
-*   ~/.ramroot user directory for ramroot specific user files
-
 *   Eventually going to have to get this working with dracut_...
 
 *   Possibly use a systemed unit to copy files from */etc/ramroot.z*
