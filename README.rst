@@ -7,6 +7,12 @@ that completely loads the root file system to a zram partition
 during the initramfs_ boot stage.
 
 
+WARNING
+=======
+
+ramroot is currently not working with any kernel 5.10+.
+
+
 Usage
 =====
 
