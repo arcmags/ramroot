@@ -8,6 +8,7 @@ build() {
     add_dir /zram_root
     add_file /etc/ramroot.conf
     add_module ext4
+    add_module lzo
     add_module vfat
     add_module zram
     add_runscript
