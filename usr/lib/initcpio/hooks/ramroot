@@ -34,7 +34,7 @@ run_hook() {
     if [ "${mounts_zram%% *}" != "$root:/" ]; then
         return 0
     fi
-    printf '\e[1;32m==> \e[1;37mChecking memory resources...\n'
+    printf '\e[1;32m==> \e[1;37mChecking memory resources ...\n'
 
     # check mounts_zram:
     for mount in $mounts_zram; do
@@ -57,8 +57,10 @@ run_hook() {
         ps_default='n'
     fi
     if (! echo "$ps_timeout" | grep -Ei \
-    '^[2-9]+[0-9]*$' &>/dev/null); then
+    '^[1-9]+[0-9]*$' &>/dev/null); then
         ps_timeout=8
+    elif [ $ps_timeout -lt 3 ]; then
+        ps_timeout=3
     elif [ $ps_timeout -gt 32 ]; then
         ps_timeout=32
     fi
@@ -107,7 +109,7 @@ run_hook() {
     # 10% free space reserved for root:
     zram=$((zram*110/100))
 
-    printf '\e[1;34m  -> \e[1;37maval: %dM\n\e[1;34m  -> ' $ram
+    printf '\e[1;34m -> \e[1;37maval: %dM\n\e[1;34m -> ' $ram
     printf '\e[1;37mreqd: %dM\n' $((zram+zram_min+ram_min))
     # WARM: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
@@ -125,14 +127,14 @@ run_hook() {
     fi
 
     # prompt for input:
-    printf "\e[1;34m:: \e[1;37mLoad root file system to zram? "
+    printf "\e[1;34m::> \e[1;37mLoad root file system to zram? "
     if [ "$ps_default" = 'y' ]; then
         printf '[Y/n] '
     else
         printf '[y/N] '
     fi
     # visual countdown:
-    s=0
+    s=1
     while [ $s -lt $ps_timeout ]; do
         printf '.'
         s=$((s+1))
@@ -144,7 +146,7 @@ run_hook() {
         if [ $? -eq 0 ]; then
             s=$ps_timeout
         fi
-        printf '\b\b  \b'
+        printf '\b\b '
         s=$((s+1))
     done
     ps_input="${ps_input:-$ps_default}"
@@ -202,7 +204,7 @@ run_hook() {
         mount_path="${mount#*:}"
         if [ "$flag_quiet" != true ]; then
             printf '\e[1;32m==> \e[1;37mLoading %s %s\e[0;37m\n' \
-                "$mount_path" 'to zram...'
+                "$mount_path" 'to zram ...'
         fi
         mount "$mount_id" /local_root
         mkdir -p "/zram_root$mount_path"
