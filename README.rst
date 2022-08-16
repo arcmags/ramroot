@@ -2,39 +2,37 @@
 ramroot
 =======
 
-Run Linux entirely from RAM!  This is customizable mkinitcpio_ hook
-that completely loads the root file system to a zram partition
-during the initramfs_ boot stage.
+Run Linux entirely from RAM! This is a customizable mkinitcpio_ hook that
+completely loads the root file system to a zram partition during the initramfs_
+boot stage.
 
 
 Usage
 =====
 
-During early system boot, the ramroot initcpio hook determines the
-host machine's total ram and prompts the user y/n to load the root file
-system to zram if enough space is available.
+During early system boot, the ramroot initcpio hook determines the host
+machine's total ram and prompts the user y/n to load the root file system to
+zram if enough space is available.
 
-A ramroot helper script easily enables/disables and/or generates
-additional ramroot config files.
+A ramroot helper script easily enables/disables and/or generates additional
+ramroot config files.
 
 Installation
 ------------
 
-This package is available in the AUR_ for easy installation.  A basic
-config file is created during initial installation.
+This package is available in the AUR_ for easy installation. A basic config
+file is created during initial installation.
 
 Requirements
 ------------
 
 Arch Linux
-    ramroot is designed specifically to work with the Arch Linux
-    `boot process`_.  These scripts work with slight modifications on
-    other distributions from time to time, however this not
-    officially supported
+    ramroot is designed specifically to work with the Arch Linux `boot
+    process`_. These scripts work with slight modifications on other
+    distributions from time to time, however this not officially supported
 
 mkinitcpio
-    A dependency of the linux package.  This is included here as
-    linux is no longer included in the Arch Linux base package set.
+    Create custom initial ramdisk image.
 
 
 Configuration
@@ -43,87 +41,77 @@ Configuration
 /etc/ramroot.conf
 -----------------
 
-This file is an ash shell script.  Many common bash builtins are
-not available here and the syntax tends to be a bit stricter.  The
-fallback config file can be viewed at */usr/lib/ramroot/ramroot.conf*.
+This file is an ash shell script. Many common bash builtins are not available
+here and the syntax tends to be a bit stricter. The fallback config file can be
+viewed at */usr/lib/ramroot/ramroot.conf*.
 
-After any changes are made to */etc/ramroot.conf*, a user must
-execute ``ramroot -E`` or ``mkinitcpio -P`` in order for those changes
-to be built into a new initramfs image.
+After any changes are made to */etc/ramroot.conf*, a user must execute
+``ramroot -E`` or ``mkinitcpio -P`` in order for those changes to be built into
+a new initramfs image.
 
-All *UUID* (or *PARTUUID*) values must include the proper ``UUID=``
-prefix.  A *mountpath* is an absolute mount path (as given in
-*/etc/fstab*). Every size is a whole number of *mebibytes*
-with *no-suffix*.
+All *UUID* (or *PARTUUID*) values must include the proper ``UUID=`` prefix. A
+*mountpath* is an absolute mount path (as given in */etc/fstab*). Every size is
+a whole number of *mebibytes* with *no-suffix*.
 
 ``mounts_zram``
-    Defines additional mounts to load to zram during initramfs.
-    A mount consists of the *UUID* separated from the
-    *mountpath* by a colon.  Multiple mounts are separated by spaces
-    or newlines.
+    Additional mounts loaded to zram when ramroot is active. A mount consists
+    of the *UUID* separated from the *mountpath* by a colon. Multiple mounts
+    are separated by spaces or newlines.
 
 ``mounts_null``
-    Defines mounts to specifically ignore by ramroot.  The
-    *UUID* is optional for these mounts.  These will not
-    be loaded to zram or mounted normally.  If */* is specified in
-    ``mounts_null``, ramroot will skip loading altogether.
+    Mounts excluded when ramroot is active. The *UUID* is optional for these
+    mounts. These will not be loaded to zram or mounted normally. If */* is
+    specified in ``mounts_null``, ramroot will skip loading altogether.
 
 ``ps_default``
-    Default zram y/n prompt value.  Valid values are *yes* or *no*.
+    Default zram boot y/n prompt value. Valid values are *yes* or *no*.
 
 ``ps_timeout``
-    Boot prompt timeout, positive integer between 1 and 33.  After
-    this many seconds, the zram y/n prompt will assume
-    the ``ps_default`` value.
+    zram boot prompt timeout, positive integer between 1 and 32. After this
+    many seconds, the prompt will select the ``ps_default`` value.
 
 ``ram_min``
     Minimum amount of free ram required.
 
 ``zram_min``
-    Minimum amount of free zram required.  If both this and
-    ``ram_min`` cannot be satisfied, the boot prompt automatically
-    selects *no*.
+    Minimum amount of free zram required. If both this and ``ram_min`` cannot
+    be satisfied, the zram boot prompt will automatically select *no*.
 
 ``ram_pref``
-    Preferred amount of free ram.  If both ``ram_min`` and
-    ``zram_min`` are satisfied, additional memory is allocated
-    to ram up to this preferred ram value.
+    Preferred amount of free ram. Additional memory is allocated to ram up to
+    this preferred value.
 
 ``zram_max``
-    Maximum amount of free zram to create.  Once ``ram_pref`` is
-    satisfied, the amount of free zram is further extended to
-    ``zram_max``.
+    Maximum amount of free zram. If ``ram_pref`` is satisfied, free zram is
+    increased to ``zram_max``.
 
 All remaining memory is allocated towards ram.
 
 /etc/ramroot.z/
 ---------------
 
-The structure of this directory mirrors the hierarchy of the
-root file system.  Upon a successful sync to zram, any files and
-directories contained in */etc/ramroot/* are non-persistently
-overwritten to the root directory.
+The structure of this directory mirrors the hierarchy of the root file system.
+Upon a successful sync to zram, any files and directories contained in
+*/etc/ramroot/* are non-persistently overwritten to the root directory.
 
-This can be used to load any number of custom scripts, binaries,
-configs, etc when boot from zram.  Just a few use case examples for
-this include: a custom zram hostname at */etc/ramroot.z/etc/hostname*,
-enable autologin when boot from zram via a
-*/etc/ramroot.z/etc/systemd/system/getty@tty1.service.d/override.conf*
+This can be used to load any number of custom scripts, binaries, configs, etc
+when boot from zram. A few use case examples for this include: a custom zram
+hostname at */etc/ramroot.z/etc/hostname*, enable autologin when boot from zram
+via a */etc/ramroot.z/etc/systemd/system/getty@tty1.service.d/override.conf*
 file, or even add more sudo access with drop in files in
 */etc/ramroot.z/etc/sudoers.d/*.
 
-Any files copied from */etc/ramroot/* to */* in this manner preserve
-all ownerships.  Also note that symbolic links (rather than their
-target files) will be overwritten by this action (due to the fact
-that they aren't resolved yet during early initramfs).
-
+Any files copied from */etc/ramroot.z/* to */* in this manner preserve all
+ownerships. Be wary that any symbolic links (rather than their target files)
+will be overwritten by this action as they aren't resolved yet during early
+initramfs.
 
 ~/.ramroot.z/
 -------------
 
-Any files contained within a *.ramroot.z* directory in a user's home
+Any files contained within a *~/.ramroot.z* directory in a user's home
 folder are non-persistently overwritten to their home folders upon a
-sync to zram as above.
+sync to zram as described in */etc/ramroot.z/* above.
 
 
 Ramroot Script
@@ -135,16 +123,15 @@ Options
 -------
 
 ``-C, --config-gen``
-    Attempt to detect the root file system partitions and generate
-    a new config file.
+    Attempt to detect the root file system partitions and generate a new config
+    file.
 
 ``-D, --disable``
-    Remove ramroot hook from */etc/mkinitcpio.conf* and rebuild
-    initramfs image.
+    Remove ramroot hook from */etc/mkinitcpio.conf* and rebuild initramfs
+    image.
 
 ``-E, --enable``
-    Add ramroot hook to */etc/mkinitcpio.conf* and rebuild
-    initramfs image.
+    Add ramroot hook to */etc/mkinitcpio.conf* and rebuild initramfs image.
 
 ``-o, --output <FILE>``
     Save new config to *FILE* instead of */etc/mkinitcpio.conf*.
@@ -159,27 +146,26 @@ Options
 Notes
 =====
 
-The file system transfer to ram takes several minutes.  As soon as
-the boot process is complete, the boot media can be safely removed.
+The file system transfer to zram takes several minutes. As soon as the boot
+process is complete, the boot media can be safely removed.
 
-Remember that all changes to files in ram are completely lost when the
-host machine is power cycled.  To persistently update the system and
-edit files, boot the device without transferring the filesystem to ram.
+Remember that all changes to files in zram are completely lost when the host
+machine is power cycled. To persistently update the system and edit files, boot
+the device without transferring the filesystem to zram.
 
-Keep a clean and trimmed down system to maintain faster zram sync times.
-Arch Linux stores downloaded packages in */var/cache/pacman/pkg/*.
-After every update, if no problems occur, consider removing
-`old packages`_.
+Keep a clean and trimmed down system to maintain faster zram sync times. Arch
+Linux stores downloaded packages in */var/cache/pacman/pkg/*. Consider removing
+`old packages`_ after system updates.
 
-Also, keep in mind that higher quality (more expensive) USB flash
-drives often exhibit a dramatic improvement in zram sync times.
+Higher quality (more expensive) USB flash drives exhibit a dramatic improvement
+in zram sync times.
 
 
 Credits
 =======
 
-This project was motivated greatly in part by the liveroot_ package and
-by several inquisitive `forum posts`_.
+This project was motivated greatly in part by the liveroot_ package and by
+several inquisitive `forum posts`_.
 
 :Author:
     Chris Magyar
