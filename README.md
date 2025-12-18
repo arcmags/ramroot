@@ -79,14 +79,11 @@ Upon a successful sync to zram, any files and directories contained in
 */etc/ramroot/* are non-persistently overwritten to the root directory.
 
 This can be used to load any number of custom scripts, binaries, configs, etc
-when boot from zram. A few use case examples for this include: a custom zram
-hostname at */etc/ramroot.z/etc/hostname*, enable autologin when boot from zram
-via a */etc/ramroot.z/etc/systemd/system/getty@tty1.service.d/override.conf*
-file, etc.
+when boot from zram.
 
 Any files copied from */etc/ramroot.z/* to */* in this manner preserve all
-ownerships. Be wary that any symbolic links (rather than their target files)
-will be overwritten by this action as they aren't resolved yet during early
+ownerships. Be wary that symbolic links (rather than their target files) will
+be overwritten by this action as they aren't resolved yet during early
 initramfs.
 
 ### ~/.ramroot.z/

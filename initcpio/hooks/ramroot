@@ -204,7 +204,7 @@ run_hook() {
     for mount in $mounts_zram; do
         # TODO: check each cp command for success
         if [ "$flag_quiet" != true ]; then
-            printf '\e[1;34m > \e[1;37mloading %s ...\e[0m\n' "$mount_path"
+            printf '\e[1;34m > \e[1;37msyncing %s ...\e[0m\n' "$mount_path"
         fi
         sleep 1
         mount_id="$(resolve_device "${mount%:*}")"

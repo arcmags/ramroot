@@ -1,0 +1,20 @@
+# Maintainer: Chris Magyar <c.magyar.ec@gmail.com>
+
+pkgver=dev
+
+pkgname=ramroot
+#pkgver=2.0.3
+pkgrel=1
+pkgdesc='Load root file system to zram during boot'
+arch=(x86_64)
+url="https://github.com/arcmags/$pkgname"
+license=(GPL-3.0-or-later)
+conflicts=(liveroot)
+depends=(mkinitcpio)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
+sha256sums=(SKIP)
+
+package() {
+    cd "$pkgname-$pkgver"
+    PREFIX="$pkgdir" make install
+}

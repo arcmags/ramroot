@@ -1,0 +1,13 @@
+pkgbase = ramroot
+	pkgdesc = Load root file system to zram during boot
+	pkgver = dev
+	pkgrel = 1
+	url = https://github.com/arcmags/ramroot
+	arch = x86_64
+	license = GPL-3.0-or-later
+	depends = mkinitcpio
+	conflicts = liveroot
+	source = ramroot-dev.tar.gz::https://github.com/arcmags/ramroot/archive/dev.tar.gz
+	sha256sums = SKIP
+
+pkgname = ramroot
