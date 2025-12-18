@@ -38,6 +38,7 @@ hook enables ramroot::
 
     HOOKS=(base udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
 
+Users are responsible for dealing with their own */etc/mkinitcpio.conf* files themselves
 
 Requirements
 ------------
