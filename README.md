@@ -26,6 +26,10 @@ compatible with this hook. See the non-systemd hooks in the official
 
     HOOKS=(base udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
 
+Rebuild initramfs images to include changes made to */etc/mkinitcpio.conf*:
+
+    # mkinitcpio -P
+
 Users are responsible for dealing with their own */etc/mkinitcpio.conf* and any
 *.pacnew* files.
 
