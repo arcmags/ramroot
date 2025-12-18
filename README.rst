@@ -3,7 +3,7 @@ ramroot
 =======
 
 Run Linux entirely from RAM! This is a customizable mkinitcpio_ hook that
-completely loads the root file system to a zram partition during the initramfs_
+completely loads the root file system to a zram device during the initramfs_
 boot stage.
 
 
@@ -14,14 +14,30 @@ During early system boot, the ramroot initcpio hook determines the host
 machine's total ram and prompts the user y/n to load the root file system to
 zram if enough space is available.
 
-A ramroot helper script easily enables/disables and/or generates additional
-ramroot config files.
+Installation and Setup
+----------------------
 
-Installation
-------------
+Install the hooks and manpages::
 
-This package is available in the AUR_ for easy installation. A basic config
-file is created during initial installation.
+    # make install
+
+Uninstall::
+
+    # make uninstall
+
+After installation, the ``ramroot`` hook must be manually added to
+*/etc/mkinitcpio.conf*. This was done via script in the past (before I realized
+it's probably not a great idea to change users' */etc/mkinitcpio.conf* in an
+install script).
+
+As of mkinitcpio-v40_, Arch Linux has begun including the ``systemd`` hook in
+*/etc/mkinitcpio.conf* by default. This version of ramroot is not (yet)
+compatible with this hook. See the non-systemd hooks in the official
+meson.build_ from mkinitcpio. Adding the ``ramroot`` hook after the ``udev``
+hook enables ramroot::
+
+    HOOKS=(base udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
+
 
 Requirements
 ------------
@@ -114,35 +130,6 @@ folder are non-persistently overwritten to their home folders upon a
 sync to zram as described in */etc/ramroot.z/* above.
 
 
-Ramroot Script
-==============
-
-``ramroot <options>``
-
-Options
--------
-
-``-C, --config-gen``
-    Attempt to detect the root file system partitions and generate a new config
-    file.
-
-``-D, --disable``
-    Remove ramroot hook from */etc/mkinitcpio.conf* and rebuild initramfs
-    image.
-
-``-E, --enable``
-    Add ramroot hook to */etc/mkinitcpio.conf* and rebuild initramfs image.
-
-``-o, --output <FILE>``
-    Save new config to *FILE* instead of */etc/mkinitcpio.conf*.
-
-``-Y, --yes``
-    Overwrite output files without asking.
-
-``-H, --help``
-    Display help text and exit.
-
-
 Notes
 =====
 
@@ -164,26 +151,21 @@ in zram sync times.
 Credits
 =======
 
-This project was motivated greatly in part by the liveroot_ package and by
-several inquisitive `forum posts`_.
-
 :Author:
     Chris Magyar
 
 :Version:
-    2.0.2
+    2.0.3
 
 :License:
     GPL 3.0
 
-:Donate(xmr):
-    41dUPANhvCvLUuRVJpUc9cRFnsLHzWiTPUhyuamrVwa61xoP
-    uxZaD6R28cLqxEhTaC6LuwcHtkbUi2uELDD88MoQHJKePvP
-
 
 .. _AUR: https://aur.archlinux.org/packages/ramroot/
 .. _mkinitcpio: https://wiki.archlinux.org/index.php/mkinitcpio
+.. _mkinitcpio-v40: https://github.com/archlinux/mkinitcpio/tree/v40
 .. _zram: https://en.wikipedia.org/wiki/Zram
+.. _meson.build: https://github.com/archlinux/mkinitcpio/blob/v40/meson.build
 .. _initramfs: https://en.wikipedia.org/wiki/Initial_ramdisk
 .. _boot process: https://wiki.archlinux.org/index.php/Arch_boot_process
 .. _build hook: https://wiki.archlinux.org/index.php/mkinitcpio#Build_hooks
@@ -192,5 +174,3 @@ several inquisitive `forum posts`_.
 .. _MODULES: https://wiki.archlinux.org/index.php/mkinitcpio#MODULES
 .. _arch-usb: http://valleycat.org/arch-usb/arch-usb.html
 .. _old packages: https://wiki.archlinux.org/index.php/pacman#Cleaning_the_package_cache
-.. _liveroot: https://github.com/bluerider/liveroot
-.. _forum posts: https://bbs.archlinux.org/viewtopic.php?id=178963

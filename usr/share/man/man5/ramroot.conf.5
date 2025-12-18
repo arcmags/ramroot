@@ -1,68 +1,58 @@
-.TH RAMROOT.CONF 5 "2021-08-25" "ramroot 2.0.2" "ramroot.conf manual"
+.TH RAMROOT.CONF 5 "2025-12-16" "ramroot 2.0.3" "ramroot.conf manual"
 .SH NAME
 ramroot.conf - ramroot initcpio hook configuration file
-file
 .SH SYNOPSIS
 /etc/ramroot.conf
 .SH DESCRIPTION
-This file is an ash shell script.  Many common bash builtins are not
-available here and the syntax tends to be a bit stricter.  The fallback
-config file can be viewed at \fI/usr/lib/ramroot/ramroot.conf\fR.
-.PP
-After any changes are made to \fI/etc/ramroot.conf\fR, a user must
-execute \fBramroot -E\fR or \fBmkinitcpio -P\fR in order for those
-changes to be built into a new initramfs image.
+This file is an ash shell script.  A default config file can be viewed at
+\fI/usr/lib/ramroot/ramroot.conf\fR.
 .PP
 All \fIUUID\fR (or \fIPARTUUID\fR) values must include the proper
 \fIUUID=\fR prefix.  A \fImountpath\fR is an absolute mount path (as
 given in \fI/etc/fstab\fR).  Every size is a whole number of
 \fImebibytes\fR with \fIno suffix\fR.
+.PP
+\fBmkinitcpio -P\fR must be run after making changes to
+\fI/etc/ramroot.conf\fR.
 .SH VARIABLES
 .TP
 \fBmounts_zram\fR
-Defines additional mounts to load to zram during initramfs.  A mount
-consists of the \fIUUID\fR separated from the \fImountpath\fR by a
-colon.  Multiple mounts are separated by spaces or newlines.
+Additional mounts loaded to zram during initramfs.  A mount consists of a
+\fIUUID\fR separated from a \fImountpath\fR by a colon.  Multiple mounts are
+separated by spaces or newlines.
 .TP
 \fBmounts_null\fR
-Defines mounts to specifically ignore by ramroot.  The \fIUUID\fR
-is optional for these mounts.  These will not be loaded to zram or
-mounted normally.  If \fI/\fR is specified in \fBmounts_null\fR,
-ramroot will skip loading altogether.
+Mounts specifically ignored by ramroot.  A \fIUUID\fR is optional for these
+mounts.  These mounts will be commented out in \fI/etc/fstab\fR when ramroot
+active.
 .TP
 \fBps_default\fR
 Default zram y/n prompt value.  Valid values are \fIyes\fR or \fIno\fR.
 .TP
 \fBps_timeout\fR
-Boot prompt timeout, positive integer between 1 and 33.  After this
-many seconds, the zram y/n prompt will assume the
-\fBps_default\fR value.
+Boot prompt timeout, positive integer between 1 and 32.
 .TP
 \fBram_min\fR
 Minimum amount of free ram required.
 .TP
 \fBzram_min\fR
-Minimum amount of free zram required.  If both this and
-\fBram_min\fR cannot be satisfied, the boot prompt automatically
-selects \fIno\fR.
+Minimum amount of free zram required.  If both this and \fBram_min\fR cannot be
+satisfied, the boot prompt automatically selects \fIno\fR.
 .TP
 \fBram_pref\fR
-Preferred amount of free ram.  If both \fBram_min\fR and
-\fBzram_min\fR are satisfied, additional memory is allocated to ram
-up to this preferred ram value.
+Preferred amount of free ram.  If both \fBram_min\fR and \fBzram_min\fR are
+satisfied, additional memory is allocated to ram up to this preferred ram
+value.
 .TP
 \fBzram_max\fR
-Maximum amount of free zram to create.  Once \fBram_pref\fR is
-satisfied, the amount of free zram is further extended
-to \fBzram_max\fR.
+Maximum amount of free zram to create.  Once \fBram_pref\fR is satisfied, the
+amount of free zram is further extended to \fBzram_max\fR.
 .PP
 All remaining memory is allocated towards ram.
 .SH SEE ALSO
 \fBramroot\fR(8), <\fBhttps://github.com/arcmags/ramroot/\fR>
-.SH AUTHOR
-Written by Chris Magyar.
 .SH COPYRIGHT
-Copyright \(co 2017 Free Software Foundation, Inc. License GPLv3+:
-GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+Copyright 2025 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3
+or later <http://gnu.org/licenses/gpl.html>. This is free software: you are
+free to change and redistribute it. There is NO WARRANTY, to the extent
+permitted by law.

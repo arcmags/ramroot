@@ -1,37 +1,17 @@
-.TH RAMROOT 8 "2021-08-25" "ramroot 2.0.2" "Ramroot Manual"
+.TH RAMROOT 8 "2025-12-16" "ramroot 2.0.3" "ramroot manual"
 .SH NAME
-ramroot \- enable/disable ramroot initcpio hook and/or generate config
-file
-.SH SYNOPSIS
-\fBramroot\fR <\fIOPTIONS\fR>
-.SH OPTIONS
-.TP
-\fB\-C\fR, \fB\-\-config\-gen\fR
-Attempt to detect the root file system partitions and generate a
-new config file.
-.TP
-\fB\-D\fR, \fB\-\-disable\fR
-Remove ramroot hook from \fI/etc/mkinitcpio.conf\fR and rebuild
-initramfs image.
-.TP
-\fB\-E\fR, \fB\-\-enable\fR
-Add ramroot hook to \fI/etc/mkinitcpio.conf\fR and rebuild
-initramfs image.
-.TP
-\fB\-o\fR, \fB\-\-output\fR <\fIfile\fR>
-Save new config to \fIfile\fR instead of \fI/etc/mkinitcpio.conf\fR.
-.TP
-\fB\-Y\fR, \fB\-\-yes\fR
-Overwrite output files without asking.
-.TP
-\fB\-H\fR, \fB\-\-help\fR
-Display help text and exit.
+ramroot \- load root file system to zram during boot
+.SH DESCRIPTION
+\fBramroot\fR is a mkinitcpio hook that loads the root filesystem to zram.  In
+early boot stages, ramroot checks for available memory, and prompts users with
+the option to boot the root filesystem from zram.
+.SH CONFIGURATION
+\fBramroot\fR configuration is done via \fI/etc/ramroot.conf\fR.  A default configuration
+only attempts to load the root \fI/\fR filesystem to zram.  The directories \fI/etc/ramroot.z/\fR and \fI~/ramroot.z/\fR may be used for additional customization.
 .SH SEE ALSO
 \fBramroot.conf\fR(5), <\fBhttps://github.com/arcmags/ramroot/\fR>
-.SH AUTHOR
-Written by Chris Magyar.
 .SH COPYRIGHT
-Copyright \(co 2017 Free Software Foundation, Inc. License GPLv3+:
-GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+Copyright 2025 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3
+or later <http://gnu.org/licenses/gpl.html>. This is free software: you are
+free to change and redistribute it. There is NO WARRANTY, to the extent
+permitted by law.

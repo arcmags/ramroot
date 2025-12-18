@@ -1,4 +1,5 @@
 #!/bin/bash
+## /usr/lib/initcpio/install/ramroot ::
 
 build() {
     add_binary cp
@@ -19,3 +20,5 @@ help() {
 This hook optionally loads the root filesystem into zram during boot
 HELPEOF
 }
+
+# vim: ft=bash

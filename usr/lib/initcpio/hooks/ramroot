@@ -1,4 +1,5 @@
 #!usr/bin/ash
+## /usr/lib/initcpio/hooks/ramroot ::
 
 run_hook() {
     local dir_home flag_tmp mount mount_id mount_path mounts_null \
@@ -6,7 +7,9 @@ run_hook() {
         ps_timeout ram ram_min ram_pref s zram zram_max zram_min
     #global fsck_root mount_handler root zram_device zram_mount
 
-    sleep 2
+    printf '\e[1;34m## \e[1;37mramroot\e[1;34m ##\e[0m\n'
+
+    # TODO: check for errors in ramroot.conf?
     source /etc/ramroot.conf
 
     # set mounts:
@@ -34,7 +37,14 @@ run_hook() {
     if [ "${mounts_zram%% *}" != "$root:/" ]; then
         return 0
     fi
-    printf '\e[1;32m==> \e[1;37mChecking memory resources ...\n'
+
+    sleep 1
+    printf '\e[1;34m=> \e[1;37mChecking memory resources ...\e[0m\n'
+    sleep 1
+
+    # get available ram:
+    ram="$(($(free | awk '/Mem/ {print int($2)}')/1024))"
+    printf '\e[1;34m > \e[1;37maval: %dM\e[0m\n' "$ram"
 
     # check mounts_zram:
     for mount in $mounts_zram; do
@@ -43,8 +53,7 @@ run_hook() {
         # FAIL: mount not found:
         if [ "$mount_id" = "$mount_path" ] || \
         [ -z "$mount_id" ] || [ -z "$mount_path" ]; then
-            printf '\e[1;31m==> FAILED: \e[1;37m%s %s\e[0;37m\n' \
-                'ramroot mount not found:' "$mount"
+            printf '\e[1;31mE: \e[1;37m%s: mount not found\e[0m\n' "${mount%:*}"
             sleep 2
             return 1
         fi
@@ -85,9 +94,6 @@ run_hook() {
         zram_min=$zram_max
     fi
 
-    # get available ram:
-    ram="$(($(free | awk '/Mem/ {print int($2)}')/1024))"
-
     # get zram size:
     for mount in $mounts_zram; do
         sleep 1
@@ -97,8 +103,7 @@ run_hook() {
         mount "$mount_id" /local_root
         # FAIL: unable to mount:
         if [ $? -ne 0 ]; then
-            printf '\e[1;31m==> FAILED: \e[1;37m%s %s\e[0;37m\n' \
-                'ramroot unable to mount:' "${mount%:*}"
+            printf '\e[1;31mE: \e[1;37m%s: mount error\e[0m\n' "${mount%:*}"
             sleep 2
             return 1
         fi
@@ -108,17 +113,17 @@ run_hook() {
     done
     # 10% free space reserved for root:
     zram=$((zram*110/100))
+    printf '\e[1;34m > \e[1;37mreqd: %dM\n' "$((zram+zram_min+ram_min))"
 
-    printf '\e[1;34m -> \e[1;37maval: %dM\n\e[1;34m -> ' $ram
-    printf '\e[1;37mreqd: %dM\n' $((zram+zram_min+ram_min))
     # WARM: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
-        printf '\e[1;33m==> SKIPPED: \e[1;37m%s\e[0;37m\n' \
-            'ramroot: not enough ram'
+        printf '\e[1;31mE: \e[1;37mnot enough ram\e[0m\n'
         sleep 2
         return 0
+    fi
+
     # calculate zram size:
-    elif [ $((ram-ram_pref-zram-zram_min)) -le 0 ]; then
+    if [ $((ram-ram_pref-zram-zram_min)) -le 0 ]; then
         zram=$((zram+zram_min))
     elif [ $((ram-ram_pref-zram-zram_max)) -le 0 ]; then
         zram=$((ram-ram_pref))
@@ -127,11 +132,11 @@ run_hook() {
     fi
 
     # prompt for input:
-    printf "\e[1;32m::> \e[1;37mLoad root file system to zram? "
+    printf "\e[1;32m:: \e[1;37mLoad filesystem to zram? "
     if [ "$ps_default" = 'y' ]; then
-        printf '[Y/n] '
+        printf '[Y/n] \e[0m'
     else
-        printf '[y/N] '
+        printf '[y/N] \e[0m'
     fi
     # visual countdown:
     s=1
@@ -151,18 +156,19 @@ run_hook() {
     done
     ps_input="${ps_input:-$ps_default}"
     if [ "$ps_input" != 'y' ] && [ "$ps_input" != 'Y' ]; then
-        printf 'no\n'
+        printf '\e[1;37mno\e[0m\n'
         return 0
     fi
-    printf 'yes\n'
+    printf '\e[1;37myes\e[0m\n'
+
+    printf '\e[1;34m=> \e[1;37mInitializing zram device ...\e[0m\n' "$mount_path"
 
     # make zram device:
     if [ ! -b "/dev/zram0" ]; then
         modprobe zram
         # FAIL: zram module error:
         if [ $? -ne 0 ]; then
-            printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-                'error loading zram module'
+            printf '\e[1;31mE: \e[1;37merror loading zram module\e[0m\n'
             sleep 2
             return 1
         fi
@@ -172,24 +178,21 @@ run_hook() {
     zram_device="$(zramctl -f -s ${zram}M -a lzo)"
     # FAIL: error initializing zram device:
     if [ $? -ne 0 ]; then
-        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-            'error initializing zram device'
+        printf '\e[1;31mE: \e[1;37mzramctl error\e[0m\n'
         sleep 2
         return 1
     fi
     mkfs.ext4 -q "$zram_device"
     # FAIL: error formatting zram device:
     if [ $? -ne 0 ]; then
-        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-            'error formatting zram device'
+        printf '\e[1;31mE: \e[1;37mformat error\e[0m\n'
         sleep 2
         return 1
     fi
     mount -o discard "$zram_device" /zram_root
     # FAIL: error mounting zram device:
     if [ $? -ne 0 ]; then
-        printf '\e[1;31m==> FAILED: \e[1;37m%s\e[0;37m\n' \
-            'error mounting zram device'
+        printf '\e[1;31mE: \e[1;37mmount error\e[0m\n'
         sleep 2
         return 1
     fi
@@ -199,13 +202,13 @@ run_hook() {
 
     # copy root to zram:
     for mount in $mounts_zram; do
+        # TODO: check each cp command for success
+        if [ "$flag_quiet" != true ]; then
+            printf '\e[1;34m > \e[1;37mloading %s ...\e[0m\n' "$mount_path"
+        fi
         sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
-        if [ "$flag_quiet" != true ]; then
-            printf '\e[1;32m==> \e[1;37mLoading %s %s\e[0;37m\n' \
-                "$mount_path" 'to zram ...'
-        fi
         mount "$mount_id" /local_root
         mkdir -p "/zram_root$mount_path"
         cp -a /local_root/. "/zram_root$mount_path"
@@ -254,3 +257,5 @@ run_hook() {
     mount_handler=zram_mount
     export zram_device
 }
+
+# vim: ft=sh
