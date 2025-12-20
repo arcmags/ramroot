@@ -1,7 +1,7 @@
 # ramroot
 
-ramroot is a mkinitcpio hook that loads the root file system to a zram device
-during the initramfs boot stage.
+ramroot is a [mkinitcpio][mkinitcpio] hook that loads the root file system to a zram
+device during the initramfs boot stage.
 
 ## Installation
 
@@ -14,24 +14,25 @@ Uninstall:
     # man uninstall
 
 After installation, the `ramroot` hook must be manually added to
-*/etc/mkinitcpio.conf*. This was done via script in the past (before I realized
-it's probably not a great idea to change users' */etc/mkinitcpio.conf* in an
-install script).
+*/etc/mkinitcpio.conf* (or a file in */etc/mkinitcpio.conf.d/*). This was done
+via script in the past (before I realized it's not a good idea to change users'
+*/etc/mkinitcpio.conf* in an install script).
 
-As of [mkinitcpio-v40][v40], Arch Linux has begun including the `systemd` hook
-in */etc/mkinitcpio.conf* by default. This version of ramroot is not (yet)
-compatible with this hook. See the non-systemd hooks in the official
-[meson.build][meson.build] from mkinitcpio. Adding the `ramroot` hook after the
-`udev` hook enables ramroot:
+Ramroot is not (yet) compatible with a systemd based initramfs. See the
+non-systemd hooks in the official [meson.build][meson.build] from mkinitcpio.
+Using these hooks with `ramroot` added after `udev` enables ramroot:
 
     HOOKS=(base udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
 
-Rebuild initramfs images to include changes made to */etc/mkinitcpio.conf*:
+The drop-in file *mkinitcpio.ramroot.conf* is provided that can be placed in
+*/etc/mkinitcpio.conf.d/* to easily make these changes.
+
+Rebuild initramfs to include changes:
 
     # mkinitcpio -P
 
 Users are responsible for dealing with their own */etc/mkinitcpio.conf* and any
-*.pacnew* files.
+*.pacnew* files resulting from system updates.
 
 ## Configuration
 
@@ -98,8 +99,8 @@ described for */etc/ramroot.z/* above.
 
 [GPLv3](https://www.gnu.org/licenses/gpl-3.0) | [mags](https://mags.zone)
 
-[v40]: https://github.com/archlinux/mkinitcpio/tree/v40
 [meson.build]: https://github.com/archlinux/mkinitcpio/blob/v40/meson.build
+[mkinitcpio]: https://wiki.archlinux.org/title/Mkinitcpio
 
 <!--metadata:
 author: Chris Magyar <c.magyar.ec@gmail.com>

@@ -6,6 +6,7 @@ null:
 install:
 	install -Dm644 initcpio/hooks/ramroot "$(PREFIX)/usr/lib/initcpio/hooks/ramroot"
 	install -Dm644 initcpio/install/ramroot "$(PREFIX)/usr/lib/initcpio/install/ramroot"
+	install -Dm644 initcpio/mkinitcpio.ramroot.conf "$(PREFIX)/usr/lib/ramroot/mkinitcpio.ramroot.conf"
 	install -Dm644 ramroot.conf "$(PREFIX)/usr/lib/ramroot/ramroot.conf"
 	install -Dm644 ramroot.conf "$(PREFIX)/etc/ramroot.conf"
 	install -Dm644 ramroot.issue "$(PREFIX)/etc/ramroot.z/etc/issue.d/ramroot.issue"

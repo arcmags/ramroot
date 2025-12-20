@@ -2,9 +2,13 @@
 .SH NAME
 ramroot \- load root file system to zram during boot
 .SH DESCRIPTION
-\fBramroot\fR is a mkinitcpio hook that loads the root filesystem to zram.  In
-early boot stages, ramroot checks for available memory, and prompts users with
-the option to boot the root filesystem from zram.
+\fBramroot\fR is a mkinitcpio hook that loads the root filesystem (and
+optionally, other filesystems) to zram in early boot.  Ramroot checks for
+available memory, and prompts users with the option to load the root filesystem
+
+to zram before
+
+
 .SH CONFIGURATION
 \fBramroot\fR configuration is done via \fI/etc/ramroot.conf\fR.  A default configuration
 only attempts to load the root \fI/\fR filesystem to zram.  The directories \fI/etc/ramroot.z/\fR and \fI~/ramroot.z/\fR may be used for additional customization.
