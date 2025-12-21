@@ -9,7 +9,7 @@ arch=(any)
 url="https://github.com/arcmags/$pkgname"
 license=(GPL-3.0-or-later)
 depends=(mkinitcpio)
-backup=(etc/ramroot.conf)
+backup=(etc/ramroot.conf etc/ramroot.z/etc/issue.d/ramroot.issue)
 source=("$pkgname-$pkgver.tar.gz::$url/archive/$pkgver.tar.gz")
 sha256sums=(SKIP)
 
