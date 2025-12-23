@@ -2,18 +2,41 @@
 .SH NAME
 ramroot \- load root file system to zram during boot
 .SH DESCRIPTION
-\fBramroot\fR is a mkinitcpio hook that loads the root filesystem (and
-optionally, other filesystems) to zram in early boot.  Ramroot checks for
-available memory, and prompts users with the option to load the root filesystem
-
-to zram before
-
-
+\fBramroot\fR is a mkinitcpio busybox hook that loads the root filesystem (and
+optionally, other filesystems) to zram in early userspace.  Ramroot checks for
+available memory, and interactively prompts with the option to load the root
+filesystem to zram during the initramfs boot phase.
+.PP
+\fBramroot\fR is not (yet) compatible with a systemd based initramfs.  To
+enable \fBramroot\fR, it must be added to \fBHOOKS\fR in
+\fI/etc/mknitcpio.conf\fR:
+.RS
+.PP
+\fBHOOKS=(\fR\fIbase udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck\fR\fB)\fR
+.RE
 .SH CONFIGURATION
-\fBramroot\fR configuration is done via \fI/etc/ramroot.conf\fR.  A default configuration
-only attempts to load the root \fI/\fR filesystem to zram.  The directories \fI/etc/ramroot.z/\fR and \fI~/ramroot.z/\fR may be used for additional customization.
+.SS /etc/ramroot.conf
+.PP
+This an ash shell script that gets sourced by the \fBramroot\fR hook in early userspace.
+It defines additional paritions/mount points
+
+
+The default configuration attempts to load only the root \fI/\fR filesystem to zram.
+
+.SS /etc/ramroot.z/
+The directories \fI/etc/ramroot.z/\fR and \fI~/ramroot.z/\fR may be used for additional customization.
+
+
+.SH FILES
+.PP
+\fI/usr/lib/initcpio/hooks/ramroot\fR
+.br
+\fI/usr/lib/initcpio/install/ramroot\fR
+.br
+\fI/etc/ramroot.conf\fR, \fI/usr/lib/ramroot/ramroot.conf\fR
 .SH SEE ALSO
-\fBramroot.conf\fR(5), <\fBhttps://github.com/arcmags/ramroot/\fR>
+.MR ramroot.conf 5 ,
+<\fIhttps://github.com/arcmags/ramroot/\fR>
 .SH COPYRIGHT
 Copyright 2025 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3
 or later <http://gnu.org/licenses/gpl.html>. This is free software: you are
