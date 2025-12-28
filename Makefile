@@ -16,10 +16,10 @@ install:
 
 .PHONY: uninstall
 uninstall:
+	rm -rf "$(DESTDIR)/etc/ramroot.z/"
+	rm -rf "$(DESTDIR)/usr/lib/ramroot/"
+	rm -rf "$(DESTDIR)/usr/share/licenses/ramroot"
 	rm -f "$(DESTDIR)/etc/ramroot.conf"
 	rm -f "$(DESTDIR)/usr/lib/initcpio/hooks/ramroot"
 	rm -f "$(DESTDIR)/usr/lib/initcpio/install/ramroot"
 	rm -f "$(DESTDIR)/usr/share/man/man8/ramroot.8"
-	rm -rf "$(DESTDIR)/etc/ramroot.z/"
-	rm -rf "$(DESTDIR)/usr/lib/ramroot/"
-	rm -rf "$(DESTDIR)/usr/share/licenses/ramroot"
