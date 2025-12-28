@@ -1,6 +1,6 @@
-.TH RAMROOT 8 "2025-12-16" "ramroot 2.0.3" "ramroot manual"
+.TH RAMROOT 8 "2025-12-27" "ramroot 2.1.0" "ramroot manual"
 .SH NAME
-ramroot \- load root file system to zram during boot
+ramroot \- load root filesystem to zram
 .SH DESCRIPTION
 \fBramroot\fR is a mkinitcpio busybox hook that loads the root filesystem (and
 optionally, other filesystems) to zram in early userspace.  Ramroot checks for
@@ -12,31 +12,65 @@ enable \fBramroot\fR, it must be added to \fBHOOKS\fR in
 \fI/etc/mknitcpio.conf\fR:
 .RS
 .PP
-\fBHOOKS=(\fR\fIbase udev ramroot autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck\fR\fB)\fR
+\fBHOOKS=(\fR\fIbase udev ramroot autodetect microcode modconf kms keyboard
+keymap consolefont block filesystems fsck\fR\fB)\fR
 .RE
 .SH CONFIGURATION
-.SS /etc/ramroot.conf
+\fI/etc/ramroot.conf\fR
+.RS
+This an ash shell script that gets sourced by the \fBramroot\fR hook in early
+userspace. It defines additional paritions/mount points and required/desired
+memory resources. The default configuration
+(\fI/usr/lib/ramroot/ramroot.conf\fR) only attempts to load the root \fI/\fR
+filesystem to zram.
+.TP
+\fBmounts_zram\fR
+Additional mounts loaded to zram during initramfs.  A mount consists of a
+\fIUUID\fR separated from a \fImountpath\fR by a colon.  Multiple mounts are
+separated by spaces or newlines.
+.TP
+\fBmounts_null\fR
+Mounts specifically ignored by ramroot.  A \fIUUID\fR is optional for these
+mounts.  These mounts will be commented out in \fI/etc/fstab\fR when ramroot is
+active.
+.TP
+\fBps_default\fR
+Default zram y/n prompt value.  Valid values are \fIyes\fR or \fIno\fR.
+.TP
+\fBps_timeout\fR
+Boot prompt timeout, positive integer between 1 and 32.
+.TP
+\fBram_min\fR
+Minimum amount of free ram required.
+.TP
+\fBzram_min\fR
+Minimum amount of free zram required.  If both this and \fBram_min\fR cannot be
+satisfied, the boot prompt automatically selects \fIno\fR.
+.TP
+\fBram_pref\fR
+Preferred amount of free ram.  If both \fBram_min\fR and \fBzram_min\fR are
+satisfied, additional memory is allocated to ram up to this preferred ram
+value.
+.TP
+\fBzram_max\fR
+Maximum amount of free zram to create.  Once \fBram_pref\fR is satisfied, the
+amount of free zram is further extended to \fBzram_max\fR.
 .PP
-This an ash shell script that gets sourced by the \fBramroot\fR hook in early userspace.
-It defines additional paritions/mount points
-
-
-The default configuration attempts to load only the root \fI/\fR filesystem to zram.
-
-.SS /etc/ramroot.z/
-The directories \fI/etc/ramroot.z/\fR and \fI~/ramroot.z/\fR may be used for additional customization.
-
-
-.SH FILES
+All remaining memory is allocated towards ram.
+.RE
 .PP
-\fI/usr/lib/initcpio/hooks/ramroot\fR
-.br
-\fI/usr/lib/initcpio/install/ramroot\fR
-.br
-\fI/etc/ramroot.conf\fR, \fI/usr/lib/ramroot/ramroot.conf\fR
-.SH SEE ALSO
-.MR ramroot.conf 5 ,
-<\fIhttps://github.com/arcmags/ramroot/\fR>
+\fI/etc/ramroot.z/\fR
+.RS
+This directory mirrors the hierarchy of the root filesystem.  Upon a successful
+sync to zram, its contents are copied to the root directory.  Files copied in this
+manner preserve all owerships.  Symbolic links are overwritten.
+.RE
+.PP
+\fI~/.ramroot.z/\fR
+.RS
+These user directories mirror the hierarchy of users' home folders and act as
+described in \fB/etc/ramroot.z\fR one users' directories folders.
+.RE
 .SH COPYRIGHT
 Copyright 2025 Free Software Foundation, Inc. License GPLv3+: GNU GPL version 3
 or later <http://gnu.org/licenses/gpl.html>. This is free software: you are

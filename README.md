@@ -1,6 +1,6 @@
 # ramroot
 
-ramroot is a [mkinitcpio][mkinitcpio] hook that loads the root file system to a zram
+ramroot is a [mkinitcpio][mkinitcpio] hook that loads the root filesystem to a zram
 device during the initramfs boot stage.
 
 ## Installation
@@ -75,7 +75,7 @@ All remaining memory is allocated towards ram.
 
 ### /etc/ramroot.z/
 
-The structure of this directory mirrors the hierarchy of the root file system.
+The structure of this directory mirrors the hierarchy of the root filesystem.
 Upon a successful sync to zram, any files and directories contained in
 */etc/ramroot/* are non-persistently overwritten to the root directory.
 

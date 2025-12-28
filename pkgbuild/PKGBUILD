@@ -2,7 +2,7 @@
 
 pkgname=ramroot
 pkgver=dev
-#pkgver=2.0.3
+#pkgver=2.1.0
 pkgrel=1
 pkgdesc='Load root file system to zram during boot'
 arch=(any)
