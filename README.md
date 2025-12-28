@@ -5,13 +5,15 @@ device during the initramfs boot stage.
 
 ## Installation
 
-Install hooks and manpages:
+Install hook, manpages, libs, config, issue:
 
     # make install
 
 Uninstall:
 
     # man uninstall
+
+Also available on the [AUR][AUR].
 
 After installation, the `ramroot` hook must be manually added to
 */etc/mkinitcpio.conf* (or a file in */etc/mkinitcpio.conf.d/*). This was done
@@ -97,8 +99,9 @@ described for */etc/ramroot.z/* above.
 - Arch Linux
 - mkinitcpio
 
-[GPLv3](https://www.gnu.org/licenses/gpl-3.0) | [mags](https://mags.zone)
+[gpl3](https://www.gnu.org/licenses/gpl-3.0.txt) | [mags](https://mags.zone)
 
+[AUR]: https://aur.archlinux.org/packages/ramroot
 [meson.build]: https://github.com/archlinux/mkinitcpio/blob/v40/meson.build
 [mkinitcpio]: https://wiki.archlinux.org/title/Mkinitcpio
 
