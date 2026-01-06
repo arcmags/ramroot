@@ -11,7 +11,7 @@ Install hook, manpages, libs, config, issue:
 
 Uninstall:
 
-    # man uninstall
+    # make uninstall
 
 Also available on the [AUR][AUR].
 
