@@ -1,6 +1,6 @@
 # Maintainer: Chris Magyar <c.magyar.ec@gmail.com>
 
-pkgname=ramroot-git
+pkgname=ramroot-dev
 _gitname=ramroot
 pkgver=git
 pkgrel=1
@@ -10,11 +10,16 @@ url="https://github.com/arcmags/$_gitname"
 license=(GPL-3.0-or-later)
 depends=(mkinitcpio)
 makedepends=(git)
-conflicts=(ramroot ramroot-dev)
+conflicts=(ramroot ramroot-git)
 provides=(ramroot)
 backup=(etc/ramroot.conf etc/ramroot.z/etc/issue.d/ramroot.issue)
 source=("git+$url.git")
 sha256sums=(SKIP)
+
+prepare() {
+    cd "$_gitname"
+    git checkout -b dev origin/dev
+}
 
 pkgver() {
     cd "$_gitname"

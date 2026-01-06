@@ -9,9 +9,9 @@ run_hook() {
 
     printf '\e[1;34m## \e[1;37mramroot\e[1;34m ##\e[0m\n'
 
-    [ "$debug" = true ] && ash
-
     source /etc/ramroot.conf
+
+    [ "$debug" = true ] && ash
 
     # set mounts:
     for mount in $root:/ $mounts_zram; do
