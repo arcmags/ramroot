@@ -6,9 +6,11 @@ pkgbase = ramroot
 	arch = any
 	license = GPL-3.0-or-later
 	depends = mkinitcpio
+	provides = ramroot
+	conflicts = ramroot-git
 	backup = etc/ramroot.conf
 	backup = etc/ramroot.z/etc/issue.d/ramroot.issue
 	source = ramroot-2.1.0.tar.gz::https://github.com/arcmags/ramroot/archive/2.1.0.tar.gz
-	sha256sums = 6c1f91f844723eee19b672bfd526d5c35546bd8aa2e8d91895442fa4ee23f490r
+	sha256sums = 6c1f91f844723eee19b672bfd526d5c35546bd8aa2e8d91895442fa4ee23f490
 
 pkgname = ramroot
