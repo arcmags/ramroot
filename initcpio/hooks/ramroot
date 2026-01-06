@@ -2,14 +2,15 @@
 ## /usr/lib/initcpio/hooks/ramroot ::
 
 run_hook() {
+    # globals: fsck_root mount_handler zram_device zram_mount
     local dir_home flag_tmp mount mount_id mount_path mounts_null \
         mounts_tmp mounts_zram mount_tmp mount_tmp ps_default ps_input \
         ps_timeout ram ram_min ram_pref s zram zram_max zram_min
-    #global fsck_root mount_handler root zram_device zram_mount
 
     printf '\e[1;34m## \e[1;37mramroot\e[1;34m ##\e[0m\n'
 
-    # TODO: check for errors in ramroot.conf?
+    [ "$debug" = true ] && ash
+
     source /etc/ramroot.conf
 
     # set mounts:
@@ -115,7 +116,7 @@ run_hook() {
     zram=$((zram*110/100))
     printf '\e[1;34m > \e[1;37mreqd: %dM\n' "$((zram+zram_min+ram_min))"
 
-    # WARM: not enough ram
+    # WARN: not enough ram
     if [ $((ram-ram_min-zram-zram_min)) -le 0 ]; then
         printf '\e[1;31mE: \e[1;37mnot enough ram\e[0m\n'
         sleep 2
@@ -175,7 +176,7 @@ run_hook() {
         sleep 1
     fi
     sleep 1
-    zram_device="$(zramctl -f -s ${zram}M -a lzo)"
+    zram_device="$(zramctl -f -s ${zram}M -a lz4)"
     # FAIL: error initializing zram device:
     if [ $? -ne 0 ]; then
         printf '\e[1;31mE: \e[1;37mzramctl error\e[0m\n'
@@ -202,7 +203,6 @@ run_hook() {
 
     # copy root to zram:
     for mount in $mounts_zram; do
-        # TODO: check each cp command for success
         if [ "$flag_quiet" != true ]; then
             printf '\e[1;34m > \e[1;37msyncing %s ...\e[0m\n' "$mount_path"
         fi
@@ -255,7 +255,7 @@ run_hook() {
         :
     }
     mount_handler=zram_mount
-    export zram_device
+    export zram_device zram_mount
 }
 
 # vim: ft=sh
