@@ -101,7 +101,7 @@ run_hook() {
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
         poll_device "$mount_id" 20
-        mount "$mount_id" /local_root
+        mount -o ro "$mount_id" /local_root
         # FAIL: unable to mount:
         if [ $? -ne 0 ]; then
             printf '\e[1;31mE: \e[1;37m%s: mount error\e[0m\n' "${mount%:*}"
@@ -209,7 +209,7 @@ run_hook() {
         sleep 1
         mount_id="$(resolve_device "${mount%:*}")"
         mount_path="${mount#*:}"
-        mount "$mount_id" /local_root
+        mount -o ro "$mount_id" /local_root
         mkdir -p "/zram_root$mount_path"
         cp -a /local_root/. "/zram_root$mount_path"
         umount /local_root
